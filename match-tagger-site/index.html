@@ -1252,7 +1252,7 @@ function normalize(m){
   m.phases=m.phases||{h1s:null,h1e:null,h2s:null,h2e:null};
   m.events=Array.isArray(m.events)?m.events:[]; m.players=Array.isArray(m.players)?m.players:[];
   if(!FORMATIONS[m.formation]) m.formation='4-3-3';
-  m.halfLen=+m.halfLen||45; return m;
+  m.halfLen=+m.halfLen||45; if(m.date) m.date=isoDate(m.date); return m;
 }
 
 /* ---------- Persistence ---------- */
@@ -2410,9 +2410,12 @@ async function buildDeck(items,c){
 
 /* ===================== Squad, aggregation & app views ===================== */
 const norm=s=>String(s||'').trim().toLowerCase().replace(/\s+/g,' ');
+const fold=s=>norm(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 function squad(){ if(!Array.isArray(settings.squad)) settings.squad=[]; return settings.squad; }
 const SQ=id=>squad().find(x=>x.id===id);
-const byDateDesc=(a,b)=>(b.date||'').localeCompare(a.date||'')||(b.updatedAt||0)-(a.updatedAt||0);
+function isoDate(d){ d=String(d||'').trim(); let x=d.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/); if(x) return x[1]+'-'+x[2].padStart(2,'0')+'-'+x[3].padStart(2,'0');
+  x=d.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/); if(x) return x[3]+'-'+x[2].padStart(2,'0')+'-'+x[1].padStart(2,'0'); return d; }
+const byDateDesc=(a,b)=>isoDate(b.date).localeCompare(isoDate(a.date))||(b.updatedAt||0)-(a.updatedAt||0);
 const byDateAsc=(a,b)=>-byDateDesc(a,b);
 function latestMatch(){ return Object.values(store).sort(byDateDesc)[0]; }
 function teamName(){ return (settings.team&&settings.team.name)||((latestMatch()||{}).us)||'Club YLA WU18'; }
@@ -2447,6 +2450,7 @@ function seasonOf(d){ if(!d||!/^\d{4}-\d{2}/.test(d)) return 'Undated'; const y=
 function seasons(){ return [...new Set(Object.values(store).map(m=>seasonOf(m.date)))].sort().reverse(); }
 function curSeason(){ const ss=seasons(); if(ui.season&&(ui.season==='all'||ss.includes(ui.season))) return ui.season; return ss[0]||'all'; }
 function matchesIn(season){ return Object.values(store).filter(m=>season==='all'||seasonOf(m.date)===season).sort(byDateDesc); }
+const oldestFirst=()=>{ try{ return localStorage.getItem('matchTagger.msort')==='asc'; }catch(e){ return false; } };
 function isPlayed(m){ return m.events.length>0||m.phases.h1s!=null; }
 function goalsFA(m){ let f=0,a=0; m.events.forEach(e=>{ if(e.type==='goal') f++; else if(e.type==='goal_against') a++; }); return {f,a}; }
 function result(m){ const s=goalsFA(m); return s.f>s.a?'W':s.f<s.a?'L':'D'; }
@@ -2564,7 +2568,7 @@ function renderHome(){
   const el=$('#view-home'), ss=seasons(), season=ss[0]||seasonOf(new Date().toISOString().slice(0,10));
   const played=matchesIn(season).filter(isPlayed), rec=recordOf(played), last=played[0];
   const form=played.slice(0,5).reverse();
-  const recent=Object.values(store).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0)).slice(0,5);
+  const recent=Object.values(store).filter(m=>!isUntouchedBlank(m)).sort(byDateDesc).slice(0,5);
   const agg=playerAgg(season);
   const lead=[['Goals','g'],['Assists','a'],['Minutes','min'],['Ball recoveries','rec']];
   const lastCard=last?withMatch(last,()=>{ const s=goalsFA(last), hs=last.home?s.f:s.a, as=last.home?s.a:s.f;
@@ -2588,7 +2592,7 @@ function renderHome(){
         <button class="tile" data-go="team"><span class="ic">${IC.shield}</span><strong>Team</strong><span>Results, goals by period and team trends.</span></button>
       </div>
       <div class="home-grid">
-        <section class="card"><div class="card-head"><h2>Recently worked on</h2><span style="display:flex;gap:14px"><button class="linkbtn" data-openbackup>Open backup</button><button class="linkbtn" data-go="matches">All analyses</button></span></div>
+        <section class="card"><div class="card-head"><h2>Latest matches</h2><span style="display:flex;gap:14px"><button class="linkbtn" data-openbackup>Open backup</button><button class="linkbtn" data-go="matches">All analyses</button></span></div>
           ${recent.length?`<div class="mlist">${recent.map(m=>matchRow(m,{primaryOpen:true})).join('')}</div>`:'<p class="hint">No matches yet. Start with New match.</p>'}</section>
         <section class="card"><div class="card-head"><h2>Season leaders</h2><button class="linkbtn" data-go="players">All players</button></div>
           <div class="leaders">${lead.map(([l,k])=>{ const top=topBy(agg,k,3); return `<div class="leader"><h3>${l}</h3>${top.length?`<ol>${top.map(x=>`<li><button data-go="player" data-arg="${x.s.id}"><span class="n">${esc(x.s.num||'–')}</span><span class="nm">${esc(x.s.name)}</span><b class="tnum">${x.v}</b></button></li>`).join('')}</ol>`:'<p class="hint">Nothing tagged yet.</p>'}</div>`; }).join('')}</div></section>
@@ -2599,11 +2603,11 @@ function renderHome(){
 /* ---------- Analyses (all matches) ---------- */
 function renderMatches(){
   const el=$('#view-matches'), season=curSeason(), q=norm(ui.mq||'');
-  const list=matchesIn(season).filter(m=>!q||norm([m.them,m.comp,m.us,m.date].join(' ')).includes(q));
+  const list=matchesIn(season).filter(m=>!q||norm([m.them,m.comp,m.us,m.date].join(' ')).includes(q)); if(oldestFirst()) list.reverse();
   const rec=recordOf(list.filter(isPlayed));
   el.innerHTML=`<div class="wrap page">
     <header class="page-head"><div><span class="eyebrow">${esc(seasonText(season))}</span><h1>Analyses</h1><p>${list.length} match${list.length===1?'':'es'} · ${rec.w} won, ${rec.d} drawn, ${rec.l} lost</p></div>
-      <div class="page-actions">${seasonSelect()}<input class="search" id="mSearch" type="search" placeholder="Search opponent or competition" value="${esc(ui.mq||'')}" aria-label="Search matches"><button class="btn" data-openbackup>Open backup</button><button class="btn primary" data-go="new">New match</button></div></header>
+      <div class="page-actions">${seasonSelect()}<input class="search" id="mSearch" type="search" placeholder="Search opponent or competition" value="${esc(ui.mq||'')}" aria-label="Search matches"><div class="seg" role="group" aria-label="Order"><button data-msort="desc" aria-pressed="${!oldestFirst()}">Newest first</button><button data-msort="asc" aria-pressed="${oldestFirst()}">Oldest first</button></div><button class="btn" data-openbackup>Open backup</button><button class="btn primary" data-go="new">New match</button></div></header>
     ${list.length?`<div class="mlist big">${list.map(m=>matchRow(m,{del:true,year:season==='all'})).join('')}</div>`:`<div class="empty-state"><strong>${Object.keys(store).length?'No matches found':'No analyses yet'}</strong><p>${Object.keys(store).length?'Try another season or search term.':'Create your first match to start analysing.'}</p><button class="btn primary" data-go="new">New match</button></div>`}
     <div class="row-actions foot"><span class="hint">Your folder saves everything automatically. A backup file is an extra copy of all matches, tags, lineups and players.</span><span style="flex:1"></span><button class="btn sm" id="btnBackup">Back up all matches</button><button class="btn sm" data-openbackup>Open backup</button></div>
   </div>`;
@@ -2725,7 +2729,8 @@ function saveTeam(){
 /* ---------- Players ---------- */
 const POSITIONS=['','GK','CB','RB','LB','DM','CM','AM','RW','LW','ST'];
 function renderPlayers(){
-  const el=$('#view-players'), season=curSeason(), agg=playerAgg(season), list=squad().slice();
+  const el=$('#view-players'), season=curSeason(), agg=playerAgg(season), all=squad().slice(), pq=fold(ui.pq||'').trim();
+  const list=pq?all.filter(s=>{ const num=String(s.num||'').trim(), nm=fold(s.name); if(/^#?\d+$/.test(pq)) return num===pq.replace('#','')||num.startsWith(pq.replace('#',''))||nm.includes(pq); return nm.includes(pq)||nm.split(' ').some(w=>w.startsWith(pq)); }):all;
   const cust=customKeys(Object.values(agg).map(a=>a.line)).filter(k=>tagInfo(k).kind==='player');
   const val=(s,k)=>{ const a=agg[s.id]; if(k==='num') return +s.num||999; if(k==='name') return norm(s.name); if(k==='pos') return s.pos||'zz'; if(k==='apps'||k==='starts'||k==='min') return a[k]; return a.line[k]||0; };
   const ps=ui.psort||{k:'num',d:1};
@@ -2733,10 +2738,10 @@ function renderPlayers(){
   const cols=[['num','#'],['name','Player'],['pos','Pos'],['apps','Apps'],['starts','Starts'],['min','Min']].concat(STAT_COLS.map(c=>[c[0],c[1],c[2]]),cust.map(k=>[k,tagInfo(k).label]));
   const cards=ui.pview!=='table';
   el.innerHTML=`<div class="wrap page">
-    <header class="page-head"><div><span class="eyebrow">${esc(teamName())} · ${esc(seasonText(season))}</span><h1>Players</h1><p>${list.length} player${list.length===1?'':'s'} · stats update automatically from every tagged match.</p></div>
-      <div class="page-actions">${seasonSelect()}<div class="seg" role="group" aria-label="Layout"><button data-pview="cards" aria-pressed="${cards}">Cards</button><button data-pview="table" aria-pressed="${!cards}">Table</button></div><button class="btn primary" id="btnAddPlayer" aria-expanded="${!!ui.addOpen}">Add player</button></div></header>
+    <header class="page-head"><div><span class="eyebrow">${esc(teamName())} · ${esc(seasonText(season))}</span><h1>Players</h1><p>${pq?list.length+' of '+all.length+' players match “'+esc(ui.pq.trim())+'”':all.length+' player'+(all.length===1?'':'s')+' · stats update automatically from every tagged match.'}</p></div>
+      <div class="page-actions"><input class="search" id="pSearch" type="search" placeholder="Search name or number" value="${esc(ui.pq||'')}" aria-label="Search players by name or shirt number" autocomplete="off">${seasonSelect()}<div class="seg" role="group" aria-label="Layout"><button data-pview="cards" aria-pressed="${cards}">Cards</button><button data-pview="table" aria-pressed="${!cards}">Table</button></div><button class="btn primary" id="btnAddPlayer" aria-expanded="${!!ui.addOpen}">Add player</button></div></header>
     ${ui.addOpen?`<form id="addPlayerForm" class="card"><div class="form three"><div class="field"><label for="apNum">Shirt number</label><input id="apNum" type="number" min="1" max="99"></div><div class="field"><label for="apName">Name</label><input id="apName" required placeholder="First and last name"></div><div class="field"><label for="apPos">Position</label><select id="apPos">${POSITIONS.map(p=>`<option value="${p}">${p||'–'}</option>`).join('')}</select></div></div><div class="row-actions"><button class="btn primary" type="submit">Add to squad</button><button class="btn ghost" type="button" id="btnAddCancel">Cancel</button></div></form>`:''}
-    ${!list.length?`<div class="empty-state"><strong>No players yet</strong><p>Players appear here as soon as you name them in a match lineup, or add them yourself.</p></div>`:cards?
+    ${!list.length?(pq?`<div class="empty-state"><strong>No player matches “${esc(ui.pq.trim())}”</strong><p>Search by name or shirt number.</p><button class="btn" data-pclear>Clear search</button></div>`:`<div class="empty-state"><strong>No players yet</strong><p>Players appear here as soon as you name them in a match lineup, or add them yourself.</p></div>`):cards?
       `<div class="pgrid">${list.map(s=>{ const a=agg[s.id]; return `<button class="pcard" data-go="player" data-arg="${s.id}"><span class="bignum" aria-hidden="true">${esc(s.num||'')}</span>
         <span class="ppos">${esc([s.num?'#'+s.num:'',s.pos].filter(Boolean).join(' · ')||'Squad')}</span><span class="pname">${esc(s.name)}</span>
         <span class="pstats">${[['Apps',a.apps],['Min',a.min],['Goals',a.line.g],['Assists',a.line.a]].map(([l,v])=>`<span><b class="tnum">${v}</b><span>${l}</span></span>`).join('')}</span></button>`; }).join('')}</div>`
@@ -3502,6 +3507,8 @@ document.addEventListener('click',e=>{
   if(b=g('[data-upcancel]')){ const u=ups.find(x=>x.id===+b.dataset.upcancel); if(u){ u.state='cancel'; renderUploads(); pumpUploads(); } return; }
   if(b=g('[data-upretry]')){ const u=ups.find(x=>x.id===+b.dataset.upretry); if(u){ u.state='queued'; u.err=''; renderUploads(); pumpUploads(); } return; }
   if(b=g('[data-upclear]')){ const u=ups.find(x=>x.id===+b.dataset.upclear); if(u) u.state='cleared'; renderUploads(); return; }
+  if(b=g('[data-msort]')){ try{ localStorage.setItem('matchTagger.msort',b.dataset.msort); }catch(err){} renderMatches(); return; }
+  if(b=g('[data-pclear]')){ ui.pq=''; renderPlayers(); const n=$('#pSearch'); if(n) n.focus(); return; }
   if(b=g('[data-cldl]')){ downloadVideo(b.dataset.cldl); return; }
   if(b=g('[data-cldel]')){ ui.clDel=b.dataset.cldel; renderOdModal(); return; }
   if(b=g('[data-cldelno]')){ ui.clDel=null; renderOdModal(); return; }
@@ -3665,6 +3672,7 @@ document.addEventListener('input',e=>{
   if(t.dataset.pname){ const p=P(t.dataset.pname); if(p){ p.name=t.value; if(ui.autoName) ui.autoName.delete(p.id);
       const q=squad().find(x=>norm(x.name)===norm(t.value)); if(q&&q.num&&String(p.num)!==String(q.num)){ p.num=q.num; luFill('[data-pnum="'+p.id+'"]',q.num); }
       save(); } return; }
+  if(t.id==='pSearch'){ ui.pq=t.value; const pos=t.selectionStart; renderPlayers(); const n=$('#pSearch'); if(n){ n.focus(); try{ n.setSelectionRange(pos,pos); }catch(err){} } return; }
   if(t.id==='mSearch'){ ui.mq=t.value; const pos=t.selectionStart; renderMatches(); const n=$('#mSearch'); if(n){ n.focus(); try{ n.setSelectionRange(pos,pos); }catch(err){} } return; }
   if(t.id==='nmThemShort'){ ui.nmShortTouched=true; return; }
   if(t.id==='nmThem'&&!ui.nmShortTouched){ const sh=$('#nmThemShort'); if(sh) sh.value=t.value.trim().replace(/^(kaa|krc|kvc|kv|fc|sv|rsc|club|k\.)\s+/i,'').replace(/[^A-Za-z]/g,'').slice(0,3).toUpperCase(); return; }
@@ -3709,6 +3717,7 @@ document.addEventListener('change',e=>{
 });
 document.addEventListener('keydown',e=>{
   const t=e.target;
+  if(t.id==='pSearch'){ if(e.key==='Enter'){ const one=document.querySelectorAll('#view-players [data-go="player"]'); if(one.length===1) one[0].click(); } else if(e.key==='Escape'){ ui.pq=''; renderPlayers(); const n=$('#pSearch'); if(n) n.focus(); } return; }
   if((t.id==='gatePw'||t.id==='gateApi')&&e.key==='Enter'){ e.preventDefault(); const b=$('#gateLogin'); if(b) b.click(); return; }
   if(t.closest&&t.closest('#gate')) return;
   if(ui.lvOpen){ if(e.key==='Escape'){ ui.lvOpen=false; renderLvModal(); } return; }
