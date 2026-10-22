@@ -865,6 +865,8 @@ button.sync:hover{background:rgba(255,255,255,.08)}
 .cl-row.err small{color:var(--warn)}
 .cl-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .cl-head .grow{flex:1;min-width:160px;font-size:14px;color:var(--muted)}
+/* Lineup autofill */
+.lu-row input.autofilled{background:var(--accent-soft);border-color:var(--accent);transition:background .8s,border-color .8s}
 /* Backups */
 .bk-btn{position:relative}
 .bk-btn .bk-dot{display:none;width:8px;height:8px;border-radius:50%;background:var(--warn);margin-right:2px}
@@ -1857,6 +1859,7 @@ function trayAction(a){
 }
 
 /* Lineup editor */
+function luFill(sel,val){ const n=document.querySelector(sel); if(!n) return; n.value=val; n.classList.remove('autofilled'); void n.offsetWidth; n.classList.add('autofilled'); clearTimeout(n._af); n._af=setTimeout(()=>n.classList.remove('autofilled'),1200); }
 function renderLineupEditor(){
   const el=$('#tab-lineup'), F=FORMATIONS[M.formation];
   const starters=F.roles.map((r,i)=>({r,i,p:M.players.find(p=>p.slot===i)}));
@@ -1876,7 +1879,7 @@ function renderLineupEditor(){
       <span style="display:flex;gap:2px;align-items:center"><select data-swap="${p.id}" aria-label="Swap into starting XI"><option value="">Start as…</option>${F.roles.map((r,i)=>`<option value="${i}">${r}</option>`).join('')}</select><button class="rm" data-rmp="${p.id}" aria-label="Remove player">×</button></span></div>`).join('')}</div>
     <div class="row-actions"><button class="btn sm" id="btnAddBench">+ Add bench player</button>${(()=>{ const free=squad().filter(q=>!M.players.some(p=>p.sq===q.id)).sort((a,b)=>(+a.num||99)-(+b.num||99)); return free.length?`<select id="addFromSquad" aria-label="Add a squad player to the bench"><option value="">+ Add from squad…</option>${free.map(q=>`<option value="${q.id}">${esc((q.num?'#'+q.num+' ':'')+q.name)}</option>`).join('')}</select>`:''; })()}</div>
     <datalist id="squadList">${squad().map(q=>`<option value="${esc(q.name)}"></option>`).join('')}</datalist>
-    <p class="hint">Type a name from your squad to link the player, so her stats and clips add up on the Players page. Use "Start as…" to move a bench player into the starting XI. Substitutions during the match are tagged from the pitch.</p>
+    <p class="hint">Type a name or a shirt number from your squad and the other fills in by itself. Linked players' stats and clips add up on the Players page. Use "Start as…" to move a bench player into the starting XI. Substitutions during the match are tagged from the pitch.</p>
   </div>`;
 }
 
@@ -2429,11 +2432,14 @@ function linkAll(){
   if(touched){ lsSave(); clearTimeout(saveTimer); saveTimer=setTimeout(flush,900); }
 }
 function relink(p){
-  const nm=String(p.name||'').trim(); delete p.sqSkip;
+  let nm=String(p.name||'').trim(); delete p.sqSkip;
   if(!nm){ p.sq=null; return; }
+  if(!squad().some(x=>norm(x.name)===norm(nm))){   // a first name only: complete it when exactly one squad player matches
+    const one=squad().filter(x=>norm(x.name).split(' ')[0]===norm(nm)&&!M.players.some(q=>q!==p&&q.sq===x.id));
+    if(one.length===1){ p.name=nm=one[0].name; toast('Filled in '+one[0].name+(one[0].num?' (#'+one[0].num+')':'')+' from your squad.'); } }
   const s=findOrCreateSq(nm,p.num); if(!s) return;
   if(M.players.some(q=>q!==p&&q.sq===s.id)) toast(s.name+' is already in this lineup.');
-  p.sq=s.id; if(!p.num&&s.num) p.num=s.num;
+  p.sq=s.id; if(s.num) p.num=s.num;
 }
 function withMatch(m,fn){ const prev=M; M=m; try{ return fn(); } finally{ M=prev; } }
 
@@ -3611,7 +3617,7 @@ document.addEventListener('click',e=>{
   if(b=g('[data-fhalf]')){ ui.fHalf=b.dataset.fhalf; renderEvents(); return; }
   if(b=g('[data-shalf]')){ ui.statHalf=b.dataset.shalf; renderStats(); return; }
   if(b=g('#btnClips')) return startClips();
-  if(b=g('#btnEditLineup')){ ui.editLineup=true; ui.layoutEdit=false; ui.tray=null; renderTagging(); return; }
+  if(b=g('#btnEditLineup')){ ui.editLineup=true; ui.layoutEdit=false; ui.tray=null; renderTagging(); renderLineupEditor(); return; }
   if(b=g('#btnDoneLineup')){ ui.editLineup=false; ui.lastSig=''; renderTagging(); return; }
   if(b=g('#btnAddBench')){ const nums=M.players.map(p=>+p.num||0); M.players.push({id:newId('p'),num:Math.max(11,...nums)+1,name:'',slot:null}); save(); renderLineup(); return; }
   if(b=g('[data-rmp]')){ const id=b.dataset.rmp; if(M.events.some(e=>[e.pid,e.assist,e.in,e.out,e.a,e.b].includes(id))){ toast('This player has tagged events. Delete those first.'); return; } M.players=M.players.filter(p=>p.id!==id); save(); renderLineup(); return; }
@@ -3656,13 +3662,19 @@ document.addEventListener('input',e=>{
   if(t.dataset.cvlabel){ const it=layout().items.find(i=>i.id===t.dataset.cvlabel); if(it){ it.ref=t.value; saveSettings(); renderLineup(); } return; }
   if(t.dataset.secname!==undefined){ const sec=panel()[+t.dataset.secname]; if(sec){ sec.name=t.value; saveSettings(); renderDock(); } return; }
   if(t.dataset.tkey!==undefined){ const ok=setKey(t.dataset.tkey,t.value.replace(/\s/g,'')); renderTagsModal(); renderTagging(); const n=document.querySelector('[data-tkey="'+t.dataset.tkey+'"]'); if(n&&ok){ n.focus(); } return; }
-  if(t.dataset.pname){ const p=P(t.dataset.pname); if(p){ p.name=t.value; save(); } return; }
+  if(t.dataset.pname){ const p=P(t.dataset.pname); if(p){ p.name=t.value; if(ui.autoName) ui.autoName.delete(p.id);
+      const q=squad().find(x=>norm(x.name)===norm(t.value)); if(q&&q.num&&String(p.num)!==String(q.num)){ p.num=q.num; luFill('[data-pnum="'+p.id+'"]',q.num); }
+      save(); } return; }
   if(t.id==='mSearch'){ ui.mq=t.value; const pos=t.selectionStart; renderMatches(); const n=$('#mSearch'); if(n){ n.focus(); try{ n.setSelectionRange(pos,pos); }catch(err){} } return; }
   if(t.id==='nmThemShort'){ ui.nmShortTouched=true; return; }
   if(t.id==='nmThem'&&!ui.nmShortTouched){ const sh=$('#nmThemShort'); if(sh) sh.value=t.value.trim().replace(/^(kaa|krc|kvc|kv|fc|sv|rsc|club|k\.)\s+/i,'').replace(/[^A-Za-z]/g,'').slice(0,3).toUpperCase(); return; }
   if(t.id==='pexPre'){ ui.pre=Math.max(0,+t.value||0); uiPrefs().pre=ui.pre; saveSettings(); return; }
   if(t.id==='pexPost'){ ui.post=Math.max(1,+t.value||1); uiPrefs().post=ui.post; saveSettings(); return; }
-  if(t.dataset.pnum){ const p=P(t.dataset.pnum); if(p){ p.num=t.value; save(); } return; }
+  if(t.dataset.pnum){ const p=P(t.dataset.pnum); if(p){ p.num=t.value; const auto=ui.autoName||(ui.autoName=new Set());
+      if(!String(p.name||'').trim()||auto.has(p.id)){ const v=String(t.value).trim(), c=v?squad().filter(q=>String(q.num)===v&&!M.players.some(o=>o!==p&&o.sq===q.id)):[];
+        if(c.length===1){ p.name=c[0].name; p.sq=c[0].id; auto.add(p.id); luFill('[data-pname="'+p.id+'"]',p.name); }
+        else if(auto.has(p.id)){ p.name=''; p.sq=null; auto.delete(p.id); luFill('[data-pname="'+p.id+'"]',''); } }
+      save(); } return; }
   if(t.dataset.set){ const k=t.dataset.set; let val=t.value; if(k==='home') val=val==='1'; if(k==='halfLen') val=Math.max(1,+val||45); if(k==='usShort'||k==='themShort') val=val.toUpperCase(); M[k]=val; save(); renderHeader(); ui.lastScore=''; tick(true); renderTimeline(); return; }
   if(t.id==='pre'){ ui.pre=Math.max(0,+t.value||0); uiPrefs().pre=ui.pre; saveSettings(); }
   if(t.id==='post'){ ui.post=Math.max(1,+t.value||1); uiPrefs().post=ui.post; saveSettings(); }
