@@ -1,0 +1,4 @@
+# Netlify publishes the website from this folder. No build step needed.
+[build]
+  publish = "match-tagger-site"
+  command = ""

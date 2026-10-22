@@ -1,0 +1,129 @@
+# Match Tagger · website with online storage
+
+Your videos and tags live in your own online storage at Cloudflare. Upload a video once, then watch, tag and cut clips from any computer and any browser. No OneDrive app needed.
+
+The folder setup (a Match Tagger folder in OneDrive) still works too. You choose when you open the site.
+
+## What's in this zip
+
+| Folder | What it is | Where it goes |
+|---|---|---|
+| `match-tagger-site` | The website | Netlify (drag and drop) |
+| `storage-service/worker.js` | The small storage service that guards your videos | Cloudflare (copy and paste) |
+
+## What it costs
+
+- **Cloudflare Workers** (the storage service): free plan.
+- **Cloudflare R2** (the storage itself): the first 10 GB are free, then about $0.015 per GB per month. Watching and downloading your own videos costs nothing extra. A season of full matches (around 100 GB) comes to roughly $1.50 a month.
+- Cloudflare asks for a payment method before you can turn on R2, even if you stay within the free 10 GB.
+
+---
+
+## Setup · part 1 · Cloudflare (about 15 minutes)
+
+### 1 · Create an account
+
+1. Go to **dash.cloudflare.com/sign-up**, sign up with your email and confirm the email.
+2. You do not need to add a website or domain. Skip that if Cloudflare asks.
+
+### 2 · Turn on R2 and create the storage bucket
+
+1. In the left menu, open **R2 Object Storage** (it may sit under **Storage & Databases**).
+2. Click **Purchase R2 Plan** / **Get started** and add a payment method. You stay on the free tier until you go past 10 GB.
+3. Click **Create bucket**.
+4. **Bucket name:** `match-tagger`
+5. **Location:** leave it on **Automatic**, or pick **Western Europe** as a location hint.
+6. Click **Create bucket**. Leave it **private**: do not turn on public access.
+
+### 3 · Create the storage service (a "Worker")
+
+1. In the left menu, open **Workers & Pages** (under **Compute**).
+2. Click **Create** → **Create Worker** / **Start with Hello World!**.
+3. **Name:** `match-tagger-storage` → click **Deploy**.
+   - If Cloudflare asks you to pick a **workers.dev subdomain**, choose something short, for example your name.
+4. Click **Edit code**.
+5. Delete all the example code in the editor.
+6. Open `storage-service/worker.js` from this zip in Notepad (Windows) or TextEdit (Mac), select everything, copy it, and paste it into the editor.
+7. Click **Deploy** (top right).
+
+### 4 · Connect the bucket to the Worker
+
+1. Go back to your Worker `match-tagger-storage` (click its name at the top, or via **Workers & Pages**).
+2. Open **Bindings** (or **Settings** → **Bindings**) → **Add binding** → **R2 bucket**.
+3. **Variable name:** `BUCKET` (capitals, exactly like that).
+4. **R2 bucket:** `match-tagger`.
+5. Click **Add binding** / **Deploy**.
+
+### 5 · Set your password
+
+1. In your Worker, go to **Settings** → **Variables and Secrets** → **Add**.
+2. **Type:** **Secret**.
+3. **Variable name:** `ADMIN_PASSWORD` (capitals, exactly like that).
+4. **Value:** the password you want to log in with. Make it long, for example four random words. Anyone with this password can see and delete your videos.
+5. Click **Deploy**.
+
+### 6 · Check it
+
+1. On your Worker's page, find its address. It looks like `match-tagger-storage.yourname.workers.dev`.
+2. Open that address in your browser. You should see:
+   **"Match Tagger storage is ready."**
+3. If it says something is missing, redo step 4 or 5. The names `BUCKET` and `ADMIN_PASSWORD` must match exactly.
+
+Write down the address. You need it to log in.
+
+---
+
+## Setup · part 2 · the website
+
+1. Unzip this file.
+2. Log in at **app.netlify.com**, open your project and go to **Deploys**.
+3. Drag the folder **match-tagger-site** onto the box at the bottom ("Drag and drop your project output folder here").
+4. Open your site.
+   - **First time on this computer:** choose **Use online storage**.
+   - **Already using a folder:** click the status at the top right → **Switch to online storage**.
+5. Fill in your storage address (`match-tagger-storage.yourname.workers.dev`) and your password → **Log in**.
+
+At the top right you now see **Saved online**.
+
+### Bring your work over
+
+- **Matches and tags:** if you used this browser before (with the folder or without), all matches in it are uploaded automatically when you log in. On another computer, log in there once as well and its matches are added too.
+- **Matches from the Claude version:** **Analyses → Open backup** and choose a backup file you saved there.
+- **Videos:** click **Saved online** (top right) → **Upload videos** and select your match videos. You can select many at once. Matches that were tagged on a video with the same file name are linked automatically.
+
+---
+
+## Daily use
+
+- **New match:** create it, then pick the video from your online storage, or click **Upload from this computer**. The video plays right away and uploads in the background, so you can start tagging immediately.
+- **Keep the tab open while uploading.** The status at the top right shows the progress. If an upload stops (internet drop, closed tab), choose the same file again and it continues where it stopped.
+- **Live tagging:** works as before. After the match, click **Add video & sync** and upload or pick the video.
+- **Another computer:** open the site, choose **Use online storage** and log in. Everything is there. You stay logged in for 30 days per browser.
+- **Exports:** clips and presentations download to your computer. Click **Also save online** to keep a copy in your storage (folder **Exports**).
+- **Space used / download / delete videos:** click **Saved online** at the top right. You see every video, its size and which match uses it, with **Download** and **Delete** buttons. In a match you also find **Download video** under **Setup**.
+- **Log out:** **Saved online** → **Log out**.
+- **Change your password:** change the `ADMIN_PASSWORD` secret in Cloudflare (step 5). Every browser then has to log in again.
+
+## How long uploads take
+
+A full match of 3 GB takes about 20 minutes at an upload speed of 20 Mbps, and about 7 minutes at 60 Mbps. Check your upload speed at **fast.com** (click *Show more info*).
+
+## Updating the storage service
+
+When a new version of `storage-service/worker.js` comes with an update (for example version 2, which adds downloads):
+
+1. **Workers & Pages** → **match-tagger-storage** → **Edit code**.
+2. Select all the code in the editor, delete it, and paste the new `worker.js`.
+3. Click **Deploy**. Your bucket, password and videos stay exactly as they are.
+
+## Troubleshooting
+
+| Problem | Fix |
+|---|---|
+| "Cannot reach …" when logging in | Check the address. Open it in a browser: it must say "Match Tagger storage is ready". |
+| "The storage is not finished" | The `BUCKET` binding or the `ADMIN_PASSWORD` secret is missing or misspelled (setup steps 4 and 5). |
+| "Wrong password" | Use exactly the value of `ADMIN_PASSWORD`. Changed it? Log in with the new one. |
+| A video does not play | Use .mp4 (H.264). Most cameras and Veo export this. Other formats can be stored, but your browser may not play them. |
+| Download opens the video in a tab instead of saving it | Your storage service is still version 1. Update it (see *Updating the storage service*). |
+| Upload stopped | Click **Try again** in the upload list, or choose the same file again. |
+| "Not logged in" at the top right | Your 30 days are over or the password changed. Click it and log in again. Your work in this browser is kept and saved online after you log in. |
