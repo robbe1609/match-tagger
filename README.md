@@ -115,6 +115,13 @@ Players from another group: on an attendance page click **Other team players…*
 
 Your old planners' data comes as a file, `planner-import.json`. On the Calendar page, scroll down and click **Import planner data**, then choose that file. It adds your month calendar, your saved week plans and all fixtures with their squads. Matches that are already in the app (same date and opponent) are updated instead of duplicated, and players are matched to your squad by name.
 
+## Match types
+
+Every match is a **Competition**, **Cup** or **Friendly** match. Pick it in the **Match type** dropdown when you add a match (calendar **+ Match** or **New match**), on the match page (**Edit match**) or in the tagger under **Setup**. Existing matches count as Competition.
+
+- **Colours:** competition yellow, cup purple, friendly teal, in the calendar, its PDF/PowerPoint export, and as a small label in the match lists.
+- **Filter:** next to **Season** you find **Matches: All / Competition / Cup / Friendly**. It applies to Analyses, Players (cards, table and chart, including the 50% line and the PDF), each player's page and Team. The choice is remembered in this browser. The Overview always shows all matches.
+
 ## Players chart
 
 On **Players**, click **Chart** (next to Cards and Table).

@@ -925,6 +925,10 @@ html.locked body>*:not(#gate):not(#toasts){visibility:hidden}
 .cal-ev.mt{background:#FFC000;color:#0B0F14;border:0;cursor:pointer}
 .cal-ev.mt:hover{filter:brightness(1.07)}
 .cal-ev.mt i{font-style:normal;font-weight:800;opacity:.65}
+.cal-ev.mt.mt-cup,.lg.mt.mt-cup{background:#8E5BD0;color:#FFFFFF}
+.cal-ev.mt.mt-friendly,.lg.mt.mt-friendly{background:#2EB8A6;color:#0B0F14}
+.mt-tag{display:inline-block;vertical-align:1px;font-family:var(--f-body);font-size:11px;font-weight:700;letter-spacing:.02em;text-transform:none;line-height:1;padding:3px 7px;border-radius:999px;background:#FFC000;color:#0B0F14;white-space:nowrap}
+.mt-tag.mt-cup{background:#8E5BD0;color:#FFFFFF}.mt-tag.mt-friendly{background:#2EB8A6;color:#0B0F14}
 .cal-ev.off{color:var(--muted);border:1px dashed var(--line)}
 .cal-ev.big{font-size:14px;padding:8px 10px;white-space:normal}
 .cal-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
@@ -1786,7 +1790,7 @@ function finalScore(m){ let f=0,a=0; m.events.forEach(e=>{if(e.type==='goal')f++
 function renderHeader(){
   $('#title').textContent=matchName(M);
   const d=M.date?new Date(M.date+'T12:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'}):'';
-  $('#meta').textContent=[d,M.comp,(M.home?'Home':'Away'),M.halfLen+' min halves'].filter(Boolean).join(' · ');
+  $('#meta').textContent=[d,mtypeOf(M)!=='league'?mtLabel(mtypeOf(M)):'',M.comp,(M.home?'Home':'Away'),M.halfLen+' min halves'].filter(Boolean).join(' · ');
   $('#bugHome').textContent=(M.home?M.usShort:M.themShort)||'HOM';
   $('#bugAway').textContent=(M.home?M.themShort:M.usShort)||'AWY';
   $('#btnReport').dataset.arg=M.id; $('#btnFixture').dataset.arg=M.id; updBackupState();
@@ -2327,6 +2331,7 @@ function renderSetup(){
     <div class="field"><label for="sHome">You play</label><select id="sHome" data-set="home"><option value="1"${M.home?' selected':''}>Home (left on scoreboard)</option><option value="0"${M.home?'':' selected'}>Away (right on scoreboard)</option></select></div>
     <div class="field"><label for="sHalf">Half length (minutes)</label><input id="sHalf" type="number" min="10" max="60" data-set="halfLen" value="${M.halfLen}"></div>
     <div class="field"><label for="sDate">Date</label><input id="sDate" type="date" data-set="date" value="${esc(M.date)}"></div>
+    <div class="field"><label for="sType">Match type</label><select id="sType" data-set="mtype">${mtOptions(mtypeOf(M))}</select></div>
     <div class="field"><label for="sComp">Competition</label><input id="sComp" data-set="comp" placeholder="e.g. Elite U18, matchday 9" value="${esc(M.comp)}"></div>
     <div class="full row-actions"><button class="btn sm" data-backup="match">Save backup of this match</button><button class="btn sm" data-openbackup>Open backup</button><span class="hint">Video file: ${esc(M.videoName||'none yet')}</span>${col&&FSX.kind==='cloud'&&matchCloudVideo(M)?`<button class="btn sm" data-cldl="${esc(matchCloudVideo(M).key)}">Download video</button>`:''}</div>
     ${M.livePhases&&!isLiveTb()?`<div class="full row-actions"><button class="btn sm" id="btnResync">Sync live tags again</button><span class="hint">This match was tagged live and synced to the video${M.sync&&M.sync.o2!==M.sync.o1?' (each half separately)':''}. Use this if the tags are a little early or late.</span></div>`:''}
@@ -2851,9 +2856,17 @@ function withMatch(m,fn){ const prev=M; M=m; try{ return fn(); } finally{ M=prev
 function seasonOf(d){ if(!d||!/^\d{4}-\d{2}/.test(d)) return 'Undated'; const y=+d.slice(0,4), mo=+d.slice(5,7), s=mo>=7?y:y-1; return s+'–'+String((s+1)%100).padStart(2,'0'); }
 function seasons(){ return [...new Set(Object.values(store).map(m=>seasonOf(m.date)))].sort().reverse(); }
 function curSeason(){ const ss=seasons(); if(ui.season&&(ui.season==='all'||ss.includes(ui.season))) return ui.season; return ss[0]||'all'; }
-function matchesIn(season){ return Object.values(store).filter(m=>season==='all'||seasonOf(m.date)===season).sort(byDateDesc); }
+function matchesIn(season,anyType){ const f=anyType?'all':mtFilter(); return Object.values(store).filter(m=>(season==='all'||seasonOf(m.date)===season)&&(f==='all'||mtypeOf(m)===f)).sort(byDateDesc); }
 const oldestFirst=()=>{ try{ return localStorage.getItem('matchTagger.msort')==='asc'; }catch(e){ return false; } };
 function isPlayed(m){ return m.events.length>0||m.phases.h1s!=null; }
+/* match type: competition (default), cup or friendly */
+const MTYPES=[['league','Competition','#FFC000','#0B0F14'],['cup','Cup','#8E5BD0','#FFFFFF'],['friendly','Friendly','#2EB8A6','#0B0F14']];
+const mtypeOf=m=>(m&&MTYPES.some(t=>t[0]===m.mtype))?m.mtype:'league';
+const mtLabel=k=>(MTYPES.find(t=>t[0]===k)||MTYPES[0])[1];
+const mtOptions=v=>MTYPES.map(([k,l])=>`<option value="${k}"${k===(v||'league')?' selected':''}>${l}</option>`).join('');
+const mtTag=m=>`<span class="mt-tag mt-${mtypeOf(m)}">${mtLabel(mtypeOf(m))}</span>`;
+const mtFilter=()=>{ const v=ui.mtf||'all'; return MTYPES.some(t=>t[0]===v)?v:'all'; };
+const mtScope=()=>mtFilter()==='all'?'':mtLabel(mtFilter())+' matches only';
 function goalsFA(m){ let f=0,a=0; m.events.forEach(e=>{ if(e.type==='goal') f++; else if(e.type==='goal_against') a++; }); return {f,a}; }
 function result(m){ const s=goalsFA(m); return s.f>s.a?'W':s.f<s.a?'L':'D'; }
 function recordOf(ms){ const r={p:0,w:0,d:0,l:0,gf:0,ga:0}; ms.forEach(m=>{ const s=goalsFA(m); r.p++; r.gf+=s.f; r.ga+=s.a; r[s.f>s.a?'w':s.f<s.a?'l':'d']++; }); return r; }
@@ -2861,7 +2874,7 @@ function htScore(m){ const p=m.phases, cut=p.h1e!=null?p.h1e:p.h2s; if(cut==null
 function fmtDate(d,o){ if(!d) return 'No date'; try{ return new Date(d+'T12:00:00').toLocaleDateString('en-GB',o||{day:'numeric',month:'short',year:'numeric'}); }catch(e){ return d; } }
 const vsLabel=m=>(m.home?'vs ':'at ')+(m.them||'Opponent');
 function resChip(m){ if(!isPlayed(m)) return '<span class="pill">Not tagged</span>'; const r=result(m); return `<span class="res ${r}" title="${{W:'Win',D:'Draw',L:'Loss'}[r]}">${r}</span>`; }
-function seasonSelect(){ const ss=seasons(), cur=curSeason(); return `<label class="sel"><span>Season</span><select id="seasonSel">${ss.map(s=>`<option value="${esc(s)}"${s===cur?' selected':''}>${esc(s)}</option>`).join('')}<option value="all"${cur==='all'?' selected':''}>All seasons</option></select></label>`; }
+function seasonSelect(){ const ss=seasons(), cur=curSeason(); return `<label class="sel"><span>Season</span><select id="seasonSel">${ss.map(s=>`<option value="${esc(s)}"${s===cur?' selected':''}>${esc(s)}</option>`).join('')}<option value="all"${cur==='all'?' selected':''}>All seasons</option></select></label><label class="sel"><span>Matches</span><select id="mtfSel"><option value="all">All matches</option>${MTYPES.map(([k,l])=>`<option value="${k}"${mtFilter()===k?' selected':''}>${l}</option>`).join('')}</select></label>`; }
 const seasonText=s=>s==='all'?'All seasons':'Season '+s;
 
 /* stats */
@@ -2969,7 +2982,7 @@ function matchRow(m,opts){
   const meta=[m.comp,m.home?'Home':'Away',m.events.length+' tags',m.videoName?'Video: '+m.videoName:'No video yet'].filter(Boolean).join(' · ');
   return `<div class="mrow">
     <div class="mdate"><b>${d?d.getDate():'–'}</b><span>${d?d.toLocaleDateString('en-GB',{month:'short'}):''}${d&&opts.year?' '+String(d.getFullYear()).slice(2):''}</span></div>
-    <div class="mmain"><button class="mtitle" data-go="report" data-arg="${m.id}">${esc(vsLabel(m))}</button><span class="msub">${esc(meta)}</span></div>
+    <div class="mmain"><button class="mtitle" data-go="report" data-arg="${m.id}">${esc(vsLabel(m))}</button><span class="msub">${mtTag(m)} ${esc(meta)}</span></div>
     <div class="mscore">${resChip(m)}<b class="tnum">${isPlayed(m)?finalScore(m):'–'}</b></div>
     <div class="macts"><button class="btn sm" data-go="fixture" data-arg="${m.id}">Match page</button><button class="btn sm" data-go="report" data-arg="${m.id}">Report</button>${opts.del?`<button class="btn sm" data-backupid="${m.id}" title="Save this match to a backup file">Backup</button>`:''}<button class="btn sm${opts.primaryOpen?' primary':''}" data-go="match" data-arg="${m.id}">Open tagger</button>${opts.del?(ui.confirmDel===m.id?`<span class="confirm"><button class="btn sm danger" data-delyes="${m.id}">Delete</button><button class="btn sm" data-delno>Keep</button></span>`:`<button class="btn sm ghost" data-del="${m.id}" aria-label="Delete match">Delete</button>`):''}</div>
   </div>`;
@@ -2978,7 +2991,7 @@ function matchRow(m,opts){
 /* ---------- Home ---------- */
 function renderHome(){
   const el=$('#view-home'), ss=seasons(), season=ss[0]||seasonOf(new Date().toISOString().slice(0,10));
-  const played=matchesIn(season).filter(isPlayed), rec=recordOf(played), last=played[0];
+  const played=matchesIn(season,true).filter(isPlayed), rec=recordOf(played), last=played[0];
   const form=played.slice(0,5).reverse();
   const todayIso=new Date().toISOString().slice(0,10), isUpcoming=m=>!isPlayed(m)&&isoDate(m.date)>todayIso;
   const recent=Object.values(store).filter(m=>!isUntouchedBlank(m)&&!isUpcoming(m)).sort(byDateDesc).slice(0,5);
@@ -3039,6 +3052,7 @@ function renderNew(){
         <div class="field"><label for="nmThemShort">Short name for the scoreboard</label><input id="nmThemShort" maxlength="6" placeholder="GNT"></div>
         <div class="field"><label for="nmHome">We play</label><select id="nmHome"><option value="1">Home</option><option value="0">Away</option></select></div>
         <div class="field"><label for="nmDate">Date</label><input id="nmDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+        <div class="field"><label for="nmType">Match type</label><select id="nmType">${mtOptions('league')}</select></div>
         <div class="field"><label for="nmComp">Competition</label><input id="nmComp" placeholder="e.g. Elite U18, matchday 9" value="${esc(last?last.comp.replace(/,?\s*matchday.*$/i,''):'')}"></div>
         <div class="field"><label for="nmHalf">Half length (minutes)</label><input id="nmHalf" type="number" min="10" max="60" value="${last?last.halfLen:45}"></div>
         <div class="field"><label for="nmFormation">Formation</label><select id="nmFormation">${Object.keys(FORMATIONS).map(f=>`<option${f===(last?last.formation:'4-3-3')?' selected':''}>${f}</option>`).join('')}</select></div>
@@ -3052,7 +3066,7 @@ function createMatch(live){
   const g=id=>$('#'+id), them=g('nmThem').value.trim();
   if(!them){ toast('Enter the opponent.'); g('nmThem').focus(); return; }
   const m=blankMatch(); m.them=them; m.themShort=(g('nmThemShort').value.trim()||them.replace(/[^A-Za-z]/g,'').slice(0,3)||'OPP').toUpperCase().slice(0,6);
-  m.home=g('nmHome').value==='1'; m.date=g('nmDate').value||m.date; m.comp=g('nmComp').value.trim(); m.halfLen=Math.max(5,+g('nmHalf').value||45); m.formation=g('nmFormation').value;
+  m.home=g('nmHome').value==='1'; m.date=g('nmDate').value||m.date; m.comp=g('nmComp').value.trim(); m.mtype=g('nmType')?g('nmType').value:'league'; m.halfLen=Math.max(5,+g('nmHalf').value||45); m.formation=g('nmFormation').value;
   m.us=teamName(); m.usShort=teamShort();
   const src=store[g('nmCopy').value];
   if(src) m.players=src.players.map(p=>({id:newId('p'),num:p.num,name:p.name,slot:p.slot,sq:p.sq||null}));
@@ -3216,7 +3230,7 @@ function pchHtml(list,agg,season,cust){
     ${pch.open?`<div class="pch-pick">
       <div class="pch-acts"><button class="btn sm" data-pchall>All</button><button class="btn sm" data-pchnone>None</button><button class="btn sm" data-pchplayed>Only players with minutes</button>${others.length?`<button class="btn sm" data-pchmine>Hide other team</button>`:''}<span class="hint">Click a name to show or hide it.</span></div>
       <div class="pch-chips">${list.map(s=>`<button class="pch-chip" data-pchtoggle="${s.id}" aria-pressed="${!hide.has(s.id)}"><b>${esc(s.num||'–')}</b>${esc(s.name)}${isOther(s,sx)?'<small>other team</small>':''}</button>`).join('')}</div></div>`:''}
-    <div class="card-head"><h2>${esc(label)}${esc(modeTxt)}</h2><span class="hint">${esc(seasonText(season))}${avg!=null?` · average <b class="pch-avgtxt">${fmt(avg)}</b> over ${vals.length} player${vals.length===1?'':'s'}`:''}${half!=null?` · <b class="pch-halftxt">${pch.last.below}</b> below 50% of available minutes`:''}${pch.mode==='p90'?' · players with minutes only':pch.mode==='match'?' · players with appearances only':''}</span></div>
+    <div class="card-head"><h2>${esc(label)}${esc(modeTxt)}</h2><span class="hint">${esc(seasonText(season))}${mtScope()?' · '+esc(mtScope()):''}${avg!=null?` · average <b class="pch-avgtxt">${fmt(avg)}</b> over ${vals.length} player${vals.length===1?'':'s'}`:''}${half!=null?` · <b class="pch-halftxt">${pch.last.below}</b> below 50% of available minutes`:''}${pch.mode==='p90'?' · players with minutes only':pch.mode==='match'?' · players with appearances only':''}</span></div>
     ${!rows.length?`<div class="empty-state"><strong>No players selected</strong><p>Choose which players to show.</p><button class="btn" data-pchall>Show all players</button></div>`:`
     <div class="pch-chart" style="--avg:${avg!=null?pct(avg):0}%;--half:${half!=null?pct(half):0}%;--grid:${nice.step/nice.max*100}%" role="img" aria-label="${esc(label+modeTxt+' per player, average '+fmt(avg))}">
       ${avg!=null?`<div class="pch-row pch-top" aria-hidden="true"><span></span><div class="pch-track"><span class="pch-avglbl${pct(avg)>78?' r':''}${half!=null&&Math.abs(pct(avg)-pct(half))<14&&avg<half?' r':''}">Average ${fmt(avg)}</span><i class="pch-avg"></i>${half!=null?`<span class="pch-halflbl${pct(half)>78||(Math.abs(pct(avg)-pct(half))<14&&half<avg)?' r':''}">50% ${fmt(half)}</span><i class="pch-half"></i>`:''}</div><span></span></div>`:''}
@@ -3245,7 +3259,7 @@ async function pchPdf(){
     const doc=new window.jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4'}), pw=210, ph=297, mg=14;
     const ink=[11,15,20], mut=[86,97,109], line=[211,218,225], acc=[0,120,191], warn=[199,112,42];
     const nameW=58, valW=22, x0=mg+nameW, x1=pw-mg-valW, bw=x1-x0, rowH=7.2, X=v=>x0+bw*Math.max(0,Math.min(1,v/c.nice.max));
-    const title=c.label+c.modeTxt, sub=teamName()+' · '+seasonText(c.season)+' · '+c.rows.length+' player'+(c.rows.length===1?'':'s')+' · '+new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+    const title=c.label+c.modeTxt, sub=teamName()+' · '+seasonText(c.season)+(mtScope()?' · '+mtScope():'')+' · '+c.rows.length+' player'+(c.rows.length===1?'':'s')+' · '+new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
     const per=Math.floor((ph-mg-60-22)/rowH), pages=Math.ceil(c.rows.length/per);
     for(let pg=0;pg<pages;pg++){
       if(pg) doc.addPage();
@@ -3546,7 +3560,7 @@ function renderReport(){
     const groups=[['1st half',evs.filter(e=>halfOf(e.t)==='1')],['2nd half',evs.filter(e=>halfOf(e.t)==='2')],['Outside the halves',evs.filter(e=>halfOf(e.t)==='x')]].filter(g=>g[1].length);
     el.innerHTML=`<div class="wrap page">
       <button class="back" data-go="matches">← All analyses</button>
-      <header class="page-head"><div><span class="eyebrow">Match report · ${esc(fmtDate(m.date,{weekday:'long',day:'numeric',month:'long',year:'numeric'}))}${m.comp?' · '+esc(m.comp):''}</span><h1>${esc(vsLabel(m))}</h1></div>
+      <header class="page-head"><div><span class="eyebrow">${mtTag(m)} Match report · ${esc(fmtDate(m.date,{weekday:'long',day:'numeric',month:'long',year:'numeric'}))}${m.comp?' · '+esc(m.comp):''}</span><h1>${esc(vsLabel(m))}</h1></div>
         <div class="page-actions"><button class="btn primary" data-go="match" data-arg="${m.id}">Open in tagger</button><button class="btn" id="btnRepCsv">Export CSV</button></div></header>
       <div class="rboard"><div class="side"><span class="tm">${esc(m.home?m.us:m.them)}</span>${m.home?usList:themList}</div>
         <div class="mid"><span class="sc tnum">${hs}<i>–</i>${as}</span>${ht?`<span class="ht">Half-time ${esc(ht)}</span>`:''}${isPlayed(m)?'':'<span class="ht">Not tagged yet</span>'}</div>
@@ -3940,7 +3954,7 @@ function plCalModel(month, forExport){
     for(let i=0;i<7;i++){ const dt=plAdd(d,i), ymd=plYmd(dt), e=plCal.days[ymd], items=[];
       if(e&&e.type==='training') items.push({kind:'training',time:plRange(e),place:e.place||''});
       if(e&&e.type==='off') items.push({kind:'off',reason:e.reason||''});
-      plMatchesOn(ymd).forEach(x=>items.push({kind:'match',time:x.kickoff||'',opponent:x.them||'',venue:x.home?'H':'A',id:x.id}));
+      plMatchesOn(ymd).forEach(x=>items.push({kind:'match',time:x.kickoff||'',opponent:x.them||'',venue:x.home?'H':'A',id:x.id,mtype:mtypeOf(x),mlabel:mtLabel(mtypeOf(x))}));
       days.push({date:ymd,dayNum:dt.getUTCDate(),inMonth:dt.getUTCMonth()===m-1,items}); }
     weeks.push({week:plIsoWeek(d).week,mon,days});
   }
@@ -4069,7 +4083,7 @@ function renderCalendar(){
   const cell=d=>{
     const dow=(plParse(d.date).getUTCDay()+6)%7;
     const items=d.items.map(it=>it.kind==='match'
-      ?`<button class="cal-ev mt" data-go="fixture" data-arg="${it.id}" title="Open the match page"><b>${esc(it.time||'Match')}</b> ${esc(it.opponent)} <i>${it.venue==='H'?'H':'A'}</i></button>`
+      ?`<button class="cal-ev mt mt-${it.mtype}" data-go="fixture" data-arg="${it.id}" title="${esc(it.mlabel)} · open the match page"><b>${esc(it.time||(it.mtype==='league'?'Match':it.mlabel))}</b> ${esc(it.opponent)} <i>${it.venue==='H'?'H':'A'}</i></button>`
       :it.kind==='training'?`<span class="cal-ev tr"><b>${esc(it.time||'Training')}</b>${attTaken(d.date)?`<em class="cal-att" title="Present or late / marked">✓ ${attBadge(d.date)}</em>`:''}${it.place?' '+esc(it.place):''}</span>`
       :`<span class="cal-ev off">${esc(cal.offLabel)}${it.reason?' · '+esc(it.reason):''}</span>`).join('');
     return `<div class="cal-day${d.inMonth?'':' out'}${d.date===today?' today':''}${dow>4?' we':''}${plUi.daySel===d.date?' sel':''}" data-calday="${d.date}" role="button" tabindex="0" aria-label="${esc(fmtDate(d.date,{weekday:'long',day:'numeric',month:'long'}))}"><span class="cal-dn">${d.dayNum}</span>${items}</div>`;
@@ -4089,7 +4103,7 @@ function renderCalendar(){
         <span class="cal-sep"></span><button class="btn" data-attcsv="month">Attendance (.csv) · this month</button><button class="btn" data-attcsv="all">· this season</button></div>
       <p class="hint">The PDF and PowerPoint show this month as one slide, like the week planner. The calendar file adds trainings and matches to Google, Outlook or Apple Calendar. The attendance file opens in Excel: one row per player, one column per training.</p>
       <div class="pl-slidewrap cal-prev"><div class="pl-slide" id="calSlide"></div></div></div>`:''}
-    <div class="cal-legend"><span><i class="lg tr"></i>Training</span><span><i class="lg mt"></i>Match</span><span><i class="lg off"></i>${esc(cal.offLabel)}</span><span class="hint">Click a day to plan it · click a match to open it · click a week number to plan that week</span></div>
+    <div class="cal-legend"><span><i class="lg tr"></i>Training</span>${MTYPES.map(([k,l])=>`<span><i class="lg mt mt-${k}"></i>${l}</span>`).join('')}<span><i class="lg off"></i>${esc(cal.offLabel)}</span><span class="hint">Click a day to plan it · click a match to open it · click a week number to plan that week</span></div>
     <div class="cal-grid" role="grid">
       <div class="cal-h wk">Wk</div>${PL_DOW.map((d,i)=>`<div class="cal-h${i>4?' we':''}">${d}</div>`).join('')}
       ${cal.weeks.map(w=>`<button class="cal-wk${plWeeks[plKey(w.mon)]?' planned':''}" data-go="week" data-arg="${plKey(w.mon)}" title="${plWeeks[plKey(w.mon)]?'Open the week plan':'Plan this week'}"><b>${w.week}</b><span>${plWeeks[plKey(w.mon)]?'Plan':'+ Plan'}</span></button>${w.days.map(cell).join('')}`).join('')}
@@ -4114,7 +4128,7 @@ function renderCalendar(){
 function fxRow(m){
   const d=isoDate(m.date), sel=((m.selection||{}).ids||[]).length, vid=m.videoName?'Video linked':'No video yet';
   return `<div class="mrow"><div class="mdate"><b>${d?+d.slice(8,10):'–'}</b><span>${d?PL_MON[+d.slice(5,7)-1].slice(0,3):''}</span></div>
-    <div class="mmain"><button class="mtitle" data-go="fixture" data-arg="${m.id}">${esc(vsLabel(m))}</button><span class="msub">${esc([m.kickoff,m.comp,m.home?'Home':'Away',sel?sel+' selected':'No squad yet',vid].filter(Boolean).join(' · '))}</span></div>
+    <div class="mmain"><button class="mtitle" data-go="fixture" data-arg="${m.id}">${esc(vsLabel(m))}</button><span class="msub">${mtTag(m)} ${esc([m.kickoff,m.comp,m.home?'Home':'Away',sel?sel+' selected':'No squad yet',vid].filter(Boolean).join(' · '))}</span></div>
     <div class="macts"><button class="btn sm" data-go="fixture" data-arg="${m.id}">Open</button></div></div>`;
 }
 /* day editor (small dialog) */
@@ -4128,7 +4142,7 @@ function renderDayModal(){
       <div class="field full"><label for="cdPlace">Location</label><input id="cdPlace" data-cdf="place" value="${esc(e.place||'')}" placeholder="KTA, The Nest, Tempelhof…"></div></div>
       <div class="cd-att"><span>${attTaken(ymd)?(()=>{ const c=attCount(ymd); return `<b>Attendance:</b> ${c.present} present${c.late?', '+c.late+' late':''}${c.excused?', '+c.excused+' excused':''}${c.absent?', '+c.absent+' absent':''}${c.injured?', '+c.injured+' injured':''}`; })():'<b>Attendance</b> not taken yet'}</span><button class="btn sm primary" data-go="training" data-arg="${ymd}">${attTaken(ymd)?'Edit attendance':'Take attendance'}</button></div>`
     :e.type==='off'?`<div class="field"><label for="cdReason">Reason (optional)</label><input id="cdReason" data-cdf="reason" value="${esc(e.reason||'')}" placeholder="Rest day after a match, exams, pitch closed…"></div>`:''}
-    <div class="cd-matches"><span class="eyebrow">Matches</span>${ms.length?ms.map(m=>`<button class="cal-ev mt big" data-go="fixture" data-arg="${m.id}"><b>${esc(m.kickoff||'')}</b> ${esc(vsLabel(m))}</button>`).join(''):'<span class="hint">No match on this day.</span>'}</div>
+    <div class="cd-matches"><span class="eyebrow">Matches</span>${ms.length?ms.map(m=>`<button class="cal-ev mt mt-${mtypeOf(m)} big" data-go="fixture" data-arg="${m.id}"><b>${esc(m.kickoff||'')}</b> ${esc(vsLabel(m))}</button>`).join(''):'<span class="hint">No match on this day.</span>'}</div>
     <div class="row-actions"><button class="btn primary" data-caladd="${ymd}">+ Match on this day</button><button class="btn" data-go="week" data-arg="${plKey(plYmd(plMonday(dt)))}">Open the week plan</button></div>`;
 }
 
@@ -4143,7 +4157,8 @@ function renderAddMatch(){
       <div class="field"><label for="faKick">Kick-off</label><input id="faKick" type="time" value="15:00"></div>
       <div class="field"><label for="faHome">Venue</label><select id="faHome"><option value="1">Home</option><option value="0">Away</option></select></div>
       <div class="field"><label for="faShort">Short name (scoreboard)</label><input id="faShort" maxlength="6" placeholder="MEC"></div>
-      <div class="field"><label for="faComp">Competition</label><input id="faComp" placeholder="e.g. Elite U18, cup"></div>
+      <div class="field"><label for="faType">Match type</label><select id="faType">${mtOptions('league')}</select></div>
+      <div class="field"><label for="faComp">Competition</label><input id="faComp" placeholder="e.g. Elite U18, matchday 9"></div>
       <div class="field"><label for="faPlace">Location</label><input id="faPlace" placeholder="Pitch / address"></div>
     </div>
     <div class="row-actions"><button class="btn primary" type="submit">Add match</button><button type="button" class="btn ghost" data-fxaddclose>Cancel</button></div></form>`;
@@ -4152,7 +4167,7 @@ function renderAddMatch(){
 function shortFor(name){ return String(name||'').trim().replace(/^(kaa|krc|kvc|kv|fc|sv|rsc|club|k\.|rwdm|oh)\s+/i,'').replace(/[^A-Za-z]/g,'').slice(0,3).toUpperCase()||'OPP'; }
 function plCreateFixture(o){
   const m=blankMatch(); m.players=m.players.filter(()=>false);
-  Object.assign(m,{them:o.them,themShort:(o.short||shortFor(o.them)).toUpperCase().slice(0,6),home:!!o.home,date:o.date,comp:o.comp||'',kickoff:o.kickoff||'',place:o.place||'',us:teamName(),usShort:teamShort()});
+  Object.assign(m,{them:o.them,themShort:(o.short||shortFor(o.them)).toUpperCase().slice(0,6),home:!!o.home,date:o.date,comp:o.comp||'',mtype:MTYPES.some(t=>t[0]===o.mtype)?o.mtype:'league',kickoff:o.kickoff||'',place:o.place||'',us:teamName(),usShort:teamShort()});
   const prev=Object.values(store).filter(x=>x.players&&x.players.some(p=>p.name)).sort(byDateDesc)[0];
   if(prev){ m.formation=prev.formation; m.halfLen=prev.halfLen; }
   m.selection=fxSelDefaults(m); m.updatedAt=Date.now(); m.planned=true;
@@ -4297,7 +4312,7 @@ function renderFixture(){
   const vid=m.videoPath&&typeof videoIndex!=='undefined'?videoIndex.find(v=>v.id===m.videoPath):null;
   const pad=n=>String(n);
   el.innerHTML=`<div class="wrap page">
-    <header class="page-head"><div><button class="back" style="display:block;margin-bottom:6px" data-go="calendar" data-calto="${(d||'').slice(0,7)}">← Calendar</button><span class="eyebrow">${esc([d?fmtDate(d,{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'No date',m.kickoff?'Kick-off '+m.kickoff:'',m.comp].filter(Boolean).join(' · '))}</span>
+    <header class="page-head"><div><button class="back" style="display:block;margin-bottom:6px" data-go="calendar" data-calto="${(d||'').slice(0,7)}">← Calendar</button><span class="eyebrow">${mtTag(m)} ${esc([d?fmtDate(d,{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'No date',m.kickoff?'Kick-off '+m.kickoff:'',m.comp].filter(Boolean).join(' · '))}</span>
       <h1>${esc(vsLabel(m))}</h1><p>${esc([m.home?'Home':'Away',m.place,isPlayed(m)?'Played · '+finalScore(m):''].filter(Boolean).join(' · '))}</p></div>
       <div class="page-actions"><button class="btn" data-fxedit aria-expanded="${plUi.fxEdit}">Edit details</button>${isPlayed(m)?`<button class="btn" data-go="report" data-arg="${m.id}">Match report</button>`:''}<button class="btn primary" data-fxtag="${m.id}">Open in tagger</button></div></header>
     <div class="fx-status">
@@ -4310,6 +4325,7 @@ function renderFixture(){
       <div class="field"><label>Opponent</label><input data-fxf="them" value="${esc(m.them)}"></div><div class="field"><label>Short name</label><input data-fxf="themShort" maxlength="6" value="${esc(m.themShort)}"></div>
       <div class="field"><label>Date</label><input type="date" data-fxf="date" value="${esc(d)}"></div><div class="field"><label>Kick-off</label><input type="time" data-fxf="kickoff" value="${esc(m.kickoff||'')}"></div>
       <div class="field"><label>Venue</label><select data-fxf="home"><option value="1"${m.home?' selected':''}>Home</option><option value="0"${m.home?'':' selected'}>Away</option></select></div>
+      <div class="field"><label>Match type</label><select data-fxf="mtype">${mtOptions(mtypeOf(m))}</select></div>
       <div class="field"><label>Competition</label><input data-fxf="comp" value="${esc(m.comp)}"></div><div class="field"><label>Location</label><input data-fxf="place" value="${esc(m.place||'')}"></div>
       <div class="field"><label>Half length (min)</label><input type="number" min="10" max="60" data-fxf="halfLen" value="${m.halfLen}"></div></div>
       <div class="row-actions">${ui.fxDel===m.id?`<span class="hint">Delete this match, its squad and all its tags?</span><button class="btn danger" data-fxdelyes="${m.id}">Delete for good</button><button class="btn ghost" data-fxdelno>Keep</button>`:`<button class="btn ghost danger" data-fxdel="${m.id}">Delete match</button>`}</div></section>`:''}
@@ -4532,7 +4548,7 @@ document.addEventListener('submit',e=>{
   if(e.target.id==='wkAddStaff'){ e.preventDefault(); e.stopPropagation(); const st=plWeeks[plUi.week], n=$('#wkNewStaff').value.trim(); if(!n) return; st.staff.push({id:plUid(),name:n,present:true}); wkChanged(true); setTimeout(()=>{ const x=$('#wkNewStaff'); if(x) x.focus(); },0); }
   if(e.target.id==='fxAddForm'){ e.preventDefault(); e.stopPropagation(); const v=id=>($('#'+id).value||'').trim();
     if(!v('faThem')){ $('#faThem').focus(); return; }
-    const m=plCreateFixture({them:v('faThem'),short:v('faShort'),date:v('faDate'),kickoff:v('faKick'),home:v('faHome')==='1',comp:v('faComp'),place:v('faPlace')});
+    const m=plCreateFixture({them:v('faThem'),short:v('faShort'),date:v('faDate'),kickoff:v('faKick'),home:v('faHome')==='1',comp:v('faComp'),place:v('faPlace'),mtype:v('faType')});
     plUi.addMatch=null; renderAddMatch(); toast('Match added. Pick the squad below.'); go('fixture',m.id); }
 },true);
 document.addEventListener('keydown',e=>{
@@ -5456,6 +5472,7 @@ document.addEventListener('input',e=>{
 document.addEventListener('change',e=>{
   const t=e.target;
   if(t.id==='seasonSel'){ ui.season=t.value; renderView(); return; }
+  if(t.id==='mtfSel'){ ui.mtf=t.value; try{ localStorage.setItem('matchTagger.mtf',ui.mtf); }catch(err){} renderView(); return; }
   if(t.id==='pvTag'){ pv.ftag=t.value; stopPv(); pv.i=-1; renderPlayer(); return; }
   if(t.id==='pvMatch'){ pv.fmatch=t.value; stopPv(); pv.i=-1; renderPlayer(); return; }
   if(t.id==='pvAuto'){ pv.auto=t.checked; return; }
@@ -5523,6 +5540,7 @@ document.addEventListener('submit',e=>{ e.preventDefault(); const f=e.target;
   if(f.id==='newForm') createMatch(); else if(f.id==='addPlayerForm') addSquadPlayer(); else if(f.id==='editPlayerForm') savePlayerEdit(); else if(f.id==='teamForm') saveTeam(); });
 loadSettings();
 try{ ui.pview=localStorage.getItem('matchTagger.pview')||'cards'; }catch(e){ ui.pview='cards'; }
+try{ ui.mtf=localStorage.getItem('matchTagger.mtf')||'all'; }catch(e){ ui.mtf='all'; }
 const saved=lsLoad();
 if(saved&&saved.store&&Object.keys(saved.store).length){ store=saved.store; Object.values(store).forEach(normalize); Object.keys(store).forEach(id=>{ if(isUntouchedBlank(store[id])) delete store[id]; }); M=store[saved.current]||Object.values(store).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0))[0]||blankMatch(); }
 else { M=blankMatch(); }

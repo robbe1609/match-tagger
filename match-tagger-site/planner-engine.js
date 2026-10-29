@@ -211,6 +211,7 @@ function slideList(st, withDetail){
   return list;
 }
 /* Month calendar: `cal` is prepared by the app (weeks -> days -> items), this only lays it out. */
+const MT_FILL = {league:null, cup:'8E5BD0', friendly:'2EB8A6'}, MT_INK = {cup:'FFFFFF', friendly:'0B0F14'}, MT_NAME = {league:'Competition', cup:'Cup', friendly:'Friendly'};
 function calendarShapes(st, cal){
   const out = [];
   out.push({t:'text', x:0.44, y:0.28, w:7.2, h:0.55, paras:[{runs:[
@@ -219,14 +220,17 @@ function calendarShapes(st, cal){
   // legend, laid out from the right edge
   const leg = [{k:'training', t:'Training'}];
   if (cal.projected) leg.push({k:'projected', t:'Not planned yet'});
-  leg.push({k:'match', t:'Match'});
+  const types = [];
+  (cal.weeks||[]).forEach(w=>w.days.forEach(d=>d.inMonth&&d.items.forEach(it=>{ if (it.kind==='match' && types.indexOf(it.mtype||'league')<0) types.push(it.mtype||'league'); })));
+  if (types.length <= 1 && (types[0]||'league') === 'league') leg.push({k:'match', t:'Match', mt:'league'});
+  else ['league','cup','friendly'].filter(t=>types.indexOf(t)>=0).forEach(t=>leg.push({k:'match', t:MT_NAME[t], mt:t}));
   let lx = 12.89;
   leg.slice().reverse().forEach(l=>{
     const tw = l.t.length * 11/72 * 0.6 + 0.12;
     lx -= tw;
     out.push({t:'text', x:lx, y:0.42, w:tw, h:0.26, valign:'middle', paras:[para(l.t, 11, C.muted, false, 13)], name:'Legend'});
     lx -= 0.08 + 0.34;
-    if (l.k === 'match') out.push({t:'rect', x:lx, y:0.46, w:0.34, h:0.18, fill:C.gym, r:0.04, name:'Legend swatch'});
+    if (l.k === 'match') out.push({t:'rect', x:lx, y:0.46, w:0.34, h:0.18, fill:MT_FILL[l.mt]||C.gym, r:0.04, name:'Legend swatch'});
     else out.push({t:'rect', x:lx, y:0.46, w:0.34, h:0.18, fill:C.blockFill, line:C.kern2, lineW:1, dash:l.k==='projected', r:0.04, name:'Legend swatch'});
     lx -= 0.32;
   });
@@ -268,10 +272,10 @@ function calendarShapes(st, cal){
           return;
         }
         const isM = it.kind === 'match';
-        if (isM) out.push({t:'rect', x:ix, y:iy, w:iw, h:ih, fill:C.gym, r:0.04, name:'Match'});
+        if (isM) out.push({t:'rect', x:ix, y:iy, w:iw, h:ih, fill:MT_FILL[it.mtype]||C.gym, r:0.04, name:'Match'});
         else out.push({t:'rect', x:ix, y:iy, w:iw, h:ih, fill:C.blockFill, line:C.kern2, lineW:1, dash:!!it.projected, r:0.04, name:'Training'});
-        const ink = isM ? C.dark : C.fg, ink2 = isM ? C.dark : C.muted;
-        const l1 = isM ? ('Match' + (it.time ? ' · ' + it.time : '')) : (it.time || 'Training');
+        const ink = isM ? (MT_INK[it.mtype]||C.dark) : C.fg, ink2 = ink === C.fg ? C.muted : ink;
+        const l1 = isM ? ((it.mtype && it.mtype !== 'league' ? MT_NAME[it.mtype] : 'Match') + (it.time ? ' · ' + it.time : '')) : (it.time || 'Training');
         const l2 = isM ? [it.opponent, it.venue ? '(' + it.venue + ')' : ''].filter(Boolean).join(' ') : (it.place || '');
         const single = l1 + (l2 ? ' · ' + l2 : '');
         const paras = one
