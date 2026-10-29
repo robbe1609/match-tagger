@@ -122,6 +122,18 @@ Your old planners' data comes as a file, `planner-import.json`. On the Calendar 
 - Photos are cropped to a portrait (the top of the picture is kept) and shrunk to a small JPG, then saved in your storage (`Data/photos`) so they show on every computer. Each browser also keeps a copy, so they load instantly and work offline.
 - Use JPG or PNG. iPhone photos in HEIC format may not open in Chrome: share them as JPG first.
 
+## Matches without video (entered by hand)
+
+For a match you didn't film and didn't tag live, type in what happened.
+
+- **Start:** on the match page click **Enter result by hand** (or, under Video, **No video: enter the result by hand**). For a match that isn't in the calendar yet: **New match** → **Create and enter by hand**.
+- **Line-up:** for each player choose **Start**, **Bench** or **–** (not in the squad). Players picked for the matchday squad are already on the bench.
+- **Match length:** half length, plus added time if you know it.
+- **What happened:** add **Goal** (scorer, assist or own goal by the opponent), **Goal against**, **Substitution** (off and on), **Yellow card** and **Red card**, each with its minute: `23`, `45+2`, or `HT` for a change at half-time. In a 40-minute half the second half starts at minute 41. Rows sort themselves by minute.
+- The page checks as you type (a substitute who was already on, a scorer who wasn't on the pitch) and shows each player's minutes straight away.
+- The match then counts everywhere: score, report, minutes, goals and assists, the players chart and the 50% line. **Edit match data** on the report or match page opens it again.
+- A match that was tagged on video keeps its data from the tagger and can't be entered by hand.
+
 ## Match types
 
 Every match is a **Competition**, **Cup** or **Friendly** match. Pick it in the **Match type** dropdown when you add a match (calendar **+ Match** or **New match**), on the match page (**Edit match**) or in the tagger under **Setup**. Existing matches count as Competition.

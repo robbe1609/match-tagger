@@ -466,6 +466,34 @@ button.res:hover{transform:translateY(-1px)}
 .hbar .val{font-weight:700;text-align:right}
 .stats-t td:not(.name){text-align:center}
 
+.mn-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:16px;align-items:start}
+@media (max-width:980px){.mn-grid{grid-template-columns:minmax(0,1fr)}}
+.mn-side{display:flex;flex-direction:column;gap:16px;min-width:0}
+.mn-roster{display:flex;flex-direction:column;gap:4px}
+.mn-pl{display:grid;grid-template-columns:30px minmax(0,1fr) auto 44px;align-items:center;gap:8px;padding:4px 6px;border-radius:9px;border:1px solid transparent}
+.mn-pl.start{background:var(--accent-soft);border-color:rgba(0,120,191,.35)}
+.mn-pl.bench{background:var(--surface-2);border-color:var(--line)}
+.mn-pl .num{font-family:var(--f-display);font-weight:800;font-size:17px;color:var(--muted);text-align:right}
+.mn-pl .nm{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mn-pl .nm small{margin-left:6px;font-size:11px;font-weight:700;color:var(--muted)}
+.mn-pl .seg button{padding:4px 9px}
+.mn-mins{font-variant-numeric:tabular-nums;text-align:right;font-size:14px}
+.mn-alert{color:var(--warn);font-weight:700}
+.mn-len{display:flex;flex-wrap:wrap;gap:10px 16px}
+.mn-f{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--muted)}
+.mn-f input,.mn-f select{border:1px solid var(--line);background:var(--surface-2);border-radius:7px;padding:5px 8px;font:inherit;font-size:14px;color:var(--ink);min-width:0}
+.mn-len input{width:64px}
+.mn-adds{display:flex;flex-wrap:wrap;gap:6px}
+.mn-adds svg{width:13px;height:13px}
+.mn-rows{display:flex;flex-direction:column;gap:6px}
+.mn-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;border:1px solid var(--line);border-left:4px solid var(--neutral);border-radius:10px;padding:7px 10px;background:var(--surface)}
+.mn-row.k-goal{border-left-color:var(--goal)}.mn-row.k-against{border-left-color:var(--against)}.mn-row.k-yc{border-left-color:var(--yellow)}.mn-row.k-rc{border-left-color:var(--against)}.mn-row.k-sub{border-left-color:var(--accent)}
+.mn-row.warn{background:color-mix(in srgb,var(--warn) 7%,var(--surface))}
+.mn-kind{font-family:var(--f-display);font-weight:700;font-size:16px;min-width:108px}
+.mn-min input{width:66px}
+.mn-row select{max-width:210px}
+.mn-del{margin-left:auto}
+.mn-warn{flex-basis:100%;margin:0;font-size:13px;color:var(--warn);font-weight:600}
 /* Players */
 .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
 .pcard{position:relative;overflow:hidden;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px 12px;display:flex;flex-direction:column;gap:4px;color:var(--ink);transition:border-color .15s,transform .15s}
@@ -1316,6 +1344,7 @@ body.tb-dragging,body.tb-dragging *{cursor:grabbing!important;user-select:none!i
 <section class="view" id="view-players" hidden></section>
 <section class="view" id="view-player" hidden></section>
 <section class="view" id="view-tactics" hidden></section>
+<section class="view" id="view-entry" hidden></section>
 <section class="view" id="view-team" hidden></section>
 <section class="view" id="view-new" hidden></section>
 <section class="view" id="view-match" hidden>
@@ -2945,24 +2974,25 @@ function matchMin(t){ const c=matchClock(t); return c.phase==='pre'?null:c.secs/
 /* ---------- Router ---------- */
 let view='home', viewArg=null;
 const sessionFiles={};
-const VIEWS=['home','calendar','week','fixture','training','tactics','matches','report','players','player','team','new','match'];
+const VIEWS=['home','calendar','week','fixture','training','tactics','entry','matches','report','players','player','team','new','match'];
 function parseHash(){ let h=''; try{ h=(location.hash||'').slice(1); }catch(e){}
   if(/^(home|matches|players|team|new|calendar|tactics)$/.test(h)) return [h,null];
   const w=h.match(/^week(?:-(\d{4}-W\d{2}))?$/); if(w) return ['week',w[1]||null];
   const tr=h.match(/^training-(\d{4}-\d{2}-\d{2})$/); if(tr) return ['training',tr[1]];
-  const k=h.match(/^(match|report|player|fixture|tactics)-([A-Za-z0-9]+)$/); return k?[k[1],k[2]]:['calendar',null]; }
-const navKey=v=>({report:'matches',match:'matches',player:'players',new:'calendar',fixture:'calendar',training:'calendar'}[v]||v);
+  const k=h.match(/^(match|report|player|fixture|tactics|entry)-([A-Za-z0-9]+)$/); return k?[k[1],k[2]]:['calendar',null]; }
+const navKey=v=>({entry:'matches',report:'matches',match:'matches',player:'players',new:'calendar',fixture:'calendar',training:'calendar'}[v]||v);
 function go(v,arg){
   if(typeof plUi!=='undefined'&&(plUi.daySel||plUi.addMatch)){ plUi.daySel=null; plUi.addMatch=null; renderDayModal(); renderAddMatch(); }
   if(!VIEWS.includes(v)) v='calendar';
   if(v==='fixture'&&!(arg&&store[arg])){ v='calendar'; arg=null; }
+  if(v==='entry'&&!(arg&&store[arg])){ v='matches'; arg=null; }
   if(v==='training'&&!(arg&&/^\d{4}-\d{2}-\d{2}$/.test(arg))){ v='calendar'; arg=null; }
   if(v==='week'&&!(arg&&/^\d{4}-W\d{2}$/.test(arg))) arg=plCurKey();
   if(v==='match'||v==='report'){ if(!(arg&&store[arg])){ if(v==='match'&&store[M.id]) arg=M.id; else { v='matches'; arg=null; } } }
   if(v==='player'&&!(arg&&SQ(arg))){ v='players'; arg=null; }
   if(v==='tactics'){ if(arg&&tbBoards[arg]){ tbUi.cur=arg; tbStoreLocal(); } arg=tbCur().id; }
   if(view==='tactics'&&(v!=='tactics'||arg!==viewArg)){ tbUi.drag=null; tbUi.rename=false; if(v!=='tactics'||arg!==viewArg) tbUi.sel=null; }
-  if(!['match','report','player','fixture','week','training','tactics'].includes(v)) arg=null;
+  if(!['match','report','player','fixture','week','training','tactics','entry'].includes(v)) arg=null;
   if(view==='training'&&(v!=='training'||arg!==viewArg)) plUi.attQ='';
   if(view==='fixture'&&(v!=='fixture'||arg!==viewArg)){ plUi.fxEdit=false; plUi.fxQ=''; ui.fxDel=null; }
   if(view==='match'&&v!=='match'){ V().pause(); stopClips(); ui.tray=null; ui.numBuf=''; }
@@ -2976,7 +3006,7 @@ function go(v,arg){
   try{ window.scrollTo(0,0); }catch(e){}
 }
 window.addEventListener('hashchange',()=>{ let h=''; try{ h=location.hash.slice(1); }catch(e){} if(ui.hashLock===h){ ui.hashLock=null; return; } const [v,a]=parseHash(); if(v!==view||a!==viewArg) go(v,a); });
-function renderView(){ const f={tactics:renderTactics,training:renderTraining,calendar:renderCalendar,week:renderWeek,fixture:renderFixture,home:renderHome,matches:renderMatches,report:renderReport,players:renderPlayers,player:renderPlayer,team:renderTeam,new:renderNew}[view]; if(f) f(); }
+function renderView(){ const f={entry:renderEntry,tactics:renderTactics,training:renderTraining,calendar:renderCalendar,week:renderWeek,fixture:renderFixture,home:renderHome,matches:renderMatches,report:renderReport,players:renderPlayers,player:renderPlayer,team:renderTeam,new:renderNew}[view]; if(f) f(); }
 function watchEvent(mid,eid){ const m=store[mid]; const e=m&&m.events.find(x=>x.id===eid); if(!e) return; ui.pendingSeek=e.t; go('match',mid); if(hasVideo()){ ui.pendingSeek=null; seek(e.t-3); } else toast('Load the video for this match to watch the moment.'); }
 
 const IC={
@@ -2991,7 +3021,7 @@ const PITCH_SVG=`<svg class="hero-lines" viewBox="0 0 1050 680" fill="none" stro
 
 function matchRow(m,opts){
   opts=opts||{}; const d=m.date?new Date(m.date+'T12:00:00'):null;
-  const meta=[m.comp,m.home?'Home':'Away',m.events.length+' tags',m.videoName?'Video: '+m.videoName:'No video yet'].filter(Boolean).join(' · ');
+  const meta=[m.comp,m.home?'Home':'Away',m.manualData?'Entered by hand':m.events.length+' tags',m.manualData?'':(m.videoName?'Video: '+m.videoName:'No video yet')].filter(Boolean).join(' · ');
   return `<div class="mrow">
     <div class="mdate"><b>${d?d.getDate():'–'}</b><span>${d?d.toLocaleDateString('en-GB',{month:'short'}):''}${d&&opts.year?' '+String(d.getFullYear()).slice(2):''}</span></div>
     <div class="mmain"><button class="mtitle" data-go="report" data-arg="${m.id}">${esc(vsLabel(m))}</button><span class="msub">${mtTag(m)} ${esc(meta)}</span></div>
@@ -3070,7 +3100,7 @@ function renderNew(){
         <div class="field"><label for="nmFormation">Formation</label><select id="nmFormation">${Object.keys(FORMATIONS).map(f=>`<option${f===(last?last.formation:'4-3-3')?' selected':''}>${f}</option>`).join('')}</select></div>
         <div class="field full"><label for="nmCopy">Lineup</label><select id="nmCopy">${recent.map((m,i)=>`<option value="${m.id}"${i===0?' selected':''}>Copy from ${esc(fmtDate(m.date))} ${esc(vsLabel(m))}</option>`).join('')}<option value=""${recent.length?'':' selected'}>Start with an empty lineup</option></select></div>
       </div>
-      <div class="row-actions"><button class="btn primary" type="submit">Create and open tagger</button><button class="btn" type="button" id="nmLive" title="No video needed. Add the video later and sync it.">Create and tag live</button><button class="btn ghost" type="button" data-go="home">Cancel</button></div>
+      <div class="row-actions"><button class="btn primary" type="submit">Create and open tagger</button><button class="btn" type="button" id="nmLive" title="No video needed. Add the video later and sync it.">Create and tag live</button><button class="btn" type="button" id="nmManual" title="No video and no live tags: type in the line-up, goals, substitutions and cards with their minute.">Create and enter by hand</button><button class="btn ghost" type="button" data-go="home">Cancel</button></div>
     </form></div>`;
   setTimeout(()=>{ const i=$('#nmThem'); if(i) i.focus(); },30);
 }
@@ -3084,7 +3114,8 @@ function createMatch(live){
   if(src) m.players=src.players.map(p=>({id:newId('p'),num:p.num,name:p.name,slot:p.slot,sq:p.sq||null}));
   if(videoFile) unloadVideo();
   if(live===true){ m.timebase='live'; m.live={origin:Date.now()}; }
-  store[m.id]=m; M=m; ui.tab='events'; ui.tray=null; ui.editLineup=!src&&live!==true; ui.clip=null; save();
+  store[m.id]=m; M=m; ui.tab='events'; ui.tray=null; ui.editLineup=!src&&live!==true&&live!=='manual'; ui.clip=null; save();
+  if(live==='manual'){ go('entry',m.id); toast('Pick who started and who was on the bench, then add goals, substitutions and cards.'); return; }
   go('match',m.id);
   if(live===true){ toast('Live tagging is on. Press "Start 1st half" at kick-off. Add the video later and sync it.'); return; }
   toast(src?'Match created with the lineup from '+fmtDate(src.date)+'. Load the match video to start.':'Match created. Fill in your lineup, then load the match video.');
@@ -3381,6 +3412,131 @@ document.addEventListener('click',e=>{ const b=e.target.closest('[data-phrm]'); 
   if(f&&s) phSave(s,f).then(ok=>{ if(ok){ renderView(); toast('Photo added for '+s.name+'.'); } }); }));
 document.addEventListener('dragleave',e=>{ const z=e.target.closest&&e.target.closest('[data-phdrop]'); if(z) z.classList.remove('over'); });
 
+/* =================== MATCH DATA BY HAND ===================
+   For matches without video or live tags: line-up, goals, subs and cards typed in with their minute.
+   Kept in m.manual and turned into the normal match model (players, events, halves) so every stat and chart counts it.
+   The match clock is built on a fixed timeline: 1st half from 0 s, 15 min break, then the 2nd half. */
+const MN_KINDS=[['goal','Goal'],['against','Goal against'],['sub','Substitution'],['yc','Yellow card'],['rc','Red card']];
+const mnLabel=k=>(MN_KINDS.find(x=>x[0]===k)||['',''])[1];
+const mnEditable=m=>!!m&&!m.events.some(e=>!e.man&&!['formation','swap'].includes(e.type));
+function mnInit(m){
+  if(m.manual) return m.manual;
+  const lineup={};
+  m.players.forEach(p=>{ let sid=p.sq; if(!sid&&String(p.name||'').trim()){ const s=findOrCreateSq(p.name,p.num); sid=s&&s.id; if(sid) p.sq=sid; }
+    if(sid) lineup[sid]=(p.slot!=null&&p.slot<11)?'start':'bench'; });
+  if(!Object.keys(lineup).length&&m.selection&&(m.selection.ids||[]).length) m.selection.ids.forEach(sid=>{ if(SQ(sid)) lineup[sid]='bench'; });
+  m.manual={add1:0,add2:0,lineup,rows:[]}; return m.manual; }
+/* "23", "45+2", "HT", "67'" -> {half, idx} where idx is the minute inside that half (1-based) */
+function mnParse(str,L){ const s=String(str==null?'':str).trim().toUpperCase().replace(/['’`]/g,'').replace(/\s+/g,''); if(!s) return null;
+  if(s==='HT'||s==='RUST'||s==='HALFTIME') return {ht:true};
+  let a,b=0, mm=s.match(/^(\d{1,3})\+(\d{1,2})$/); if(mm){ a=+mm[1]; b=+mm[2]; } else if(/^\d{1,3}$/.test(s)) a=+s; else return {bad:true};
+  if(a<=L) return {half:1,idx:Math.max(1,a+b)}; return {half:2,idx:a-L+b}; }
+function mnBuild(m){
+  const mn=mnInit(m), L=+m.halfLen||45; let a1=Math.max(0,+mn.add1||0), a2=Math.max(0,+mn.add2||0);
+  const parsed={}; mn.rows.forEach(r=>{ const p=mnParse(r.min,L); parsed[r.id]=p; if(p&&p.half===1) a1=Math.max(a1,p.idx-L); if(p&&p.half===2) a2=Math.max(a2,p.idx-L); });
+  const h1e=(L+a1)*60, h2s=h1e+900, h2e=h2s+(L+a2)*60; m.phases={h1s:0,h1e,h2s,h2e};
+  const tOf=p=>p.ht?h1e+450:p.half===1?(p.idx-1)*60+30:h2s+(p.idx-1)*60+30;
+  // players: starters keep their old slot when they had one
+  const old={}; m.players.forEach(p=>{ if(p.sq) old[p.sq]=p; });
+  const bySq=sid=>SQ(sid), order=Object.keys(mn.lineup).filter(sid=>bySq(sid)).sort((x,y)=>(+bySq(x).num||999)-(+bySq(y).num||999));
+  const starters=order.filter(sid=>mn.lineup[sid]==='start').slice(0,11), bench=order.filter(sid=>mn.lineup[sid]==='bench'||(mn.lineup[sid]==='start'&&!starters.includes(sid)));
+  const used=new Set(); starters.forEach(sid=>{ const o=old[sid]; if(o&&o.slot!=null&&o.slot<11&&!used.has(o.slot)) used.add(o.slot); });
+  let free=[...Array(11).keys()].filter(i=>!used.has(i));
+  const pl=sid=>{ const s=bySq(sid), o=old[sid]; return {id:o?o.id:newId('p'),num:s.num||'',name:s.name,sq:sid,slot:null}; };
+  const players=starters.map(sid=>{ const p=pl(sid), o=old[sid]; p.slot=(o&&o.slot!=null&&o.slot<11&&used.has(o.slot))?o.slot:free.shift(); return p; }).concat(bench.map(pl));
+  // the tagger keeps unlinked players that are used in swaps/formations out of the way
+  m.players=players; const pid=sid=>{ const p=players.find(x=>x.sq===sid); return p?p.id:null; };
+  const evs=[];
+  mn.rows.forEach(r=>{ const p=parsed[r.id]; if(!p||p.bad) return; const t=tOf(p), base={id:r.id,t,man:true};
+    if(r.k==='goal') evs.push(Object.assign(base,{type:'goal'},r.a==='__og'?{og:true}:{pid:pid(r.a)||undefined,assist:pid(r.b)||undefined}));
+    else if(r.k==='against') evs.push(Object.assign(base,{type:'goal_against'}));
+    else if(r.k==='sub'){ if(pid(r.a)&&pid(r.b)) evs.push(Object.assign(base,{type:'sub',out:pid(r.a),in:pid(r.b)})); }
+    else if(r.k==='yc'||r.k==='rc'){ if(pid(r.a)) evs.push(Object.assign(base,{type:r.k==='yc'?'yellow':'red',pid:pid(r.a)})); } });
+  m.events=m.events.filter(e=>!e.man&&['formation','swap'].includes(e.type)).concat(evs);
+  delete m.timebase; delete m.live; m.manualData=true;
+  return {parsed,starters,bench}; }
+/* row-level warnings: who is on the pitch at that moment */
+function mnWarnings(m,parsed){ const mn=m.manual, L=+m.halfLen||45, warn={};
+  const on=new Set(Object.keys(mn.lineup).filter(s=>mn.lineup[s]==='start')), off=new Set(), day=new Set(Object.keys(mn.lineup));
+  const key=p=>!p||p.bad?9e9:p.ht?5000:p.half===1?p.idx:10000+p.idx;
+  mn.rows.slice().sort((x,y)=>key(parsed[x.id])-key(parsed[y.id])).forEach(r=>{ const p=parsed[r.id], w=[];
+    if(!p) w.push('Enter the minute.'); else if(p.bad) w.push('Use a minute like 23, 45+2 or HT.');
+    const nm=sid=>(SQ(sid)||{}).name||'This player';
+    if(r.k==='sub'){ if(!r.a||!r.b) w.push('Choose who went off and who came on.');
+      else { if(!on.has(r.a)) w.push(nm(r.a)+' was not on the pitch.'); if(on.has(r.b)) w.push(nm(r.b)+' was already on the pitch.'); if(off.has(r.b)) w.push(nm(r.b)+' already went off.'); on.delete(r.a); off.add(r.a); on.add(r.b); } }
+    if(r.k==='goal'&&r.a&&r.a!=='__og'&&!on.has(r.a)) w.push(nm(r.a)+' was not on the pitch at that moment.');
+    if(r.k==='goal'&&r.a&&r.a===r.b) w.push('Scorer and assist are the same player.');
+    if((r.k==='yc'||r.k==='rc')&&!r.a) w.push('Choose the player.');
+    if(r.k==='rc'&&r.a) on.delete(r.a);
+    [r.a,r.b].forEach(s=>{ if(s&&s!=='__og'&&!day.has(s)) w.push(nm(s)+' is not in the matchday squad.'); });
+    if(w.length) warn[r.id]=w; });
+  return warn; }
+function renderEntry(){
+  const el=$('#view-entry'), m=store[viewArg]; if(!m){ go('matches'); return; }
+  if(!mnEditable(m)){ el.innerHTML=`<div class="wrap page"><button class="back" data-go="report" data-arg="${m.id}">← Match report</button>
+    <div class="empty-state"><strong>This match is tagged on video</strong><p>Its minutes, goals and substitutions come from the tagger. Change them there.</p><button class="btn primary" data-go="match" data-arg="${m.id}">Open in tagger</button></div></div>`; return; }
+  /* until the first change, work on a copy: just looking must not turn a planned match into a played 0-0 */
+  const w=m.manualData?m:JSON.parse(JSON.stringify(m)), mn=mnInit(w), b=mnBuild(w), warn=mnWarnings(w,b.parsed), L=+m.halfLen||45, d=isoDate(m.date);
+  const s=goalsFA(w), hs=m.home?s.f:s.a, as=m.home?s.a:s.f;
+  const ss=seasonOf(d||new Date().toISOString().slice(0,10));
+  const roster=squad().slice().sort((x,y)=>(isOther(x,ss)-isOther(y,ss))||(+x.num||999)-(+y.num||999)||x.name.localeCompare(y.name));
+  const nStart=Object.values(mn.lineup).filter(v=>v==='start').length, nBench=Object.values(mn.lineup).filter(v=>v==='bench').length;
+  const day=roster.filter(x=>mn.lineup[x.id]), opt=(sel,list,extra)=>`<option value="">–</option>${extra||''}${list.map(x=>`<option value="${x.id}"${sel===x.id?' selected':''}>${esc((x.num?x.num+' · ':'')+x.name)}</option>`).join('')}`;
+  const benchList=day.filter(x=>mn.lineup[x.id]==='bench');
+  const mins=withMatch(w,()=>minutesFor(w))||{}, minOf=sid=>{ const p=w.players.find(x=>x.sq===sid); return p&&mins[p.id]!=null?mins[p.id]:0; };
+  const key=r=>{ const p=b.parsed[r.id]; return !p||p.bad?9e9:p.ht?5000:p.half===1?p.idx:10000+p.idx; };
+  const rows=mn.rows.slice().sort((x,y)=>key(x)-key(y));
+  const rowHtml=r=>{ const w=warn[r.id];
+    const who=r.k==='goal'?`<label class="mn-f">Scorer<select data-mnf="a" data-row="${r.id}">${opt(r.a,day,`<option value="__og"${r.a==='__og'?' selected':''}>Own goal by opponent</option>`)}</select></label>${r.a==='__og'?'':`<label class="mn-f">Assist<select data-mnf="b" data-row="${r.id}">${opt(r.b,day)}</select></label>`}`
+      :r.k==='sub'?`<label class="mn-f">Off<select data-mnf="a" data-row="${r.id}">${opt(r.a,day)}</select></label><label class="mn-f">On<select data-mnf="b" data-row="${r.id}">${opt(r.b,benchList.length?benchList.concat(day.filter(x=>!benchList.includes(x))):day)}</select></label>`
+      :(r.k==='yc'||r.k==='rc')?`<label class="mn-f">Player<select data-mnf="a" data-row="${r.id}">${opt(r.a,day)}</select></label>`:'<span class="hint">Opponent scores</span>';
+    return `<div class="mn-row k-${r.k}${w?' warn':''}"><span class="mn-kind">${esc(mnLabel(r.k))}</span>
+      <label class="mn-f mn-min">Minute<input data-mnf="min" data-row="${r.id}" value="${esc(r.min||'')}" placeholder="23" inputmode="text" autocomplete="off"></label>${who}
+      <button class="btn sm ghost mn-del" data-mndel="${r.id}" aria-label="Delete this ${esc(mnLabel(r.k).toLowerCase())}">✕</button>
+      ${w?`<p class="mn-warn">${w.map(esc).join(' ')}</p>`:''}</div>`; };
+  el.innerHTML=`<div class="wrap page mn-page">
+    <header class="page-head"><div><button class="back" style="display:block;margin-bottom:6px" data-go="fixture" data-arg="${m.id}">← Match page</button>
+      <span class="eyebrow">${mtTag(m)} ${esc([d?fmtDate(d,{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'No date',m.comp].filter(Boolean).join(' · '))}</span>
+      <h1>${esc(m.home?(m.usShort||teamShort())+' '+hs+'–'+as+' '+(m.them||'Opponent'):(m.them||'Opponent')+' '+hs+'–'+as+' '+(m.usShort||teamShort()))}</h1>
+      <p>Match data entered by hand · ${nStart} starter${nStart===1?'':'s'}, ${nBench} on the bench · ${mn.rows.length} event${mn.rows.length===1?'':'s'}</p></div>
+      <div class="page-actions"><button class="btn" data-go="report" data-arg="${m.id}">Match report</button><button class="btn primary" data-go="report" data-arg="${m.id}">Done</button></div></header>
+    <div class="mn-grid">
+      <section class="card"><div class="card-head"><h2>Line-up</h2><span class="hint${nStart&&nStart!==11?' mn-alert':''}">${nStart}/11 starters · ${nBench} bench</span></div>
+        ${roster.length?`<div class="mn-roster">${roster.map(x=>{ const v=mn.lineup[x.id]||''; return `<div class="mn-pl ${v}"><span class="num">${esc(x.num||'–')}</span><span class="nm">${esc(x.name)}${isOther(x,ss)?'<small>other team</small>':''}</span>
+          <span class="seg" role="group" aria-label="${esc(x.name)}"><button data-mnlu="${x.id}" data-v="start" aria-pressed="${v==='start'}">Start</button><button data-mnlu="${x.id}" data-v="bench" aria-pressed="${v==='bench'}">Bench</button><button data-mnlu="${x.id}" data-v="" aria-pressed="${!v}" aria-label="Not in the squad">–</button></span>${v?`<b class="mn-mins" title="Minutes played">${minOf(x.id)}'</b>`:''}</div>`; }).join('')}</div>`
+          :'<div class="empty-state"><strong>No players yet</strong><p>Add your squad on the Players page first.</p><button class="btn primary" data-go="players">Players</button></div>'}
+      </section>
+      <div class="mn-side">
+        <section class="card"><div class="card-head"><h2>Match length</h2></div>
+          <div class="mn-len"><label class="mn-f">Half length<input type="number" min="5" max="60" data-mnlen="halfLen" value="${L}"> min</label>
+            <label class="mn-f">Added time 1st half<input type="number" min="0" max="20" data-mnlen="add1" value="${+mn.add1||0}"> min</label>
+            <label class="mn-f">Added time 2nd half<input type="number" min="0" max="20" data-mnlen="add2" value="${+mn.add2||0}"> min</label></div>
+          <p class="hint">Minutes count from kick-off: in a ${L}-minute half, the second half starts at minute ${L+1}. A minute like ${L}+2 adds added time automatically.</p></section>
+        <section class="card"><div class="card-head"><h2>What happened</h2><span class="hint">In any order, sorted by minute</span></div>
+          <div class="mn-adds">${MN_KINDS.map(([k,l])=>`<button class="btn sm" data-mnadd="${k}">${IC.plus} ${l}</button>`).join('')}</div>
+          ${rows.length?`<div class="mn-rows">${rows.map(rowHtml).join('')}</div>`:'<p class="hint">Add goals, substitutions and cards with the buttons above. For a substitution at half-time, type HT as the minute.</p>'}
+        </section>
+      </div>
+    </div></div>`;
+  if(ui.mnFocus){ const n=document.querySelector(`[data-mnf="min"][data-row="${ui.mnFocus}"]`); ui.mnFocus=null; if(n) n.focus(); }
+}
+function mnSave(m){ mnBuild(m); saveMatchObj(m); }
+document.addEventListener('click',e=>{
+  if(view!=='entry') return; const m=store[viewArg]; if(!m) return; const g=s=>e.target.closest(s); let b;
+  if(b=g('[data-mnlu]')){ const mn=mnInit(m), sid=b.dataset.mnlu, v=b.dataset.v;
+    if(v==='start'&&mn.lineup[sid]!=='start'&&Object.values(mn.lineup).filter(x=>x==='start').length>=11){ toast('You already have 11 starters. Move one to the bench first.'); return; }
+    if(v) mn.lineup[sid]=v; else delete mn.lineup[sid]; mnSave(m); renderEntry(); return; }
+  if(b=g('[data-mnadd]')){ const mn=mnInit(m), r={id:newId('e'),k:b.dataset.mnadd,min:'',a:'',b:''}; mn.rows.push(r); ui.mnFocus=r.id; mnSave(m); renderEntry(); return; }
+  if(b=g('[data-mndel]')){ const mn=mnInit(m), i=mn.rows.findIndex(r=>r.id===b.dataset.mndel); if(i<0) return; const gone=mn.rows.splice(i,1)[0]; mnSave(m); renderEntry();
+    toast(mnLabel(gone.k)+' deleted.',()=>{ mn.rows.push(gone); mnSave(m); renderEntry(); }); return; }
+});
+document.addEventListener('change',e=>{
+  if(view!=='entry') return; const m=store[viewArg], t=e.target; if(!m) return;
+  if(t.dataset.mnf){ const r=mnInit(m).rows.find(x=>x.id===t.dataset.row); if(!r) return; r[t.dataset.mnf]=t.value; if(t.dataset.mnf==='a'&&t.value==='__og') r.b=''; mnSave(m); renderEntry(); return; }
+  if(t.dataset.mnlen){ const k=t.dataset.mnlen, v=Math.max(0,Math.round(+t.value||0)); if(k==='halfLen') m.halfLen=Math.max(5,Math.min(60,v||45)); else mnInit(m)[k]=Math.min(30,v); mnSave(m); renderEntry(); return; }
+});
+document.addEventListener('keydown',e=>{ if(view==='entry'&&e.key==='Enter'&&e.target.dataset&&e.target.dataset.mnf==='min'){ e.preventDefault(); e.target.blur(); } });
+
 function addSquadPlayer(){
   const name=$('#apName').value.trim(); if(!name) return;
   if(squad().some(x=>norm(x.name)===norm(name))){ toast(name+' is already in the squad.'); return; }
@@ -3638,7 +3794,7 @@ function renderReport(){
     el.innerHTML=`<div class="wrap page">
       <button class="back" data-go="matches">← All analyses</button>
       <header class="page-head"><div><span class="eyebrow">${mtTag(m)} Match report · ${esc(fmtDate(m.date,{weekday:'long',day:'numeric',month:'long',year:'numeric'}))}${m.comp?' · '+esc(m.comp):''}</span><h1>${esc(vsLabel(m))}</h1></div>
-        <div class="page-actions"><button class="btn primary" data-go="match" data-arg="${m.id}">Open in tagger</button><button class="btn" id="btnRepCsv">Export CSV</button></div></header>
+        <div class="page-actions">${m.manualData?`<button class="btn primary" data-go="entry" data-arg="${m.id}">Edit match data</button>`:`<button class="btn primary" data-go="match" data-arg="${m.id}">Open in tagger</button>`}<button class="btn" id="btnRepCsv">Export CSV</button></div></header>
       <div class="rboard"><div class="side"><span class="tm">${esc(m.home?m.us:m.them)}</span>${m.home?usList:themList}</div>
         <div class="mid"><span class="sc tnum">${hs}<i>–</i>${as}</span>${ht?`<span class="ht">Half-time ${esc(ht)}</span>`:''}${isPlayed(m)?'':'<span class="ht">Not tagged yet</span>'}</div>
         <div class="side r"><span class="tm">${esc(m.home?m.them:m.us)}</span>${m.home?themList:usList}</div></div>
@@ -4391,7 +4547,7 @@ function renderFixture(){
   el.innerHTML=`<div class="wrap page">
     <header class="page-head"><div><button class="back" style="display:block;margin-bottom:6px" data-go="calendar" data-calto="${(d||'').slice(0,7)}">← Calendar</button><span class="eyebrow">${mtTag(m)} ${esc([d?fmtDate(d,{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'No date',m.kickoff?'Kick-off '+m.kickoff:'',m.comp].filter(Boolean).join(' · '))}</span>
       <h1>${esc(vsLabel(m))}</h1><p>${esc([m.home?'Home':'Away',m.place,isPlayed(m)?'Played · '+finalScore(m):''].filter(Boolean).join(' · '))}</p></div>
-      <div class="page-actions"><button class="btn" data-fxedit aria-expanded="${plUi.fxEdit}">Edit details</button>${isPlayed(m)?`<button class="btn" data-go="report" data-arg="${m.id}">Match report</button>`:''}<button class="btn primary" data-fxtag="${m.id}">Open in tagger</button></div></header>
+      <div class="page-actions"><button class="btn" data-fxedit aria-expanded="${plUi.fxEdit}">Edit details</button>${isPlayed(m)?`<button class="btn" data-go="report" data-arg="${m.id}">Match report</button>`:''}${mnEditable(m)&&(m.manualData||!m.videoName)?`<button class="btn${m.manualData?' primary':''}" data-go="entry" data-arg="${m.id}">${m.manualData?'Edit match data':'Enter result by hand'}</button>`:''}${m.manualData?'':`<button class="btn primary" data-fxtag="${m.id}">Open in tagger</button>`}</div></header>
     <div class="fx-status">
       <div class="fx-stat${sel.ids.length?' ok':''}"><b>${sel.ids.length}</b><span>selected (max ${SEL_MAX})</span></div>
       <div class="fx-stat${xi===11?' ok':''}"><b>${xi}/11</b><span>starting XI picked</span></div>
@@ -4439,7 +4595,7 @@ function fxVideoHtml(m,vid){
     ${online?`<div class="row-actions"><label class="btn sm"><input type="file" id="fxVidUp" accept="video/*" hidden>Upload a video for this match</label><span class="hint">You can keep working while it uploads.</span></div>`
      :folder?`<p class="hint">Put the video in <b>${esc(videoFolder())}</b>, then pick it above (click Check again in the folder dialog if it is new).</p>`
      :`<p class="hint">Open the tagger and choose the file. Videos stay on this computer.</p>`}
-    <div class="row-actions"><button class="btn sm" data-fxtag="${m.id}">Open in tagger</button>${!m.videoName&&!isPlayed(m)?`<button class="btn sm" data-fxlive="${m.id}">Tag live (no video)</button>`:''}</div>`;
+    <div class="row-actions"><button class="btn sm" data-fxtag="${m.id}">Open in tagger</button>${!m.videoName&&!isPlayed(m)?`<button class="btn sm" data-fxlive="${m.id}">Tag live (no video)</button>`:''}${!m.videoName&&mnEditable(m)?`<button class="btn sm" data-go="entry" data-arg="${m.id}">${m.manualData?'Edit match data':'No video: enter the result by hand'}</button>`:''}</div>`;
 }
 /* selection .pptx from the YLA template */
 let fxTpl=null;
@@ -5418,6 +5574,7 @@ document.addEventListener('click',e=>{
   if(b=g('[data-tab]')) return switchTab(b.dataset.tab);
   if(b=g('#btnLive')) return startLive();
   if(b=g('#nmLive')) return createMatch(true);
+  if(b=g('#nmManual')) return createMatch('manual');
   if(b=g('#btnResync')) return resync();
   if(b=g('[data-syncmark]')){ const a=syncAnchor(), vt=V().currentTime||0; if(b.dataset.syncmark==='1'){ const o1=vt-a.t; if(M.phases.h2s!=null){ ui.sync={step:2,o1}; renderSyncBox(); } else applySync(o1,o1); } else { applySync(ui.sync.o1, vt-M.phases.h2s); } return; }
   if(b=g('[data-syncgo]')){ if(b.dataset.syncgo==='same') applySync(ui.sync.o1,ui.sync.o1); else applySync(0,0); return; }
