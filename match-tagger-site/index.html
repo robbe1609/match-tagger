@@ -1215,6 +1215,54 @@ body.tb-dragging,body.tb-dragging *{cursor:grabbing!important;user-select:none!i
   .tb-f.wide input{width:130px}
   .tb-sep{display:none}
 }
+/* ---------- players chart ---------- */
+.pch{gap:14px}
+.pch-bar{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center}
+.pch-bar select{max-width:240px}
+.pch-pick{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--surface-2);display:flex;flex-direction:column;gap:10px}
+.pch-acts{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.pch-chips{display:flex;flex-wrap:wrap;gap:6px}
+.pch-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 11px 4px 5px;font:inherit;font-size:13px;font-weight:600;color:var(--muted)}
+.pch-chip b{min-width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--surface-2);font-size:12px;color:var(--muted)}
+.pch-chip small{font-size:11px;font-weight:700;color:var(--muted)}
+.pch-chip[aria-pressed="true"]{border-color:var(--accent);color:var(--ink);background:var(--accent-soft)}
+.pch-chip[aria-pressed="true"] b{background:var(--accent);color:var(--accent-ink)}
+.pch-chart{display:flex;flex-direction:column;--namew:minmax(120px,230px)}
+.pch-row{display:grid;grid-template-columns:var(--namew) minmax(0,1fr) 78px;align-items:center;gap:0 12px;height:32px}
+.pch-row:not(.pch-top):not(.pch-axis):hover{background:var(--surface-2);border-radius:6px}
+.pch-top{height:24px}
+.pch-name{display:flex;align-items:center;gap:8px;background:none;border:0;padding:0 0 0 4px;font:inherit;font-size:14px;font-weight:600;color:var(--ink);text-align:left;min-width:0}
+.pch-name b{flex:0 0 26px;font-family:var(--f-display);font-size:15px;color:var(--muted);text-align:right}
+.pch-name span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pch-name:hover span{text-decoration:underline;text-decoration-color:var(--accent);text-underline-offset:3px}
+.pch-track{position:relative;height:100%;background:linear-gradient(to right,var(--line) 1px,transparent 1px) 0 0/var(--grid) 100% repeat-x;box-shadow:inset 1px 0 0 var(--muted)}
+.pch-top .pch-track{background:none;box-shadow:none}
+.pch-fill{position:absolute;left:0;top:50%;height:16px;transform:translateY(-50%);background:var(--accent);border-radius:0 4px 4px 0;min-width:0}
+.pch-avg{position:absolute;top:0;bottom:0;left:var(--avg);width:0;border-left:2px dotted var(--ink);margin-left:-1px;pointer-events:none}
+.pch-avglbl{position:absolute;left:var(--avg);top:0;transform:translateX(6px);font-size:12px;font-weight:700;white-space:nowrap;color:var(--ink)}
+.pch-avglbl.r{transform:translateX(calc(-100% - 6px))}
+.pch-val{white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums;font-weight:700;font-size:14px;padding-right:4px}
+.pch-val.none{color:var(--muted);font-weight:400}
+.pch-axis{height:22px}
+.pch-ticks{position:relative;height:100%}
+.pch-ticks span{position:absolute;top:3px;transform:translateX(-50%);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pch-ticks span:first-child{transform:none}
+.pch-legend{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center;font-size:13px;color:var(--muted)}
+.pch-legend span{display:inline-flex;align-items:center;gap:7px}
+.pch-legend .lg-bar{width:16px;height:10px;border-radius:0 3px 3px 0;background:var(--accent)}
+.pch-legend .lg-avg{width:0;height:16px;border-left:2px dotted var(--ink)}
+.pch-legend .hint{margin-left:auto}
+.pch-avgtxt{color:var(--ink)}
+@media (max-width:640px){
+  .pch-chart{--namew:minmax(96px,130px)}
+  .pch-row{gap:0 8px}
+  .pch-name{font-size:13px}.pch-name b{flex-basis:20px;font-size:13px}
+  .pch-legend .hint{margin-left:0}
+  .pch-val .u{display:none}
+  .pch-row{grid-template-columns:var(--namew) minmax(0,1fr) 40px}
+  .pch-ticks span:nth-child(even){display:none}
+  .pch-avglbl{font-size:11px}
+}
 </style>
 </head>
 <body>
@@ -3057,12 +3105,12 @@ function renderPlayers(){
   const ps=ui.psort||{k:'num',d:1};
   list.sort((x,y)=>{ const a=val(x,ps.k), b=val(y,ps.k); return (a<b?-1:a>b?1:0)*(['num','name','pos'].includes(ps.k)?ps.d:-ps.d)||(+x.num||999)-(+y.num||999); });
   const cols=[['num','#'],['name','Player'],['pos','Pos'],['apps','Apps'],['starts','Starts'],['min','Min'],['att','Train %','Training attendance: present or late']].concat(STAT_COLS.map(c=>[c[0],c[1],c[2]]),cust.map(k=>[k,tagInfo(k).label]));
-  const cards=ui.pview!=='table';
+  const pmode=['cards','table','chart'].includes(ui.pview)?ui.pview:'cards', cards=pmode==='cards';
   el.innerHTML=`<div class="wrap page">
     <header class="page-head"><div><span class="eyebrow">${esc(teamName())} · ${esc(seasonText(season))}</span><h1>Players</h1><p>${pq?list.length+' of '+all.length+' players match “'+esc(ui.pq.trim())+'”':all.length+' player'+(all.length===1?'':'s')+' · stats update automatically from every tagged match.'}</p></div>
-      <div class="page-actions"><input class="search" id="pSearch" type="search" placeholder="Search name or number" value="${esc(ui.pq||'')}" aria-label="Search players by name or shirt number" autocomplete="off">${seasonSelect()}<div class="seg" role="group" aria-label="Layout"><button data-pview="cards" aria-pressed="${cards}">Cards</button><button data-pview="table" aria-pressed="${!cards}">Table</button></div><button class="btn primary" id="btnAddPlayer" aria-expanded="${!!ui.addOpen}">Add player</button></div></header>
+      <div class="page-actions"><input class="search" id="pSearch" type="search" placeholder="Search name or number" value="${esc(ui.pq||'')}" aria-label="Search players by name or shirt number" autocomplete="off">${seasonSelect()}<div class="seg" role="group" aria-label="Layout"><button data-pview="cards" aria-pressed="${cards}">Cards</button><button data-pview="table" aria-pressed="${pmode==='table'}">Table</button><button data-pview="chart" aria-pressed="${pmode==='chart'}">Chart</button></div><button class="btn primary" id="btnAddPlayer" aria-expanded="${!!ui.addOpen}">Add player</button></div></header>
     ${ui.addOpen?`<form id="addPlayerForm" class="card"><div class="form three"><div class="field"><label for="apNum">Shirt number</label><input id="apNum" type="number" min="1" max="99"></div><div class="field"><label for="apName">Name</label><input id="apName" required placeholder="First and last name"></div><div class="field"><label for="apPos">Position</label><select id="apPos">${POSITIONS.map(p=>`<option value="${p}">${p||'–'}</option>`).join('')}</select></div></div><div class="row-actions"><button class="btn primary" type="submit">Add to squad</button><button class="btn ghost" type="button" id="btnAddCancel">Cancel</button></div></form>`:''}
-    ${!list.length?(pq?`<div class="empty-state"><strong>No player matches “${esc(ui.pq.trim())}”</strong><p>Search by name or shirt number.</p><button class="btn" data-pclear>Clear search</button></div>`:`<div class="empty-state"><strong>No players yet</strong><p>Players appear here as soon as you name them in a match lineup, or add them yourself.</p></div>`):cards?
+    ${!list.length?(pq?`<div class="empty-state"><strong>No player matches “${esc(ui.pq.trim())}”</strong><p>Search by name or shirt number.</p><button class="btn" data-pclear>Clear search</button></div>`:`<div class="empty-state"><strong>No players yet</strong><p>Players appear here as soon as you name them in a match lineup, or add them yourself.</p></div>`):pmode==='chart'?pchHtml(list,agg,season,cust):cards?
       `<div class="pgrid">${list.map(s=>{ const a=agg[s.id]; return `<button class="pcard" data-go="player" data-arg="${s.id}"><span class="bignum" aria-hidden="true">${esc(s.num||'')}</span>
         <span class="ppos">${esc([s.num?'#'+s.num:'',s.pos,isOther(s,season==='all'?nowSeason():season)?'Other team':''].filter(Boolean).join(' · ')||'Squad')}</span><span class="pname">${esc(s.name)}</span>
         <span class="pstats">${[['Apps',a.apps],['Min',a.min],['Goals',a.line.g],['Assists',a.line.a]].map(([l,v])=>`<span><b class="tnum">${v}</b><span>${l}</span></span>`).join('')}</span></button>`; }).join('')}</div>`
@@ -3071,6 +3119,73 @@ function renderPlayers(){
       </tbody></table></div>`}
   </div>`;
 }
+/* =================== PLAYERS CHART ===================
+   One bar per player for the chosen stat, with the average as a dotted line. Choices are kept in this browser. */
+const PCH_LS='matchTagger.pchart.v1';
+const pch={metric:'min',mode:'total',sort:'value',hide:[],inited:false,open:false};
+try{ Object.assign(pch,JSON.parse(localStorage.getItem(PCH_LS)||'{}')); pch.open=false; }catch(e){}
+function pchSave(){ try{ localStorage.setItem(PCH_LS,JSON.stringify({metric:pch.metric,mode:pch.mode,sort:pch.sort,hide:pch.hide,inited:pch.inited})); }catch(e){} }
+function pchMetrics(cust){ return [['min','Minutes played'],['apps','Appearances'],['starts','Starts'],['att','Training attendance']].concat(STAT_COLS.map(c=>[c[0],c[2]]),cust.map(k=>[k,tagInfo(k).label])); }
+function pchModes(m){ if(m==='att') return [['total','%']]; if(m==='apps'||m==='starts') return [['total','Total']]; if(m==='min') return [['total','Total'],['match','Per match']]; return [['total','Total'],['match','Per match'],['p90','Per 90 min']]; }
+function pchValue(s,a,season,metric,mode){
+  if(metric==='att'){ if(isOther(s,season==='all'?nowSeason():season)) return null; return attStats(s.id,season).pct; }
+  const raw=['min','apps','starts'].includes(metric)?a[metric]:(a.line[metric]||0);
+  if(mode==='match') return a.apps?raw/a.apps:null;
+  if(mode==='p90') return a.min>0?raw*90/a.min:null;
+  return raw; }
+function pchNice(max){ if(!(max>0)) return {max:1,step:1}; const raw=max/5, p=10**Math.floor(Math.log10(raw)), f=raw/p, step=(f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p; return {max:Math.ceil(max/step-1e-9)*step,step}; }
+function pchHtml(list,agg,season,cust){
+  const sx=season==='all'?nowSeason():season;
+  if(!pch.inited){ pch.hide=squad().filter(s=>isOther(s,sx)).map(s=>s.id); pch.inited=true; pchSave(); }
+  const metrics=pchMetrics(cust); if(!metrics.some(m=>m[0]===pch.metric)) pch.metric='min';
+  const modes=pchModes(pch.metric); if(!modes.some(m=>m[0]===pch.mode)) pch.mode=modes[0][0];
+  const label=metrics.find(m=>m[0]===pch.metric)[1], hide=new Set(pch.hide), shown=list.filter(s=>!hide.has(s.id));
+  const dec=(pch.metric==='min'||pch.metric==='att'||pch.mode==='total')?0:2;
+  const unit=pch.metric==='att'?'%':(pch.metric==='min'?' min':'');
+  const fmt=v=>v==null?'–':(+v.toFixed(dec)).toLocaleString('en-GB',{maximumFractionDigits:dec})+unit;
+  const rows=shown.map(s=>({s,a:agg[s.id],v:pchValue(s,agg[s.id],season,pch.metric,pch.mode)}));
+  rows.sort((x,y)=>pch.sort==='num'?((+x.s.num||999)-(+y.s.num||999)||x.s.name.localeCompare(y.s.name)):((y.v==null?-1:y.v)-(x.v==null?-1:x.v)||(+x.s.num||999)-(+y.s.num||999)));
+  const vals=rows.filter(r=>r.v!=null).map(r=>r.v), avg=vals.length?vals.reduce((x,y)=>x+y,0)/vals.length:null;
+  const nice=pch.metric==='att'?{max:100,step:20}:pchNice(Math.max(0,...vals)), pct=v=>Math.max(0,Math.min(100,v/nice.max*100));
+  const ticks=[]; for(let t=0;t<=nice.max+1e-9;t+=nice.step) ticks.push(t);
+  const tick=t=>(+t.toFixed(dec?2:(nice.step<1?1:0))).toLocaleString('en-GB')+(pch.metric==='att'?'%':'');
+  const nSel=list.length-list.filter(s=>hide.has(s.id)).length, others=list.filter(s=>isOther(s,sx));
+  const modeTxt=pch.mode==='match'?' per match':pch.mode==='p90'?' per 90 minutes':'';
+  const tipOf=r=>{ const s=r.s, a=r.a; return `#${s.num||'–'} ${s.name} · ${label}${modeTxt}: ${fmt(r.v)} · ${a.apps} app${a.apps===1?'':'s'}, ${a.starts} start${a.starts===1?'':'s'}, ${a.min} min`; };
+  return `<section class="card pch">
+    <div class="pch-bar">
+      <label class="sel">Show <select id="pchMetric">${metrics.map(([k,l])=>`<option value="${esc(k)}"${k===pch.metric?' selected':''}>${esc(l)}</option>`).join('')}</select></label>
+      ${modes.length>1?`<div class="seg" role="group" aria-label="Value">${modes.map(([k,l])=>`<button data-pchmode="${k}" aria-pressed="${pch.mode===k}">${l}</button>`).join('')}</div>`:''}
+      <div class="seg" role="group" aria-label="Order"><button data-pchsort="value" aria-pressed="${pch.sort!=='num'}">Highest first</button><button data-pchsort="num" aria-pressed="${pch.sort==='num'}">By number</button></div>
+      <button class="btn${pch.open?' primary':''}" data-pchpick aria-expanded="${pch.open}">Players · ${nSel} of ${list.length}</button>
+    </div>
+    ${pch.open?`<div class="pch-pick">
+      <div class="pch-acts"><button class="btn sm" data-pchall>All</button><button class="btn sm" data-pchnone>None</button><button class="btn sm" data-pchplayed>Only players with minutes</button>${others.length?`<button class="btn sm" data-pchmine>Hide other team</button>`:''}<span class="hint">Click a name to show or hide it.</span></div>
+      <div class="pch-chips">${list.map(s=>`<button class="pch-chip" data-pchtoggle="${s.id}" aria-pressed="${!hide.has(s.id)}"><b>${esc(s.num||'–')}</b>${esc(s.name)}${isOther(s,sx)?'<small>other team</small>':''}</button>`).join('')}</div></div>`:''}
+    <div class="card-head"><h2>${esc(label)}${esc(modeTxt)}</h2><span class="hint">${esc(seasonText(season))}${avg!=null?` · average <b class="pch-avgtxt">${fmt(avg)}</b> over ${vals.length} player${vals.length===1?'':'s'}`:''}${pch.mode==='p90'?' · players with minutes only':pch.mode==='match'?' · players with appearances only':''}</span></div>
+    ${!rows.length?`<div class="empty-state"><strong>No players selected</strong><p>Choose which players to show.</p><button class="btn" data-pchall>Show all players</button></div>`:`
+    <div class="pch-chart" style="--avg:${avg!=null?pct(avg):0}%;--grid:${nice.step/nice.max*100}%" role="img" aria-label="${esc(label+modeTxt+' per player, average '+fmt(avg))}">
+      ${avg!=null?`<div class="pch-row pch-top" aria-hidden="true"><span></span><div class="pch-track"><span class="pch-avglbl${pct(avg)>78?' r':''}">Average ${fmt(avg)}</span><i class="pch-avg"></i></div><span></span></div>`:''}
+      ${rows.map(r=>`<div class="pch-row" title="${esc(tipOf(r))}"><button class="pch-name" data-go="player" data-arg="${r.s.id}"><b>${esc(r.s.num||'–')}</b><span>${esc(r.s.name)}</span></button>
+        <div class="pch-track"><span class="pch-fill${r.v!=null&&avg!=null&&r.v<avg?' below':''}" style="width:${r.v==null?0:pct(r.v)}%"></span>${avg!=null?'<i class="pch-avg"></i>':''}</div><span class="pch-val${r.v==null?' none':''}">${r.v==null?'–':esc(fmt(r.v).replace(/ min$/,''))+(/ min$/.test(fmt(r.v))?'<span class="u"> min</span>':'')}</span></div>`).join('')}
+      <div class="pch-row pch-axis" aria-hidden="true"><span></span><div class="pch-ticks">${ticks.map(t=>`<span style="left:${pct(t)}%">${tick(t)}</span>`).join('')}</div><span></span></div>
+    </div>
+    <div class="pch-legend"><span><i class="lg-bar"></i>${esc(label)}${esc(modeTxt)}</span>${avg!=null?`<span><i class="lg-avg"></i>Average of the players shown</span>`:''}<span class="hint">Click a name to open the player.</span></div>`}
+  </section>`;
+}
+document.addEventListener('click',e=>{
+  if(view!=='players') return; const g=s=>e.target.closest(s); let b;
+  if(b=g('[data-pchmode]')){ pch.mode=b.dataset.pchmode; pchSave(); renderPlayers(); return; }
+  if(b=g('[data-pchsort]')){ pch.sort=b.dataset.pchsort; pchSave(); renderPlayers(); return; }
+  if(g('[data-pchpick]')){ pch.open=!pch.open; renderPlayers(); return; }
+  if(b=g('[data-pchtoggle]')){ const id=b.dataset.pchtoggle, h=new Set(pch.hide); h.has(id)?h.delete(id):h.add(id); pch.hide=[...h]; pchSave(); renderPlayers(); return; }
+  if(g('[data-pchall]')){ pch.hide=[]; pchSave(); renderPlayers(); return; }
+  if(g('[data-pchnone]')){ pch.hide=squad().map(s=>s.id); pchSave(); renderPlayers(); return; }
+  if(g('[data-pchplayed]')){ const agg=playerAgg(curSeason()); pch.hide=squad().filter(s=>!(agg[s.id]&&agg[s.id].min>0)).map(s=>s.id); pchSave(); renderPlayers(); return; }
+  if(g('[data-pchmine]')){ const sx=curSeason()==='all'?nowSeason():curSeason(), h=new Set(pch.hide); squad().filter(s=>isOther(s,sx)).forEach(s=>h.add(s.id)); pch.hide=[...h]; pchSave(); renderPlayers(); return; }
+});
+document.addEventListener('change',e=>{ if(view==='players'&&e.target.id==='pchMetric'){ pch.metric=e.target.value; pchSave(); renderPlayers(); } });
+
 function addSquadPlayer(){
   const name=$('#apName').value.trim(); if(!name) return;
   if(squad().some(x=>norm(x.name)===norm(name))){ toast(name+' is already in the squad.'); return; }

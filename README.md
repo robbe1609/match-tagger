@@ -115,6 +115,16 @@ Players from another group: on an attendance page click **Other team players…*
 
 Your old planners' data comes as a file, `planner-import.json`. On the Calendar page, scroll down and click **Import planner data**, then choose that file. It adds your month calendar, your saved week plans and all fixtures with their squads. Matches that are already in the app (same date and opponent) are updated instead of duplicated, and players are matched to your squad by name.
 
+## Players chart
+
+On **Players**, click **Chart** (next to Cards and Table).
+
+- **Show:** minutes played, appearances, starts, training attendance, or any stat you tag (goals, assists, shots, recoveries…).
+- **Total / Per match / Per 90 min:** per match divides by appearances; per 90 uses the minutes each player actually played.
+- **The dotted line** is the average of the players on the chart, so it moves when you hide or show players.
+- **Players · x of y:** pick who is on the chart. **All**, **None**, **Only players with minutes** and **Hide other team** are quick filters; click a name to add or remove her. Your choice is remembered in this browser.
+- The season picker at the top applies to the chart too.
+
 ## Tactics board
 
 Open **Tactics** in the top menu. Every board is saved automatically to your folder or online storage, so it is on every computer you log in from.
