@@ -1131,13 +1131,97 @@ button.sync:hover{background:rgba(255,255,255,.08)}
 .bar{height:8px;border-radius:4px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
 .bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .2s}
 @media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+/* ---------- tactics board ---------- */
+.tb-page{gap:12px;padding-top:16px}
+.tb-page .page-head{padding-bottom:10px;align-items:center}
+.tb-page .page-head h1{font-size:clamp(28px,3.2vw,40px)}
+.tb-page .page-head p{margin-top:4px;font-size:14px}
+.tb-view{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 10px;align-items:center}
+.tb-view .sel{display:contents}
+.tb-view select{width:100%}
+.tb-sep{width:1px;align-self:stretch;background:var(--line);margin:0 2px}
+.tb-ren{display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap}
+.tb-ren input{font-family:var(--f-display);font-weight:800;font-size:30px;text-transform:uppercase;border:1px solid var(--accent);border-radius:8px;padding:2px 10px;background:var(--surface);color:var(--ink);min-width:0;width:min(520px,100%)}
+.tb-layout{display:grid;grid-template-columns:290px minmax(0,1fr);gap:16px;align-items:start}
+.tb-menu{position:sticky;top:64px;display:flex;flex-direction:column;gap:12px;max-height:calc(100vh - 76px);overflow:auto;padding-bottom:4px;user-select:none;-webkit-user-select:none}
+.tb-card{padding:12px 14px;gap:9px}
+.tb-card h2{font-size:19px}
+.tb-card .search{width:100%}
+.tb-plist{display:flex;flex-direction:column;gap:3px;max-height:380px;overflow:auto;margin:0 -4px;padding:0 4px}
+.tb-pl{display:flex;align-items:center;gap:9px;border:1px solid transparent;background:none;border-radius:9px;padding:4px 6px;text-align:left;color:inherit;font:inherit;cursor:grab;touch-action:pan-y}
+.tb-pl:hover{background:var(--surface-2);border-color:var(--line)}
+.tb-pl .nm{flex:1;min-width:0;font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tb-pl .nm small{margin-left:6px;font-size:11px;font-weight:700;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:0 6px}
+.tb-pl.on{opacity:.62}
+.tb-pl.on:hover{opacity:1}
+.tb-on{font-weight:800;color:var(--accent);font-size:14px}
+.tb-disc{flex:0 0 auto;width:30px;height:30px;border-radius:50%;background:var(--c);color:var(--k);border:2px solid #fff;box-shadow:0 0 0 1px rgba(11,15,20,.28),0 1px 3px rgba(0,0,0,.25);display:inline-flex;align-items:center;justify-content:center;font:700 13px/1 Arial,Helvetica,sans-serif}
+.tb-adds{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:6px}
+.tb-add{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface-2);border-radius:9px;padding:5px 8px;font:inherit;font-weight:600;font-size:13px;color:inherit;cursor:grab;touch-action:pan-y;text-align:left}
+.tb-add:hover{border-color:var(--accent)}
+.tb-add .tb-disc{width:26px;height:26px;font-size:12px}
+.tb-ico{flex:0 0 auto;width:26px;height:26px;display:inline-block;background-position:center;background-repeat:no-repeat;background-size:contain}
+.tb-ico.ball{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='8' fill='%23fff' stroke='%2311161C' stroke-width='1.6'/%3E%3Ccircle cx='12' cy='12' r='3.2' fill='%2311161C'/%3E%3C/svg%3E")}
+.tb-ico.cone{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3L4.5 19h15z' fill='%23F28C28' stroke='rgba(0,0,0,.45)' stroke-width='1.2' stroke-linejoin='round'/%3E%3C/svg%3E")}
+.tb-ico.goal{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='3' y='8' width='18' height='8' fill='%23E6EBF0' stroke='%2356616D' stroke-width='1.6'/%3E%3Cpath d='M7 8v8M11 8v8M15 8v8M19 8v8M3 12h18' stroke='%2356616D' stroke-width='.8'/%3E%3C/svg%3E")}
+.tb-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tb-grow{flex:1;min-width:0}.tb-grow select{flex:1;min-width:0;max-width:100%}
+.tb-lbl{font-size:13px;font-weight:600;color:var(--muted)}
+.tb-colin{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:600}
+.tb-colin input{width:30px;height:26px;padding:0;border:1px solid var(--line);border-radius:6px;background:none;cursor:pointer}
+.tb-stage{display:flex;flex-direction:column;gap:10px;min-width:0}
+.tb-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tb-bar .spacer{flex:1}
+.tb-bar select{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 8px;font-weight:600;font-size:13px;color:var(--ink)}
+.tb-tools button{display:inline-flex;align-items:center;gap:5px;padding:6px 10px}
+.tb-tools svg{width:16px;height:16px;flex:0 0 auto}
+.seg button:disabled{opacity:.45;cursor:default}
+.tb-insp{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;min-height:46px;border:1px solid var(--line);border-radius:12px;padding:7px 12px;background:var(--surface)}
+.tb-insp .hint{font-size:14px}
+.tb-it-t{font-family:var(--f-display);font-weight:700;font-size:17px;text-transform:uppercase;letter-spacing:.04em}
+.tb-f{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--muted)}
+.tb-f input{border:1px solid var(--line);background:var(--surface-2);border-radius:7px;padding:5px 8px;width:58px;font:inherit;font-size:14px;color:var(--ink)}
+.tb-f.wide input{width:170px}
+.tb-sws{display:inline-flex;gap:4px;align-items:center}
+.tb-sw{width:22px;height:22px;border-radius:50%;border:1px solid rgba(11,15,20,.35);background:var(--c);padding:0}
+.tb-sw.auto{background:conic-gradient(#0078BF 0 25%,#D7263D 0 50%,#FFFFFF 0 75%,#11161C 0)}
+.tb-sw[aria-pressed="true"]{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--accent)}
+.tb-pitch{border-radius:14px;overflow:hidden;background:#2C7442;box-shadow:var(--shadow);touch-action:none;user-select:none;-webkit-user-select:none;line-height:0}
+.tb-pitch.white{background:#FFFFFF;border:1px solid var(--line)}
+#tbSvg{display:block;width:100%;height:auto;max-height:calc(100vh - 280px);min-height:260px;touch-action:none}
+#tbSvg[data-tool="move"] .tb-it{cursor:grab}
+#tbSvg:not([data-tool="move"]){cursor:crosshair}
+#tbSvg .tb-hd{cursor:move}
+#tbSvg .tb-it.flash{animation:tbflash .45s 3}
+@keyframes tbflash{50%{opacity:.25}}
+.tb-notes{min-height:76px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 10px;font:inherit;color:inherit;resize:vertical}
+.tb-ghost{position:fixed;z-index:60;pointer-events:none;width:34px;height:34px;border-radius:50%;background:var(--c);color:var(--k);border:2px solid #fff;display:flex;align-items:center;justify-content:center;font:700 14px/1 Arial,Helvetica,sans-serif;transform:translate(-50%,-50%) scale(.9);box-shadow:0 4px 14px rgba(0,0,0,.35);opacity:.85;transition:transform .12s}
+.tb-ghost.over{transform:translate(-50%,-50%) scale(1.1);opacity:1}
+.tb-ghost.ball,.tb-ghost.cone,.tb-ghost.goal{border:0;box-shadow:none;background:none;width:30px;height:30px}
+.tb-ghost.ball{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='8' fill='%23fff' stroke='%2311161C' stroke-width='1.6'/%3E%3Ccircle cx='12' cy='12' r='3.2' fill='%2311161C'/%3E%3C/svg%3E") center/contain no-repeat}
+.tb-ghost.cone{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3L4.5 19h15z' fill='%23F28C28' stroke='rgba(0,0,0,.45)' stroke-width='1.2'/%3E%3C/svg%3E") center/contain no-repeat}
+.tb-ghost.goal{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='3' y='8' width='18' height='8' fill='%23E6EBF0' stroke='%2356616D' stroke-width='1.6'/%3E%3C/svg%3E") center/contain no-repeat}
+body.tb-dragging,body.tb-dragging *{cursor:grabbing!important;user-select:none!important}
+@media (max-width:980px){
+  .tb-layout{grid-template-columns:minmax(0,1fr)}
+  .tb-menu{position:static;max-height:none;overflow:visible;order:2}
+  .tb-stage{order:1}
+  .tb-plist{max-height:300px}
+  #tbSvg{max-height:none}
+}
+@media (max-width:640px){
+  .tb-tools button span{display:none}
+  .tb-tools button{padding:7px 9px}
+  .tb-f.wide input{width:130px}
+  .tb-sep{display:none}
+}
 </style>
 </head>
 <body>
 
 <nav class="nav" aria-label="Main"><div class="wrap nav-in">
   <button class="nav-brand" data-go="calendar" aria-label="Match Tagger calendar"><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="1.5" y="5.5" width="29" height="21" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><line x1="16" y1="5.5" x2="16" y2="26.5" stroke="currentColor" stroke-width="2"/><circle cx="16" cy="16" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="25" cy="16" r="3" fill="var(--hero-accent)"/></svg><span>Match Tagger</span></button>
-  <div class="nav-links"><button data-go="calendar" data-nav="calendar">Calendar</button><button data-go="week" data-nav="week">Week</button><button data-go="matches" data-nav="matches">Analyses</button><button data-go="players" data-nav="players">Players</button><button data-go="team" data-nav="team">Team</button><button data-go="home" data-nav="home">Overview</button></div>
+  <div class="nav-links"><button data-go="calendar" data-nav="calendar">Calendar</button><button data-go="week" data-nav="week">Week</button><button data-go="matches" data-nav="matches">Analyses</button><button data-go="players" data-nav="players">Players</button><button data-go="tactics" data-nav="tactics">Tactics</button><button data-go="team" data-nav="team">Team</button><button data-go="home" data-nav="home">Overview</button></div>
   <span class="spacer"></span>
   <button class="sync" id="sync" data-od title="Your Match Tagger folder"><i></i><span>Opening folder…</span></button>
   <button class="btn primary sm" data-go="new">New match</button>
@@ -1152,6 +1236,7 @@ button.sync:hover{background:rgba(255,255,255,.08)}
 <section class="view" id="view-report" hidden></section>
 <section class="view" id="view-players" hidden></section>
 <section class="view" id="view-player" hidden></section>
+<section class="view" id="view-tactics" hidden></section>
 <section class="view" id="view-team" hidden></section>
 <section class="view" id="view-new" hidden></section>
 <section class="view" id="view-match" hidden>
@@ -1527,7 +1612,7 @@ async function connectDb(){
     col=true; lastSync=Date.now(); linkAll(); if(view==='match') renderLiveBar();
     if(changedCurrent){ if(store[M.id]) M=store[M.id]; renderAll(); } else renderDrawer();
     lsSave(); setSync('cloud'); flush();
-    refreshVideos(); plSync();
+    refreshVideos(); plSync(); tbSync();
   }catch(e){ console.error(e); if(e&&e.name==='AuthError'){ authLost(); return; } setSync('error'); toast(FSX.kind==='cloud'?'Could not reach your online storage. Your work is kept in this browser and saved online as soon as the connection is back.':'Could not open your Match Tagger folder. Your work is kept in this browser. Click the status at the top to reconnect.'); clearTimeout(ui.retryT); if(FSX.kind==='cloud') ui.retryT=setTimeout(connectDb,20000); }
 }
 const localMode=()=>{ try{ return localStorage.getItem('matchTagger.localMode')==='1'; }catch(e){ return false; } };
@@ -2742,12 +2827,12 @@ function matchMin(t){ const c=matchClock(t); return c.phase==='pre'?null:c.secs/
 /* ---------- Router ---------- */
 let view='home', viewArg=null;
 const sessionFiles={};
-const VIEWS=['home','calendar','week','fixture','training','matches','report','players','player','team','new','match'];
+const VIEWS=['home','calendar','week','fixture','training','tactics','matches','report','players','player','team','new','match'];
 function parseHash(){ let h=''; try{ h=(location.hash||'').slice(1); }catch(e){}
-  if(/^(home|matches|players|team|new|calendar)$/.test(h)) return [h,null];
+  if(/^(home|matches|players|team|new|calendar|tactics)$/.test(h)) return [h,null];
   const w=h.match(/^week(?:-(\d{4}-W\d{2}))?$/); if(w) return ['week',w[1]||null];
   const tr=h.match(/^training-(\d{4}-\d{2}-\d{2})$/); if(tr) return ['training',tr[1]];
-  const k=h.match(/^(match|report|player|fixture)-([A-Za-z0-9]+)$/); return k?[k[1],k[2]]:['calendar',null]; }
+  const k=h.match(/^(match|report|player|fixture|tactics)-([A-Za-z0-9]+)$/); return k?[k[1],k[2]]:['calendar',null]; }
 const navKey=v=>({report:'matches',match:'matches',player:'players',new:'calendar',fixture:'calendar',training:'calendar'}[v]||v);
 function go(v,arg){
   if(typeof plUi!=='undefined'&&(plUi.daySel||plUi.addMatch)){ plUi.daySel=null; plUi.addMatch=null; renderDayModal(); renderAddMatch(); }
@@ -2757,7 +2842,9 @@ function go(v,arg){
   if(v==='week'&&!(arg&&/^\d{4}-W\d{2}$/.test(arg))) arg=plCurKey();
   if(v==='match'||v==='report'){ if(!(arg&&store[arg])){ if(v==='match'&&store[M.id]) arg=M.id; else { v='matches'; arg=null; } } }
   if(v==='player'&&!(arg&&SQ(arg))){ v='players'; arg=null; }
-  if(!['match','report','player','fixture','week','training'].includes(v)) arg=null;
+  if(v==='tactics'){ if(arg&&tbBoards[arg]){ tbUi.cur=arg; tbStoreLocal(); } arg=tbCur().id; }
+  if(view==='tactics'&&(v!=='tactics'||arg!==viewArg)){ tbUi.drag=null; tbUi.rename=false; if(v!=='tactics'||arg!==viewArg) tbUi.sel=null; }
+  if(!['match','report','player','fixture','week','training','tactics'].includes(v)) arg=null;
   if(view==='training'&&(v!=='training'||arg!==viewArg)) plUi.attQ='';
   if(view==='fixture'&&(v!=='fixture'||arg!==viewArg)){ plUi.fxEdit=false; plUi.fxQ=''; ui.fxDel=null; }
   if(view==='match'&&v!=='match'){ V().pause(); stopClips(); ui.tray=null; ui.numBuf=''; }
@@ -2771,7 +2858,7 @@ function go(v,arg){
   try{ window.scrollTo(0,0); }catch(e){}
 }
 window.addEventListener('hashchange',()=>{ let h=''; try{ h=location.hash.slice(1); }catch(e){} if(ui.hashLock===h){ ui.hashLock=null; return; } const [v,a]=parseHash(); if(v!==view||a!==viewArg) go(v,a); });
-function renderView(){ const f={training:renderTraining,calendar:renderCalendar,week:renderWeek,fixture:renderFixture,home:renderHome,matches:renderMatches,report:renderReport,players:renderPlayers,player:renderPlayer,team:renderTeam,new:renderNew}[view]; if(f) f(); }
+function renderView(){ const f={tactics:renderTactics,training:renderTraining,calendar:renderCalendar,week:renderWeek,fixture:renderFixture,home:renderHome,matches:renderMatches,report:renderReport,players:renderPlayers,player:renderPlayer,team:renderTeam,new:renderNew}[view]; if(f) f(); }
 function watchEvent(mid,eid){ const m=store[mid]; const e=m&&m.events.find(x=>x.id===eid); if(!e) return; ui.pendingSeek=e.t; go('match',mid); if(hasVideo()){ ui.pendingSeek=null; seek(e.t-3); } else toast('Load the video for this match to watch the moment.'); }
 
 const IC={
@@ -4321,6 +4408,441 @@ document.addEventListener('input',e=>{
   if(t.id==='attSearch'){ plUi.attQ=t.value; const pos=t.selectionStart; renderTraining(); const n=$('#attSearch'); if(n){ n.focus(); try{ n.setSelectionRange(pos,pos); }catch(err){} } return; }
   if(t.id==='attNote'){ const d=plCal.days[viewArg]; if(!d) return; d.attNote=t.value; plTouch('cal'); }
 });
+
+/* =================== TACTICS BOARD ===================
+   Free boards with your squad as numbered circles, opponents, equipment, arrows, areas and text.
+   Saved per board as Data/tactics/<id>.json (folder or online storage), cached in this browser. */
+const TB_LS='matchTagger.tactics.v1', TB_M=4;
+const TB_COLORS=[['#0078BF','Blue'],['#D7263D','Red'],['#FFC000','Yellow'],['#FFFFFF','White'],['#11161C','Black'],['#2BA84A','Green'],['#F28C28','Orange'],['#8E5BD0','Purple']];
+const TB_TOOLS=[['move','Move','V','<path d="M5 3l14 8-6 1.5L10 19z"/>'],['pass','Pass','P','<path d="M4 18L18 6M18 6h-7M18 6v7"/>'],['run','Run','R','<path d="M4 18l2-1.7M9 13.7l2.5-2.1M14.5 9l3.5-3M18 6h-7M18 6v7"/>'],
+  ['drib','Dribble','D','<path d="M3 17c2-3 3 1 5-2s3 1 5-2 2-2 3-3M17 6h-5M17 6v5"/>'],['line','Line','L','<path d="M4 18L20 6"/>'],['free','Draw','F','<path d="M4 17c3-6 5-9 7-6s3 4 5 0 2-5 4-5"/>'],
+  ['zone','Area','A','<rect x="4" y="6" width="16" height="12" rx="1.5" stroke-dasharray="3 2"/>'],['text','Text','T','<path d="M6 6h12M12 6v13"/>']];
+const TB_PITCH=[['full','Full pitch'],['vert','Full pitch, upright'],['half','Half pitch'],['plain','No lines']];
+const tbR=v=>Math.round(v*10)/10;
+let tbBoards={}, tbDeleted={}; const tbDirty=new Set(); let tbTimer=null, tbSyncing=false;
+const tbUi={cur:null, tool:'move', sel:null, q:'', undo:{}, redo:{}, drag:null, rename:false, flash:null, editSnap:null, noClick:false};
+
+function tbLoad(){ try{ const x=JSON.parse(localStorage.getItem(TB_LS)||'null'); if(x){ tbBoards=x.boards||{}; tbDeleted=x.deleted||{}; tbUi.cur=x.cur||null; } }catch(e){} }
+function tbStoreLocal(){ try{ localStorage.setItem(TB_LS,JSON.stringify({boards:tbBoards,deleted:tbDeleted,cur:tbUi.cur})); }catch(e){} }
+const TB_DEF={pitch:'full',style:'grass',size:1,names:'first',formation:'4-3-3',home:'#0078BF',away:'#D7263D',notes:''};
+function tbFix(b){ Object.keys(TB_DEF).forEach(k=>{ if(b[k]==null) b[k]=TB_DEF[k]; }); if(!Array.isArray(b.items)) b.items=[]; return b; }
+function tbNextName(){ const names=new Set(Object.values(tbBoards).map(b=>b.name)); let n=Object.keys(tbBoards).length+1; while(names.has('Board '+n)) n++; return 'Board '+n; }
+function tbNew(name,from,auto){ const id='tb'+newId(), now=Date.now();
+  const b=tbFix(Object.assign(from?JSON.parse(JSON.stringify(from)):{},{id,name:name||tbNextName(),createdAt:now,updatedAt:now}));
+  if(auto) b.auto=true; else delete b.auto; tbBoards[id]=b; tbUi.cur=id; tbUi.sel=null; tbTouch(id,true); return b; }
+function tbCur(){ let b=tbBoards[tbUi.cur]; if(!b){ b=Object.values(tbBoards).sort((x,y)=>(y.updatedAt||0)-(x.updatedAt||0))[0]; if(b) tbUi.cur=b.id; else b=tbNew('Board 1',null,true); } return tbFix(b); }
+function tbTouch(id,keepAuto){ const b=tbBoards[id]; if(b){ b.updatedAt=Date.now(); if(b.auto&&!keepAuto) delete b.auto; } tbDirty.add(id); tbStoreLocal(); clearTimeout(tbTimer); tbTimer=setTimeout(tbFlush,900); }
+async function tbFlush(){
+  if(!col||!tbDirty.size) return;
+  const keys=[...tbDirty]; tbDirty.clear();
+  for(const k of keys){
+    try{
+      if(k==='_del') await FSX.write('Data/tactics/deleted.json',JSON.stringify(tbDeleted));
+      else if(k.startsWith('del:')) await FSX.remove('Data/tactics/'+k.slice(4)+'.json');
+      else if(tbBoards[k]&&!tbBoards[k].auto) await FSX.write('Data/tactics/'+k+'.json',JSON.stringify(tbBoards[k],null,1));
+    }catch(e){ console.error(e); tbDirty.add(k); if(e&&e.name==='AuthError'&&typeof authLost==='function'){ authLost(); return; } clearTimeout(tbTimer); tbTimer=setTimeout(tbFlush,15000); return; }
+  }
+}
+/* after the folder / online storage connects: newest copy of each board wins */
+async function tbSync(){
+  if(!col||tbSyncing) return; tbSyncing=true; let changed=false;
+  try{
+    try{ const t=await FSX.readText('Data/tactics/deleted.json'); if(t){ const r=JSON.parse(t)||{}; Object.entries(r).forEach(([id,ts])=>{ if(!tbDeleted[id]||tbDeleted[id]<ts) tbDeleted[id]=ts; }); } }catch(e){}
+    Object.keys(tbDeleted).forEach(id=>{ if(tbBoards[id]&&(tbBoards[id].updatedAt||0)<=tbDeleted[id]){ delete tbBoards[id]; changed=true; } });
+    let items=[]; try{ items=(await FSX.list('Data/tactics'))||[]; }catch(e){}
+    const remote=new Set();
+    for(const it of items.filter(x=>x.kind==='file'&&/^tb[a-z0-9]+\.json$/i.test(x.name))){
+      const id=it.name.replace(/\.json$/i,''); remote.add(id);
+      if(tbDeleted[id]&&!tbBoards[id]){ tbDirty.add('del:'+id); continue; }
+      try{ const r=JSON.parse(await (await it.handle.getFile()).text());
+        if(r&&Array.isArray(r.items)&&(!tbBoards[id]||(r.updatedAt||0)>(tbBoards[id].updatedAt||0))){ tbBoards[id]=tbFix(r); changed=true; }
+        else if(tbBoards[id]&&(tbBoards[id].updatedAt||0)>((r&&r.updatedAt)||0)) tbDirty.add(id); }catch(e){ console.warn('tactics board',id,e); }
+    }
+    /* an untouched board made while the storage was still loading gives way to the saved ones */
+    if(remote.size) Object.values(tbBoards).filter(x=>x.auto&&!remote.has(x.id)).forEach(x=>{ delete tbBoards[x.id]; if(tbUi.cur===x.id){ tbUi.cur=null; tbUi.sel=null; } changed=true; });
+    Object.keys(tbBoards).forEach(id=>{ if(!remote.has(id)) tbDirty.add(id); });
+    if(Object.keys(tbDeleted).length) tbDirty.add('_del');
+    tbStoreLocal(); await tbFlush();
+  } finally { tbSyncing=false; }
+  if(changed&&view==='tactics'&&!tbUi.drag){ const id=tbCur().id; if(viewArg!==id) go('tactics',id); else renderTactics(); }
+}
+
+/* ---------- undo ---------- */
+const tbState=b=>({items:b.items,pitch:b.pitch,style:b.style,size:b.size,names:b.names,home:b.home,away:b.away});
+function tbSnap(b){ b=b||tbCur(); const u=tbUi.undo[b.id]=tbUi.undo[b.id]||[]; u.push(JSON.stringify(tbState(b))); if(u.length>80) u.shift(); tbUi.redo[b.id]=[]; }
+function tbUndo(redo){ const b=tbCur(), from=(redo?tbUi.redo:tbUi.undo)[b.id]||[], to=redo?tbUi.undo:tbUi.redo; if(!from.length) return;
+  (to[b.id]=to[b.id]||[]).push(JSON.stringify(tbState(b))); Object.assign(b,JSON.parse(from.pop())); if(tbUi.sel&&!b.items.some(x=>x.id===tbUi.sel)) tbUi.sel=null; tbTouch(b.id); renderTactics(); }
+
+/* ---------- geometry ---------- */
+const tbDim=p=>p==='vert'?{W:68,H:105}:p==='half'?{W:68,H:52.5}:{W:105,H:68};
+const tbUpright=p=>p==='vert'||p==='half';
+function tbInk(hex){ const m=String(hex||'').match(/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i); if(!m) return '#FFFFFF'; const [r,g,b]=[m[1],m[2],m[3]].map(x=>parseInt(x,16)/255); return (0.299*r+0.587*g+0.114*b)>0.62?'#11161C':'#FFFFFF'; }
+function tbClamp(b,x,y){ const {W,H}=tbDim(b.pitch); return [tbR(Math.max(-TB_M+.8,Math.min(W+TB_M-.8,x))),tbR(Math.max(-TB_M+.8,Math.min(H+TB_M-.8,y)))]; }
+function tbFormPos(b,f,i,them){ const F=FORMATIONS[f]||FORMATIONS['4-3-3']; const p=F.pos[i]; if(!p) return null; const {W,H}=tbDim(b.pitch);
+  let x=p[0]/100, y=p[1]/100; if(them){ x=1-x; y=1-y; }
+  return tbUpright(b.pitch)?[tbR(x*W),tbR(y*H)]:[tbR((1-y)*W),tbR(x*H)]; }
+const tbNear=(b,x,y,d,filter)=>b.items.some(it=>it.x!=null&&(!filter||filter(it))&&Math.hypot(it.x-x,it.y-y)<d);
+function tbSpot(b,team){ const k=b.size||1;
+  for(let i=0;i<11;i++){ const p=tbFormPos(b,b.formation,i,team==='them'); if(p&&!tbNear(b,p[0],p[1],2.6*k,it=>it.t==='pl')) return p; }
+  const {W,H}=tbDim(b.pitch); for(let i=0;i<30;i++){ const x=tbR(4+i*5.5*k), y=team==='them'?tbR(1.5):tbR(H-1.5); if(x<W-2&&!tbNear(b,x,y,2.6*k)) return [x,y]; }
+  return [tbR(W/2),tbR(H/2)]; }
+function tbFreeSpot(b){ const {W,H}=tbDim(b.pitch), k=b.size||1;
+  for(let r=0;r<40;r++){ const a=r*2.4, d=r?1.6*k*Math.sqrt(r):0, x=W/2+Math.cos(a)*d, y=H/2+Math.sin(a)*d; if(!tbNear(b,x,y,2*k)) return tbClamp(b,x,y); }
+  return [tbR(W/2),tbR(H/2)]; }
+
+/* ---------- drawing ---------- */
+function tbPitchLines(b,line){
+  if(b.pitch==='plain') return '';
+  const side=`<rect x="0" y="13.84" width="16.5" height="40.32"/><rect x="0" y="24.84" width="5.5" height="18.32"/><path d="M16.5 26.69A9.15 9.15 0 0 1 16.5 41.31"/>
+    <rect x="-1.6" y="30.34" width="1.6" height="7.32"/><path d="M0 1A1 1 0 0 0 1 0M1 68A1 1 0 0 0 0 67"/><circle cx="11" cy="34" r=".32" fill="${line}" stroke="none"/>`;
+  let g=`<rect x="0" y="0" width="105" height="68"/><line x1="52.5" y1="0" x2="52.5" y2="68"/><circle cx="52.5" cy="34" r="9.15"/><circle cx="52.5" cy="34" r=".35" fill="${line}" stroke="none"/>
+    ${side}<g transform="translate(105 0) scale(-1 1)">${side}</g>`;
+  if(tbUpright(b.pitch)) g=`<g transform="translate(68 0) rotate(90)">${g}</g>`;
+  const clip=b.pitch==='half'?`<clipPath id="tbClip"><rect x="${-TB_M}" y="${-TB_M}" width="${68+2*TB_M}" height="${52.5+TB_M+.2}"/></clipPath>`:'';
+  return `${clip}<g fill="none" stroke="${line}" stroke-width=".3" ${clip?'clip-path="url(#tbClip)"':''}>${g}</g>`;
+}
+function tbBg(b){ const {W,H}=tbDim(b.pitch), M=TB_M;
+  if(b.style==='white') return `<rect x="${-M}" y="${-M}" width="${W+2*M}" height="${H+2*M}" fill="#FFFFFF"/>`;
+  let s=`<rect x="${-M}" y="${-M}" width="${W+2*M}" height="${H+2*M}" fill="#2C7442"/>`;
+  if(tbUpright(b.pitch)){ const st=105/12; for(let i=0;i*st<H-.01;i++) s+=`<rect x="0" y="${tbR(i*st)}" width="${W}" height="${Math.min(st,H-i*st).toFixed(2)}" fill="${i%2?'#317E48':'#36884E'}"/>`; }
+  else { const st=105/12; for(let i=0;i<12;i++) s+=`<rect x="${(i*st).toFixed(2)}" y="0" width="${st.toFixed(2)}" height="${H}" fill="${i%2?'#317E48':'#36884E'}"/>`; }
+  return s; }
+const tbQ=(a,m,e,t)=>{ const u=1-t; return [u*u*a[0]+2*u*t*m[0]+t*t*e[0], u*u*a[1]+2*u*t*m[1]+t*t*e[1]]; };
+function tbArrowSvg(b,it,white){ const k=b.size||1, col=it.c||(white?'#11161C':'#FFFFFF'), w=.42*k, a=it.a, e=it.b, m=it.m||[(a[0]+e[0])/2,(a[1]+e[1])/2];
+  const len=Math.hypot(e[0]-a[0],e[1]-a[1])+(it.m?Math.hypot(m[0]-(a[0]+e[0])/2,m[1]-(a[1]+e[1])/2):0), n=Math.max(8,Math.ceil(len/.25));
+  let pts=[]; for(let i=0;i<=n;i++) pts.push(tbQ(a,m,e,i/n));
+  const head=it.k!=='line', hl=1.8*k, hw=1.25*k;
+  const prev=pts[Math.max(0,pts.length-1-Math.ceil(n*Math.min(.5,hl/Math.max(len,.01))))]; let dx=e[0]-prev[0], dy=e[1]-prev[1]; const dl=Math.hypot(dx,dy)||1; dx/=dl; dy/=dl;
+  if(head){ pts=pts.filter(p=>Math.hypot(p[0]-e[0],p[1]-e[1])>hl*.85); pts.push([e[0]-dx*hl*.85,e[1]-dy*hl*.85]); }
+  if(it.k==='drib'&&pts.length>2){ let s=0; const amp=.6*k, lam=2.4*k, stop=Math.max(0,len-(head?hl*1.6:0)), out=[pts[0]];
+    for(let i=1;i<pts.length;i++){ const p=pts[i], q=pts[i-1]; s+=Math.hypot(p[0]-q[0],p[1]-q[1]); let nx=-(p[1]-q[1]), ny=p[0]-q[0]; const nl=Math.hypot(nx,ny)||1; nx/=nl; ny/=nl;
+      const o=s<stop?amp*Math.sin(2*Math.PI*s/lam)*Math.min(1,s/lam,(stop-s)/lam*2):0; out.push([p[0]+nx*o,p[1]+ny*o]); }
+    pts=out; }
+  const d='M'+pts.map(p=>p[0].toFixed(2)+' '+p[1].toFixed(2)).join('L');
+  const dash=it.k==='run'?` stroke-dasharray="${(1.3*k).toFixed(2)} ${(.9*k).toFixed(2)}"`:'';
+  const tip=head?`<path d="M${e[0].toFixed(2)} ${e[1].toFixed(2)}L${(e[0]-dx*hl-dy*hw/2).toFixed(2)} ${(e[1]-dy*hl+dx*hw/2).toFixed(2)}L${(e[0]-dx*hl+dy*hw/2).toFixed(2)} ${(e[1]-dy*hl-dx*hw/2).toFixed(2)}Z" fill="${col}"/>`:'';
+  return {d, svg:`<path d="${d}" fill="none" stroke="${col}" stroke-width="${w.toFixed(2)}" stroke-linecap="round" stroke-linejoin="round"${dash}/>${tip}`}; }
+const TB_PART=new Set(['de','van','der','den','het','ten','ter','te','vande','vanden','vander','vd','le','la','du','des','di','da','del','della','dos','das','von','zu','mac','st','st.',"'t",'el','al','ben','bin']);
+function tbShort(n){ const w=String(n||'').trim().split(/\s+/).filter(Boolean); let i=0; while(i<w.length-1&&TB_PART.has(w[i].toLowerCase())) i++; return w.slice(0,i+1).join(' '); }
+function tbName(b,it,sq){ if(b.names==='none') return ''; const n=it.name!=null?it.name:(sq?sq.name:''); if(!n) return ''; return b.names==='full'?n:tbShort(n); }
+function tbItemSvg(b,it,white,clean){ const k=b.size||1, x=it.x, y=it.y, at=clean?'':` data-tbit="${it.id}"`;
+  const halo=white?'fill="#11161C" stroke="#FFFFFF"':'fill="#FFFFFF" stroke="rgba(0,0,0,.7)"';
+  if(it.t==='pl'){ const sq=it.sid?SQ(it.sid):null, fill=it.c||(it.team==='them'?b.away:b.home), ink=tbInk(fill), r=2.3*k;
+    const num=it.num!=null&&it.num!==''?String(it.num):String((sq&&sq.num)||''), nm=tbName(b,it,sq);
+    return `<g${at} class="tb-it">${clean?'':`<circle cx="${x}" cy="${y}" r="${(r+.9).toFixed(2)}" fill="rgba(0,0,0,0)"/>`}<circle cx="${x+.18*k}" cy="${y+.28*k}" r="${r.toFixed(2)}" fill="rgba(0,0,0,.28)"/><circle cx="${x}" cy="${y}" r="${r.toFixed(2)}" fill="${fill}" stroke="${ink==='#FFFFFF'?'#FFFFFF':'#11161C'}" stroke-width="${(.3*k).toFixed(2)}"/>`+
+      (num?`<text x="${x}" y="${y}" dy=".35em" text-anchor="middle" font-size="${((num.length>2?1.85:2.45)*k).toFixed(2)}" font-weight="700" fill="${ink}">${esc(num)}</text>`:'')+
+      (nm?`<text x="${x}" y="${(y+r+2*k).toFixed(2)}" text-anchor="middle" font-size="${(1.75*k).toFixed(2)}" font-weight="700" ${halo} stroke-width="${(.45*k).toFixed(2)}" stroke-linejoin="round" paint-order="stroke">${esc(nm)}</text>`:'')+`</g>`; }
+  if(it.t==='ball') return `<g${at} class="tb-it"><circle cx="${x}" cy="${y}" r="${(.95*k).toFixed(2)}" fill="#FFFFFF" stroke="#11161C" stroke-width="${(.18*k).toFixed(2)}"/><circle cx="${x}" cy="${y}" r="${(.38*k).toFixed(2)}" fill="#11161C"/></g>`;
+  if(it.t==='cone'){ const c=it.c||'#F28C28'; return `<g${at} class="tb-it"><path d="M${x} ${tbR(y-1.15*k)}L${tbR(x-.95*k)} ${tbR(y+.75*k)}L${tbR(x+.95*k)} ${tbR(y+.75*k)}Z" fill="${c}" stroke="rgba(0,0,0,.45)" stroke-width="${(.15*k).toFixed(2)}" stroke-linejoin="round"/></g>`; }
+  if(it.t==='goal'){ const gw=(it.rot?1.3:3.6)*k, gh=(it.rot?3.6:1.3)*k, c=white?'#11161C':'#FFFFFF';
+    return `<g${at} class="tb-it"><rect x="${tbR(x-gw/2)}" y="${tbR(y-gh/2)}" width="${tbR(gw)}" height="${tbR(gh)}" fill="${white?'rgba(17,22,28,.08)':'rgba(255,255,255,.22)'}" stroke="${c}" stroke-width="${(.3*k).toFixed(2)}"/></g>`; }
+  if(it.t==='text'){ const c=it.c||(white?'#11161C':'#FFFFFF'), fs=2.6*k*(it.fs||1), st=tbInk(c)==='#FFFFFF'?'rgba(0,0,0,.65)':'rgba(255,255,255,.9)';
+    return `<g${at} class="tb-it"><text x="${x}" y="${y}" dy=".35em" text-anchor="middle" font-size="${fs.toFixed(2)}" font-weight="700" fill="${c}" stroke="${st}" stroke-width="${(fs*.16).toFixed(2)}" stroke-linejoin="round" paint-order="stroke">${esc(it.s||'Text')}</text></g>`; }
+  if(it.t==='zone'){ const c=it.c||'#FFC000', zx=Math.min(it.x,it.x+it.w), zy=Math.min(it.y,it.y+it.h);
+    return `<g${at} class="tb-it"><rect x="${tbR(zx)}" y="${tbR(zy)}" width="${tbR(Math.abs(it.w))}" height="${tbR(Math.abs(it.h))}" rx=".6" fill="${c}" fill-opacity=".24" stroke="${c}" stroke-width="${(.3*k).toFixed(2)}" stroke-dasharray="${(1*k).toFixed(2)} ${(.7*k).toFixed(2)}"/></g>`; }
+  if(it.t==='arrow'){ const r=tbArrowSvg(b,it,white); return `<g${at} class="tb-it">${clean?'':`<path d="${r.d}" fill="none" stroke="rgba(0,0,0,0)" stroke-width="2.6" stroke-linecap="round" pointer-events="stroke"/>`}${r.svg}</g>`; }
+  if(it.t==='free'&&it.pts&&it.pts.length){ const c=it.c||(white?'#11161C':'#FFFFFF'), d='M'+it.pts.map(p=>p[0]+' '+p[1]).join('L');
+    return `<g${at} class="tb-it">${clean?'':`<path d="${d}" fill="none" stroke="rgba(0,0,0,0)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" pointer-events="stroke"/>`}<path d="${d}" fill="none" stroke="${c}" stroke-width="${(.42*k).toFixed(2)}" stroke-linecap="round" stroke-linejoin="round"/></g>`; }
+  return ''; }
+const TB_LAYER={zone:0,free:1,arrow:1,goal:2,cone:2,ball:3,pl:4,text:5};
+function tbBox(b,it){ const k=b.size||1;
+  if(it.t==='pl') return [it.x-2.3*k,it.y-2.3*k,it.x+2.3*k,it.y+2.3*k];
+  if(it.t==='text'){ const fs=2.6*k*(it.fs||1), w=Math.max(2,String(it.s||'Text').length)*fs*.56; return [it.x-w/2,it.y-fs*.6,it.x+w/2,it.y+fs*.6]; }
+  if(it.t==='zone') return [Math.min(it.x,it.x+it.w),Math.min(it.y,it.y+it.h),Math.max(it.x,it.x+it.w),Math.max(it.y,it.y+it.h)];
+  if(it.t==='free'){ const xs=it.pts.map(p=>p[0]), ys=it.pts.map(p=>p[1]); return [Math.min(...xs),Math.min(...ys),Math.max(...xs),Math.max(...ys)]; }
+  if(it.t==='goal'){ const gw=(it.rot?1.3:3.6)*k/2, gh=(it.rot?3.6:1.3)*k/2; return [it.x-gw,it.y-gh,it.x+gw,it.y+gh]; }
+  return [it.x-1.2*k,it.y-1.2*k,it.x+1.2*k,it.y+1.2*k]; }
+function tbSelSvg(b,it){ if(!it) return ''; const hd=(x,y,h,round)=>`<circle data-tbh="${h}" cx="${tbR(x)}" cy="${tbR(y)}" r="1.05" fill="${round?'#FFFFFF':'#0078BF'}" stroke="${round?'#0078BF':'#FFFFFF'}" stroke-width=".3" class="tb-hd"/>`;
+  if(it.t==='arrow'){ const m=it.m||[(it.a[0]+it.b[0])/2,(it.a[1]+it.b[1])/2], mid=tbQ(it.a,m,it.b,.5);
+    return hd(it.a[0],it.a[1],'a')+hd(it.b[0],it.b[1],'b')+hd(mid[0],mid[1],'m',true); }
+  const [x0,y0,x1,y1]=tbBox(b,it), p=.7;
+  let s=`<rect x="${tbR(x0-p)}" y="${tbR(y0-p)}" width="${tbR(x1-x0+2*p)}" height="${tbR(y1-y0+2*p)}" rx="${it.t==='pl'?tbR((x1-x0)/2+p):.6}" fill="none" stroke="#0078BF" stroke-width=".35" stroke-dasharray=".9 .6" pointer-events="none"/>`;
+  if(it.t==='zone') s+=hd(x1,y1,'rs');
+  return s; }
+function tbSvgParts(b,opt){ opt=opt||{}; const {W,H}=tbDim(b.pitch), white=b.style==='white', line=white?'#9AA5B1':'rgba(255,255,255,.9)';
+  const items=b.items.concat(opt.temp?[opt.temp]:[]).map((it,i)=>[it,i]).sort((p,q)=>(TB_LAYER[p[0].t]||0)-(TB_LAYER[q[0].t]||0)||p[1]-q[1]).map(p=>p[0]);
+  const sel=!opt.clean&&tbUi.sel?b.items.find(x=>x.id===tbUi.sel):null;
+  const inner=tbBg(b)+tbPitchLines(b,line)+items.map(it=>tbItemSvg(b,it,white,opt.clean)).join('')+tbSelSvg(b,sel);
+  return {vb:`${-TB_M} ${-TB_M} ${W+2*TB_M} ${H+2*TB_M}`, w:W+2*TB_M, h:H+2*TB_M, inner}; }
+function tbDraw(){ const svg=$('#tbSvg'); if(!svg) return; const b=tbCur(), d=tbUi.drag, g=tbSvgParts(b,{temp:d&&d.temp});
+  svg.setAttribute('viewBox',g.vb); svg.innerHTML=g.inner; svg.dataset.tool=tbUi.tool; }
+
+/* ---------- page ---------- */
+const tbSw=(sel,attr,auto)=>`<span class="tb-sws" role="group" aria-label="Colour">${auto?`<button class="tb-sw auto" ${attr}="" aria-pressed="${!sel}" title="${esc(auto)}" aria-label="${esc(auto)}"></button>`:''}${TB_COLORS.map(([c,l])=>`<button class="tb-sw" style="--c:${c}" ${attr}="${c}" aria-pressed="${sel===c}" title="${l}" aria-label="${l}"></button>`).join('')}</span>`;
+function tbInspHtml(b){ const it=tbUi.sel&&b.items.find(x=>x.id===tbUi.sel);
+  if(!it){ const tips={move:'Click a player in the list or drag one onto the pitch. Click anything on the pitch to edit it, drag to move it.',pass:'Drag on the pitch to draw a pass.',run:'Drag on the pitch to draw a run.',drib:'Drag on the pitch to draw a dribble.',line:'Drag on the pitch to draw a line.',free:'Draw freely on the pitch.',zone:'Drag on the pitch to mark an area.',text:'Click on the pitch to place a text.'};
+    return `<span class="hint">${tips[tbUi.tool]||''}</span>`; }
+  const del=`<button class="btn sm ghost" data-tbdelit>Delete</button>`, dup=`<button class="btn sm ghost" data-tbdupit>Copy</button>`;
+  if(it.t==='pl'){ const sq=it.sid?SQ(it.sid):null;
+    return `<b class="tb-it-t">${it.team==='them'?'Opponent':'Player'}</b>
+      <label class="tb-f">No. <input data-tbf="num" value="${esc(it.num!=null?it.num:(sq&&sq.num)||'')}" inputmode="numeric" maxlength="3" aria-label="Number"></label>
+      <label class="tb-f wide">Name <input data-tbf="name" value="${esc(it.name!=null?it.name:(sq&&sq.name)||'')}" placeholder="${it.team==='them'?'Optional':'Name'}" aria-label="Name"></label>
+      <span class="seg" role="group" aria-label="Team"><button data-tbteam="us" aria-pressed="${it.team!=='them'}">Us</button><button data-tbteam="them" aria-pressed="${it.team==='them'}">Opponent</button></span>
+      ${tbSw(it.c||'','data-tbcol','Team colour')}${sq?`<span class="hint">From your squad</span>`:''}${dup}${del}`; }
+  if(it.t==='arrow') return `<b class="tb-it-t">Arrow</b><span class="seg" role="group" aria-label="Arrow style">${[['pass','Pass'],['run','Run'],['drib','Dribble'],['line','Line']].map(([k,l])=>`<button data-tbak="${k}" aria-pressed="${it.k===k}">${l}</button>`).join('')}</span>
+      ${tbSw(it.c||'','data-tbcol','Default')}${it.m?`<button class="btn sm" data-tbstraight>Straighten</button>`:'<span class="hint">Drag the white dot to curve it.</span>'}${dup}${del}`;
+  if(it.t==='text') return `<b class="tb-it-t">Text</b><label class="tb-f wide">Text <input data-tbf="s" value="${esc(it.s||'')}" aria-label="Text"></label>
+      <span class="seg" role="group" aria-label="Text size">${[[.7,'S'],[1,'M'],[1.5,'L'],[2.2,'XL']].map(([v,l])=>`<button data-tbfs="${v}" aria-pressed="${(it.fs||1)===v}">${l}</button>`).join('')}</span>${tbSw(it.c||'','data-tbcol','Default')}${dup}${del}`;
+  const nm={ball:'Ball',cone:'Cone',goal:'Mini goal',zone:'Area',free:'Drawing'}[it.t]||'Item';
+  return `<b class="tb-it-t">${nm}</b>${['cone','zone','free'].includes(it.t)?tbSw(it.c||'','data-tbcol','Default'):''}${it.t==='goal'?`<button class="btn sm" data-tbrot>Turn</button>`:''}${dup}${del}`; }
+function tbListHtml(b){ const q=fold(tbUi.q||'').trim().replace(/^#/,''), ss=nowSeason();
+  const on=new Map(b.items.filter(x=>x.t==='pl'&&x.sid).map(x=>[x.sid,x.id]));
+  const all=squad().slice().sort((a,c)=>(isOther(a,ss)-isOther(c,ss))||(+a.num||999)-(+c.num||999)||a.name.localeCompare(c.name));
+  if(!all.length) return `<p class="hint">No players yet. Add your squad on the <button class="tlink" data-go="players">Players</button> page, or use the numbered players below.</p>`;
+  const list=all.filter(s=>!q||fold(s.name).includes(q)||String(s.num||'').startsWith(q));
+  if(!list.length) return '<p class="hint">No player matches your search.</p>';
+  return list.map(s=>`<button class="tb-pl${on.has(s.id)?' on':''}" data-tbadd="sq:${s.id}" title="${on.has(s.id)?'On the board: click to select, drag to move':'Click to add, or drag onto the pitch'}"><span class="tb-disc" style="--c:${b.home};--k:${tbInk(b.home)}">${esc(s.num||'')}</span><span class="nm">${esc(s.name)}${isOther(s,ss)?'<small>other team</small>':''}</span>${on.has(s.id)?'<span class="tb-on">✓</span>':''}</button>`).join(''); }
+function tbMatchOpts(){ return Object.values(store).filter(m=>(m.players||[]).some(p=>p.slot!=null&&p.slot<11)).sort(byDateDesc).slice(0,40); }
+function renderTactics(){
+  const el=$('#view-tactics'); if(!el) return; const b=tbCur(), boards=Object.values(tbBoards).sort((x,y)=>(y.updatedAt||0)-(x.updatedAt||0));
+  const onBoard=b.items.filter(x=>x.t==='pl'&&x.team!=='them').length, opp=b.items.filter(x=>x.t==='pl'&&x.team==='them').length, ms=tbMatchOpts();
+  const u=(tbUi.undo[b.id]||[]).length, r=(tbUi.redo[b.id]||[]).length;
+  el.innerHTML=`<div class="wrap page tb-page">
+    <header class="page-head"><div><span class="eyebrow">Tactics board</span>
+      ${tbUi.rename?`<div class="tb-ren"><input id="tbRenIn" value="${esc(b.name)}" aria-label="Board name" maxlength="80"><button class="btn sm primary" data-tbrensave>Save</button><button class="btn sm ghost" data-tbrencancel>Cancel</button></div>`:`<h1>${esc(b.name)}</h1>`}
+      <p>${onBoard} player${onBoard===1?'':'s'}${opp?' · '+opp+' opponent'+(opp===1?'':'s'):''} · ${boards.length} board${boards.length===1?'':'s'}</p></div>
+      <div class="page-actions">
+        <label class="sel">Board <select id="tbBoardSel">${boards.map(x=>`<option value="${x.id}"${x.id===b.id?' selected':''}>${esc(x.name)}</option>`).join('')}</select></label>
+        <button class="btn" data-tbnew>${IC.plus} New board</button><button class="btn" data-tbdup>Duplicate</button><button class="btn" data-tbren>Rename</button><button class="btn ghost" data-tbdel>Delete</button>
+        <span class="tb-sep"></span><button class="btn" data-tbpng>PNG</button><button class="btn primary" data-tbpdf>Export PDF</button>${boards.length>1?`<button class="btn" data-tbpdfall>All boards PDF</button>`:''}
+      </div></header>
+    <div class="tb-layout">
+      <aside class="tb-menu" aria-label="Add to the board">
+        <section class="card tb-card"><div class="card-head"><h2>My players</h2><span class="hint">${squad().length?'Click or drag':''}</span></div>
+          ${squad().length?`<input class="search" id="tbSearch" type="search" placeholder="Search name or number" value="${esc(tbUi.q||'')}" aria-label="Search players">`:''}
+          <div class="tb-plist" id="tbList">${tbListHtml(b)}</div></section>
+        <section class="card tb-card"><div class="card-head"><h2>Add</h2><span class="hint">Click or drag</span></div>
+          <div class="tb-adds">
+            <button class="tb-add" data-tbadd="us"><span class="tb-disc" style="--c:${b.home};--k:${tbInk(b.home)}">#</span>Player</button>
+            <button class="tb-add" data-tbadd="opp"><span class="tb-disc" style="--c:${b.away};--k:${tbInk(b.away)}">#</span>Opponent</button>
+            <button class="tb-add" data-tbadd="ball"><span class="tb-ico ball"></span>Ball</button>
+            <button class="tb-add" data-tbadd="cone"><span class="tb-ico cone"></span>Cone</button>
+            <button class="tb-add" data-tbadd="goal"><span class="tb-ico goal"></span>Mini goal</button>
+          </div>
+          <div class="tb-row"><span class="tb-lbl">Team colours</span><label class="tb-colin" title="Our colour"><input type="color" id="tbHome" value="${b.home}" aria-label="Our colour"> Us</label><label class="tb-colin" title="Opponent colour"><input type="color" id="tbAway" value="${b.away}" aria-label="Opponent colour"> Opponent</label></div></section>
+        <section class="card tb-card"><div class="card-head"><h2>Shapes</h2></div>
+          <div class="tb-row"><label class="sel">Formation <select id="tbForm">${Object.keys(FORMATIONS).map(f=>`<option${f===b.formation?' selected':''}>${f}</option>`).join('')}</select></label></div>
+          <div class="tb-row"><button class="btn sm" data-tbshape="us">Our team 1–11</button><button class="btn sm" data-tbshape="them">Opponents 1–11</button></div>
+          ${ms.length?`<div class="tb-row"><label class="sel tb-grow">Line-up from <select id="tbFromMatch"><option value="">Choose a match…</option>${ms.map(m=>`<option value="${m.id}">${esc(fmtDate(isoDate(m.date),{day:'numeric',month:'short'})+' · '+(m.home?'vs ':'at ')+(m.them||'Opponent'))}</option>`).join('')}</select></label></div>`:''}
+          <p class="hint">A shape replaces the players of that team on the board. Undo brings them back.</p></section>
+        <section class="card tb-card"><div class="card-head"><h2>Pitch</h2></div>
+          <div class="tb-view">
+          <label class="sel">Pitch <select id="tbPitch">${TB_PITCH.map(([k,l])=>`<option value="${k}"${b.pitch===k?' selected':''}>${l}</option>`).join('')}</select></label>
+          <label class="sel">Colour <select id="tbStyle"><option value="grass"${b.style!=='white'?' selected':''}>Grass</option><option value="white"${b.style==='white'?' selected':''}>White (print)</option></select></label>
+          <label class="sel">Players <select id="tbSize">${[[.8,'Small'],[1,'Medium'],[1.25,'Large']].map(([v,l])=>`<option value="${v}"${(b.size||1)===v?' selected':''}>${l}</option>`).join('')}</select></label>
+          <label class="sel">Names <select id="tbNames">${[['first','Short names'],['full','Full names'],['none','No names']].map(([v,l])=>`<option value="${v}"${b.names===v?' selected':''}>${l}</option>`).join('')}</select></label>
+          </div></section>
+      </aside>
+      <div class="tb-stage">
+        <div class="tb-bar">
+          <span class="seg tb-tools" role="group" aria-label="Tool">${TB_TOOLS.map(([k,l,key,ic])=>`<button data-tbtool="${k}" aria-pressed="${tbUi.tool===k}" title="${l} (${key})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ic}</svg><span>${l}</span></button>`).join('')}</span>
+          <span class="seg" role="group" aria-label="History"><button data-tbundo ${u?'':'disabled'} title="Undo (Ctrl+Z)">Undo</button><button data-tbredo ${r?'':'disabled'} title="Redo (Ctrl+Y)">Redo</button></span>
+          <span class="spacer"></span>
+          <button class="btn sm ghost" data-tbclear ${b.items.length?'':'disabled'}>Clear</button>
+        </div>
+        <div class="tb-insp" id="tbInsp">${tbInspHtml(b)}</div>
+        <div class="tb-pitch ${b.style==='white'?'white':''}" id="tbPitchBox"><svg id="tbSvg" xmlns="http://www.w3.org/2000/svg" font-family="Arial, Helvetica, sans-serif" role="img" aria-label="Tactics board ${esc(b.name)}"></svg></div>
+        <div class="field"><label for="tbNotes">Notes</label><textarea id="tbNotes" class="tb-notes" placeholder="Coaching points, triggers, roles… Included in the PDF.">${esc(b.notes||'')}</textarea></div>
+      </div>
+    </div></div>`;
+  tbDraw();
+  if(tbUi.flash){ const id=tbUi.flash; tbUi.flash=null; const g=document.querySelector(`#tbSvg [data-tbit="${id}"]`); if(g){ g.classList.add('flash'); } }
+}
+function tbRefresh(){ const b=tbCur(); tbDraw(); const i=$('#tbInsp'); if(i) i.innerHTML=tbInspHtml(b); const l=$('#tbList'); if(l) l.innerHTML=tbListHtml(b);
+  const u=document.querySelector('[data-tbundo]'), r=document.querySelector('[data-tbredo]'); if(u) u.disabled=!(tbUi.undo[b.id]||[]).length; if(r) r.disabled=!(tbUi.redo[b.id]||[]).length;
+  const c=document.querySelector('[data-tbclear]'); if(c) c.disabled=!b.items.length;
+  const p=document.querySelector('#view-tactics .page-head p'); if(p){ const n=b.items.filter(x=>x.t==='pl'&&x.team!=='them').length, o=b.items.filter(x=>x.t==='pl'&&x.team==='them').length, nb=Object.keys(tbBoards).length; p.textContent=`${n} player${n===1?'':'s'}${o?' · '+o+' opponent'+(o===1?'':'s'):''} · ${nb} board${nb===1?'':'s'}`; } }
+
+/* ---------- editing ---------- */
+function tbAdd(kind,pt){ const b=tbCur(), k=b.size||1;
+  if(kind.startsWith('sq:')){ const sid=kind.slice(3), ex=b.items.find(x=>x.t==='pl'&&x.sid===sid);
+    if(ex){ if(pt){ tbSnap(b); [ex.x,ex.y]=tbClamp(b,pt[0],pt[1]); tbTouch(b.id); } tbUi.sel=ex.id; tbUi.flash=ex.id; tbUi.tool='move'; renderTactics(); return; }
+    if(!SQ(sid)) return; }
+  tbSnap(b); let it;
+  if(kind.startsWith('sq:')){ const p=pt||tbSpot(b,'us'); it={id:newId('i'),t:'pl',team:'us',sid:kind.slice(3),num:null,name:null,x:p[0],y:p[1]}; }
+  else if(kind==='us'||kind==='opp'){ const team=kind==='opp'?'them':'us', used=new Set(b.items.filter(x=>x.t==='pl'&&x.team===team).map(x=>String(x.num!=null?x.num:((x.sid&&SQ(x.sid)||{}).num||''))));
+    let n=1; while(used.has(String(n))) n++; const p=pt||tbSpot(b,team); it={id:newId('i'),t:'pl',team,num:String(n),name:'',x:p[0],y:p[1]}; }
+  else { const p=pt||tbFreeSpot(b); it={id:newId('i'),t:kind,x:p[0],y:p[1]}; }
+  [it.x,it.y]=tbClamp(b,it.x,it.y); b.items.push(it); tbUi.sel=it.id; tbUi.tool='move'; tbTouch(b.id); renderTactics(); }
+function tbShape(team){ const b=tbCur(); tbSnap(b); b.items=b.items.filter(x=>!(x.t==='pl'&&(x.team==='them')===(team==='them')));
+  const F=FORMATIONS[b.formation]||FORMATIONS['4-3-3']; F.pos.forEach((_,i)=>{ const p=tbFormPos(b,b.formation,i,team==='them'); b.items.push({id:newId('i'),t:'pl',team:team==='them'?'them':'us',num:String(i+1),name:team==='them'?'':F.roles[i],x:p[0],y:p[1]}); });
+  tbUi.sel=null; tbTouch(b.id); renderTactics(); toast((team==='them'?'Opponents':'Your team')+' placed in a '+b.formation+'.',()=>tbUndo()); }
+function tbFromMatch(mid){ const m=store[mid], b=tbCur(); if(!m) return; const f=FORMATIONS[m.formation]?m.formation:'4-3-3'; tbSnap(b);
+  b.items=b.items.filter(x=>!(x.t==='pl'&&x.team!=='them'));
+  (m.players||[]).filter(p=>p.slot!=null&&p.slot<11).forEach(p=>{ const pos=tbFormPos(b,f,p.slot,false); if(!pos) return; const sq=(p.sq&&SQ(p.sq))||squad().find(s=>norm(s.name)===norm(p.name));
+    b.items.push({id:newId('i'),t:'pl',team:'us',sid:sq?sq.id:undefined,num:sq?null:String(p.num||''),name:sq?null:(p.name||''),x:pos[0],y:pos[1]}); });
+  b.formation=f; tbUi.sel=null; tbTouch(b.id); renderTactics(); toast('Line-up of '+(m.home?'vs ':'at ')+(m.them||'the match')+' placed ('+f+').',()=>tbUndo()); }
+function tbMoveItem(it,o,dx,dy,b){ if(it.t==='arrow'){ it.a=[tbR(o.a[0]+dx),tbR(o.a[1]+dy)]; it.b=[tbR(o.b[0]+dx),tbR(o.b[1]+dy)]; if(o.m) it.m=[tbR(o.m[0]+dx),tbR(o.m[1]+dy)]; }
+  else if(it.t==='free') it.pts=o.pts.map(p=>[tbR(p[0]+dx),tbR(p[1]+dy)]);
+  else [it.x,it.y]=tbClamp(b,o.x+dx,o.y+dy); }
+function tbDelSel(){ const b=tbCur(); if(!tbUi.sel) return; tbSnap(b); b.items=b.items.filter(x=>x.id!==tbUi.sel); tbUi.sel=null; tbTouch(b.id); tbRefresh(); }
+function tbDupItem(){ const b=tbCur(), it=b.items.find(x=>x.id===tbUi.sel); if(!it) return; tbSnap(b); const c=JSON.parse(JSON.stringify(it)); c.id=newId('i');
+  if(c.t==='pl'&&c.sid){ const s=SQ(c.sid); c.sid=undefined; c.num=(s&&s.num)||''; c.name=(s&&s.name)||''; }
+  tbMoveItem(c,JSON.parse(JSON.stringify(it)),2.5,2.5,b); b.items.push(c); tbUi.sel=c.id; tbTouch(b.id); tbRefresh(); }
+function tbSetItem(fn,full){ const b=tbCur(), it=b.items.find(x=>x.id===tbUi.sel); if(!it) return; tbSnap(b); fn(it,b); tbTouch(b.id); if(full) renderTactics(); else tbRefresh(); }
+function tbPt(e){ const svg=$('#tbSvg'), p=svg.createSVGPoint(); p.x=e.clientX; p.y=e.clientY; const r=p.matrixTransform(svg.getScreenCTM().inverse()); return [tbR(r.x),tbR(r.y)]; }
+function tbOverPitch(e){ const s=$('#tbSvg'); if(!s) return false; const r=s.getBoundingClientRect(); return e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom; }
+
+/* ---------- export ---------- */
+function tbSvgString(b,w){ const g=tbSvgParts(b,{clean:true}); return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${g.vb}" width="${w}" height="${Math.round(w*g.h/g.w)}" font-family="Arial, Helvetica, sans-serif">${g.inner}</svg>`; }
+async function tbCanvas(b,w){ const url=URL.createObjectURL(new Blob([tbSvgString(b,w)],{type:'image/svg+xml'}));
+  try{ const img=new Image(); await new Promise((res,rej)=>{ img.onload=res; img.onerror=()=>rej(new Error('The board could not be drawn.')); img.src=url; });
+    const c=document.createElement('canvas'); c.width=img.naturalWidth||img.width; c.height=img.naturalHeight||img.height; const x=c.getContext('2d'); x.fillStyle='#FFFFFF'; x.fillRect(0,0,c.width,c.height); x.drawImage(img,0,0,c.width,c.height); return c; }
+  finally{ URL.revokeObjectURL(url); } }
+async function tbPng(){ const b=tbCur(); try{ const c=await tbCanvas(b,2400); const blob=await new Promise(r=>c.toBlob(r,'image/png')); await offerFile(fileSafe(b.name||'Tactics board')+'.png',blob); }catch(e){ console.error(e); toast('Could not export the image: '+e.message); } }
+async function tbPdf(all){
+  const btn=document.querySelector(all?'[data-tbpdfall]':'[data-tbpdf]'), old=btn&&btn.textContent; if(btn){ btn.disabled=true; btn.textContent='Making PDF…'; }
+  try{
+    if(!(window.jspdf&&window.jspdf.jsPDF)) await loadScript('vendor/jspdf.umd.min.js');
+    const J=window.jspdf.jsPDF, list=all?Object.values(tbBoards).map(tbFix).sort((x,y)=>(x.createdAt||0)-(y.createdAt||0)):[tbCur()];
+    let doc=null; const day=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+    for(const b of list){ const {W,H}=tbDim(b.pitch), orient=W>=H?'landscape':'portrait';
+      if(!doc) doc=new J({orientation:orient,unit:'mm',format:'a4'}); else doc.addPage('a4',orient);
+      const pw=doc.internal.pageSize.getWidth(), ph=doc.internal.pageSize.getHeight(), mg=12, c=await tbCanvas(b,2400);
+      doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.setTextColor(11,15,20); doc.text(String(b.name||'Tactics board'),mg,mg+7);
+      doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(86,97,109); doc.text(teamName()+' · '+day,mg,mg+13);
+      doc.setDrawColor(11,15,20); doc.setLineWidth(.6); doc.line(mg,mg+16,pw-mg,mg+16);
+      const notes=String(b.notes||'').trim(), nl=notes?doc.splitTextToSize(notes,pw-2*mg):[], maxL=orient==='landscape'?8:14, nh=nl.length?Math.min(nl.length,maxL)*4.4+9:0;
+      const top=mg+20, avH=ph-top-mg-nh-6, avW=pw-2*mg, ar=c.width/c.height; let iw=avW, ih=iw/ar; if(ih>avH){ ih=avH; iw=ih*ar; }
+      doc.addImage(c.toDataURL('image/jpeg',.92),'JPEG',(pw-iw)/2,top,iw,ih);
+      if(nl.length){ let y=top+ih+8; doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(11,15,20); doc.text('Notes',mg,y); doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(40,46,54);
+        doc.text(nl.slice(0,maxL).concat(nl.length>maxL?['…']:[]),mg,y+5.5); }
+      doc.setFontSize(8); doc.setTextColor(140,150,160); doc.text('Match Tagger · Tactics board',mg,ph-6); }
+    await offerFile(fileSafe(all?'Tactics boards':(list[0].name||'Tactics board'))+'.pdf',doc.output('blob'));
+  }catch(e){ console.error(e); toast('Could not make the PDF: '+e.message); }
+  finally{ if(btn&&btn.isConnected){ btn.disabled=false; btn.textContent=old; } }
+}
+
+/* ---------- events ---------- */
+document.addEventListener('pointerdown',e=>{
+  if(view!=='tactics'||e.button>0) return;
+  const add=e.target.closest('[data-tbadd]');
+  if(add){ tbUi.drag={kind:'menu',add:add.dataset.tbadd,x0:e.clientX,y0:e.clientY,moved:false,pid:e.pointerId}; return; }
+  const svg=e.target.closest('#tbSvg'); if(!svg) return;
+  e.preventDefault(); try{ svg.setPointerCapture(e.pointerId); }catch(err){} const ae=document.activeElement; if(ae&&ae!==document.body&&ae.blur&&ae.closest&&ae.closest('#view-tactics')) ae.blur();
+  const b=tbCur(), p=tbPt(e), h=e.target.closest('[data-tbh]'), hit=e.target.closest('[data-tbit]'), tool=tbUi.tool;
+  if(h&&tbUi.sel){ const it=b.items.find(x=>x.id===tbUi.sel); if(it){ tbUi.drag={kind:'handle',h:h.dataset.tbh,id:it.id,p0:p,o:JSON.parse(JSON.stringify(it)),snap:false}; return; } }
+  if(tool==='move'){ if(hit){ const it=b.items.find(x=>x.id===hit.dataset.tbit); if(!it) return; const was=tbUi.sel; tbUi.sel=it.id; tbUi.drag={kind:'move',id:it.id,p0:p,o:JSON.parse(JSON.stringify(it)),snap:false};
+      if(was!==it.id){ tbDraw(); const i=$('#tbInsp'); if(i) i.innerHTML=tbInspHtml(b); } }
+    else { tbUi.drag={kind:'none'}; if(tbUi.sel){ tbUi.sel=null; tbDraw(); const i=$('#tbInsp'); if(i) i.innerHTML=tbInspHtml(b); } } return; }
+  if(tool==='text'){ tbSnap(b); const [x,y]=tbClamp(b,p[0],p[1]), it={id:newId('i'),t:'text',x,y,s:'Text',fs:1}; b.items.push(it); tbUi.sel=it.id; tbUi.tool='move'; tbUi.drag={kind:'none'}; tbTouch(b.id); renderTactics();
+    const n=document.querySelector('#tbInsp [data-tbf="s"]'); if(n){ n.focus(); n.select(); } return; }
+  if(tool==='zone'){ tbUi.drag={kind:'draw',temp:{id:newId('i'),t:'zone',x:p[0],y:p[1],w:0,h:0}}; return; }
+  if(tool==='free'){ tbUi.drag={kind:'draw',temp:{id:newId('i'),t:'free',pts:[p]}}; return; }
+  tbUi.drag={kind:'draw',temp:{id:newId('i'),t:'arrow',k:tool,a:p,b:p,m:null}};
+});
+document.addEventListener('pointermove',e=>{
+  const d=tbUi.drag; if(!d||view!=='tactics') return;
+  if(d.kind==='menu'){ if(e.pointerId!==d.pid) return; if(!d.moved&&Math.hypot(e.clientX-d.x0,e.clientY-d.y0)<7) return;
+    if(!d.moved){ d.moved=true; const b=tbCur(), sq=d.add.startsWith('sq:')?SQ(d.add.slice(3)):null, g=document.createElement('div');
+      const opp=d.add==='opp', disc=sq||d.add==='us'||opp; g.className='tb-ghost'+(disc?'':' '+d.add); if(disc){ g.style.setProperty('--c',opp?b.away:b.home); g.style.setProperty('--k',tbInk(opp?b.away:b.home)); g.textContent=sq?(sq.num||''):'#'; }
+      document.body.appendChild(g); d.ghost=g; document.body.classList.add('tb-dragging'); }
+    d.ghost.style.left=e.clientX+'px'; d.ghost.style.top=e.clientY+'px'; d.ghost.classList.toggle('over',tbOverPitch(e)); e.preventDefault(); return; }
+  if(d.kind==='none') return;
+  const b=tbCur(), p=tbPt(e);
+  if(d.kind==='move'||d.kind==='handle'){ const it=b.items.find(x=>x.id===d.id); if(!it) return; const dx=p[0]-d.p0[0], dy=p[1]-d.p0[1];
+    if(!d.snap){ if(Math.hypot(dx,dy)<.25) return; tbSnap(b); d.snap=true; }
+    const cur=b.items.find(x=>x.id===d.id);
+    if(d.kind==='move') tbMoveItem(cur,d.o,dx,dy,b);
+    else if(d.h==='a') cur.a=tbClamp(b,p[0],p[1]); else if(d.h==='b') cur.b=tbClamp(b,p[0],p[1]);
+    else if(d.h==='m'){ const a=cur.a, z=cur.b, q=tbClamp(b,p[0],p[1]); cur.m=[tbR(2*q[0]-(a[0]+z[0])/2),tbR(2*q[1]-(a[1]+z[1])/2)]; }
+    else if(d.h==='rs'){ cur.w=tbR(d.o.w+dx); cur.h=tbR(d.o.h+dy); }
+    tbDraw(); return; }
+  if(d.kind==='draw'){ const t=d.temp, q=tbClamp(b,p[0],p[1]);
+    if(t.t==='arrow') t.b=q; else if(t.t==='zone'){ t.w=tbR(q[0]-t.x); t.h=tbR(q[1]-t.y); }
+    else if(t.t==='free'){ const l=t.pts[t.pts.length-1]; if(Math.hypot(q[0]-l[0],q[1]-l[1])>=.35) t.pts.push(q); }
+    tbDraw(); }
+});
+function tbEnd(e,cancel){
+  const d=tbUi.drag; if(!d) return; tbUi.drag=null; if(view!=='tactics') return;
+  if(d.kind==='menu'){ if(d.ghost){ d.ghost.remove(); document.body.classList.remove('tb-dragging'); }
+    if(d.moved){ tbUi.noClick=true; setTimeout(()=>{ tbUi.noClick=false; },0); if(!cancel&&tbOverPitch(e)) tbAdd(d.add,tbPt(e)); } return; }
+  const b=tbCur();
+  if(d.kind==='move'||d.kind==='handle'){ if(d.snap){ const it=b.items.find(x=>x.id===d.id); if(it&&it.t==='zone'){ if(it.w<0){ it.x=tbR(it.x+it.w); it.w=-it.w; } if(it.h<0){ it.y=tbR(it.y+it.h); it.h=-it.h; } } tbTouch(b.id); tbRefresh(); } return; }
+  if(d.kind==='draw'){ const t=d.temp; let ok=!cancel;
+    if(t.t==='arrow') ok=ok&&Math.hypot(t.b[0]-t.a[0],t.b[1]-t.a[1])>=1.5;
+    if(t.t==='zone'){ ok=ok&&Math.abs(t.w)>=1.5&&Math.abs(t.h)>=1.5; if(t.w<0){ t.x=tbR(t.x+t.w); t.w=-t.w; } if(t.h<0){ t.y=tbR(t.y+t.h); t.h=-t.h; } }
+    if(t.t==='free') ok=ok&&t.pts.length>2;
+    if(ok){ tbSnap(b); b.items.push(t); tbUi.sel=t.id; tbTouch(b.id); tbRefresh(); } else tbDraw(); }
+}
+document.addEventListener('pointerup',e=>tbEnd(e,false));
+document.addEventListener('pointercancel',e=>tbEnd(e,true));
+document.addEventListener('dblclick',e=>{ if(view!=='tactics') return; const g=e.target.closest('#tbSvg [data-tbit]'); if(!g) return; const it=tbCur().items.find(x=>x.id===g.dataset.tbit); if(!it) return;
+  const f=it.t==='text'?'s':it.t==='pl'?'num':null; if(!f) return; tbUi.sel=it.id; tbRefresh(); const n=document.querySelector(`#tbInsp [data-tbf="${f}"]`); if(n){ n.focus(); n.select(); } });
+document.addEventListener('click',e=>{
+  if(view!=='tactics') return; const g=s=>e.target.closest(s); let b;
+  if(b=g('[data-tbadd]')){ if(tbUi.noClick){ tbUi.noClick=false; return; } tbAdd(b.dataset.tbadd,null); return; }
+  if(b=g('[data-tbtool]')){ tbUi.tool=b.dataset.tbtool; if(tbUi.tool!=='move') tbUi.sel=null; renderTactics(); return; }
+  if(g('[data-tbundo]')){ tbUndo(false); return; }
+  if(g('[data-tbredo]')){ tbUndo(true); return; }
+  if(b=g('[data-tbclear]')){ if(b.dataset.armed!=='1'){ b.dataset.armed='1'; b.textContent='Clear the board? Click again'; setTimeout(()=>{ if(b.isConnected){ b.dataset.armed=''; b.textContent='Clear'; } },3000); return; }
+    const x=tbCur(); tbSnap(x); x.items=[]; tbUi.sel=null; tbTouch(x.id); renderTactics(); toast('Board cleared.',()=>tbUndo()); return; }
+  if(g('[data-tbnew]')){ const x=tbCur(); tbNew(null,{pitch:x.pitch,style:x.style,size:x.size,names:x.names,formation:x.formation,home:x.home,away:x.away}); go('tactics',tbUi.cur); return; }
+  if(g('[data-tbdup]')){ const x=tbCur(); tbNew(x.name+' (copy)',x); go('tactics',tbUi.cur); return; }
+  if(g('[data-tbren]')){ tbUi.rename=true; renderTactics(); const n=$('#tbRenIn'); if(n){ n.focus(); n.select(); } return; }
+  if(g('[data-tbrensave]')){ tbRename(); return; }
+  if(g('[data-tbrencancel]')){ tbUi.rename=false; renderTactics(); return; }
+  if(b=g('[data-tbdel]')){ if(b.dataset.armed!=='1'){ b.dataset.armed='1'; b.textContent='Delete this board? Click again'; setTimeout(()=>{ if(b.isConnected){ b.dataset.armed=''; b.textContent='Delete'; } },3000); return; }
+    const x=tbCur(), copy=JSON.parse(JSON.stringify(x)); delete tbBoards[x.id]; tbDeleted[x.id]=Date.now(); tbDirty.add('del:'+x.id); tbDirty.add('_del'); tbDirty.delete(x.id); tbUi.cur=null; tbUi.sel=null; tbStoreLocal(); clearTimeout(tbTimer); tbTimer=setTimeout(tbFlush,300);
+    go('tactics',tbCur().id); toast('Deleted '+copy.name+'.',()=>{ delete tbDeleted[copy.id]; tbDirty.delete('del:'+copy.id); tbBoards[copy.id]=copy; tbUi.cur=copy.id; tbTouch(copy.id); tbDirty.add('_del'); go('tactics',copy.id); }); return; }
+  if(g('[data-tbpng]')){ tbPng(); return; }
+  if(g('[data-tbpdf]')){ tbPdf(false); return; }
+  if(g('[data-tbpdfall]')){ tbPdf(true); return; }
+  if(b=g('[data-tbshape]')){ tbShape(b.dataset.tbshape); return; }
+  if(g('[data-tbdelit]')){ tbDelSel(); return; }
+  if(g('[data-tbdupit]')){ tbDupItem(); return; }
+  if(b=g('[data-tbcol]')){ const c=b.dataset.tbcol||undefined; tbSetItem(it=>{ it.c=c; }); return; }
+  if(b=g('[data-tbteam]')){ const t=b.dataset.tbteam; tbSetItem(it=>{ it.team=t; }); return; }
+  if(b=g('[data-tbak]')){ const k=b.dataset.tbak; tbSetItem(it=>{ it.k=k; }); return; }
+  if(b=g('[data-tbfs]')){ const v=+b.dataset.tbfs; tbSetItem(it=>{ it.fs=v; }); return; }
+  if(g('[data-tbstraight]')){ tbSetItem(it=>{ it.m=null; }); return; }
+  if(g('[data-tbrot]')){ tbSetItem(it=>{ it.rot=!it.rot; }); return; }
+});
+function tbRename(){ const n=$('#tbRenIn'), x=tbCur(); if(n&&n.value.trim()){ x.name=n.value.trim(); tbTouch(x.id); } tbUi.rename=false; renderTactics(); }
+document.addEventListener('change',e=>{
+  if(view!=='tactics') return; const t=e.target, b=tbCur();
+  if(t.id==='tbBoardSel'){ tbUi.cur=t.value; tbUi.sel=null; tbStoreLocal(); go('tactics',t.value); return; }
+  if(t.id==='tbPitch'||t.id==='tbStyle'||t.id==='tbSize'||t.id==='tbNames'){ tbSnap(b); const key={tbPitch:'pitch',tbStyle:'style',tbSize:'size',tbNames:'names'}[t.id];
+    const fromP=b.pitch; b[key]=key==='size'?+t.value:t.value;
+    if(key==='pitch'&&fromP!==b.pitch) tbRemap(b,fromP,b.pitch);
+    tbTouch(b.id); renderTactics(); return; }
+  if(t.id==='tbForm'){ b.formation=t.value; tbTouch(b.id); return; }
+  if(t.id==='tbFromMatch'&&t.value){ tbFromMatch(t.value); return; }
+  if(t.id==='tbHome'||t.id==='tbAway'){ tbSnap(b); b[t.id==='tbHome'?'home':'away']=t.value; tbTouch(b.id); renderTactics(); return; }
+});
+/* switching pitch: keep the picture (own goal stays own goal), scaled to the new pitch */
+function tbRemap(b,fromP,toP){ const f=tbDim(fromP), n=tbDim(toP), uf=tbUpright(fromP), ut=tbUpright(toP);
+  const P=p=>{ const tt=uf?1-p[1]/f.H:p[0]/f.W, ss=uf?p[0]/f.W:p[1]/f.H; const q=ut?[ss*n.W,(1-tt)*n.H]:[tt*n.W,ss*n.H]; return tbClamp(b,q[0],q[1]); };
+  b.items.forEach(it=>{ if(it.t==='arrow'){ it.a=P(it.a); it.b=P(it.b); if(it.m) it.m=P(it.m); } else if(it.t==='free') it.pts=it.pts.map(P);
+    else if(it.t==='zone'){ const a=P([it.x,it.y]), z=P([it.x+it.w,it.y+it.h]); it.x=Math.min(a[0],z[0]); it.y=Math.min(a[1],z[1]); it.w=tbR(Math.abs(z[0]-a[0])); it.h=tbR(Math.abs(z[1]-a[1])); }
+    else { [it.x,it.y]=P([it.x,it.y]); if(it.t==='goal'&&uf!==ut) it.rot=!it.rot; } }); }
+document.addEventListener('focusin',e=>{ if(view==='tactics'&&e.target.dataset&&e.target.dataset.tbf) tbUi.editSnap=null; });
+document.addEventListener('input',e=>{
+  if(view!=='tactics') return; const t=e.target;
+  if(t.id==='tbSearch'){ tbUi.q=t.value; const l=$('#tbList'); if(l) l.innerHTML=tbListHtml(tbCur()); return; }
+  if(t.id==='tbNotes'){ const b=tbCur(); b.notes=t.value; tbTouch(b.id); return; }
+  if(t.dataset.tbf){ const b=tbCur(), it=b.items.find(x=>x.id===tbUi.sel); if(!it) return; const key=it.id+t.dataset.tbf; if(tbUi.editSnap!==key){ tbSnap(b); tbUi.editSnap=key; }
+    it[t.dataset.tbf]=t.value; tbTouch(b.id); tbDraw(); if(t.dataset.tbf!=='s'){ const l=$('#tbList'); if(l) l.innerHTML=tbListHtml(b); } }
+});
+document.addEventListener('keydown',e=>{
+  if(view!=='tactics') return; const t=e.target;
+  if(t.id==='tbRenIn'){ if(e.key==='Enter'){ e.preventDefault(); tbRename(); } else if(e.key==='Escape'){ tbUi.rename=false; renderTactics(); } return; }
+  if(t.dataset&&t.dataset.tbf&&(e.key==='Enter'||e.key==='Escape')){ t.blur(); return; }
+  if(t.id==='tbSearch'&&e.key==='Enter'){ const one=document.querySelectorAll('#tbList [data-tbadd]'); if(one.length===1) one[0].click(); return; }
+  if(/INPUT|TEXTAREA|SELECT/.test(t.tagName)||e.altKey) return;
+  const mod=e.ctrlKey||e.metaKey, k=e.key.toLowerCase();
+  if(mod&&k==='z'){ e.preventDefault(); tbUndo(e.shiftKey); return; }
+  if(mod&&k==='y'){ e.preventDefault(); tbUndo(true); return; }
+  if(mod&&k==='d'&&tbUi.sel){ e.preventDefault(); tbDupItem(); return; }
+  if(mod) return;
+  if((e.key==='Delete'||e.key==='Backspace')&&tbUi.sel){ e.preventDefault(); tbDelSel(); return; }
+  if(e.key==='Escape'){ if(tbUi.sel||tbUi.tool!=='move'){ tbUi.sel=null; tbUi.tool='move'; renderTactics(); } return; }
+  if(/^Arrow/.test(e.key)&&tbUi.sel){ e.preventDefault(); const s=e.shiftKey?2:.5, dx=e.key==='ArrowLeft'?-s:e.key==='ArrowRight'?s:0, dy=e.key==='ArrowUp'?-s:e.key==='ArrowDown'?s:0;
+    tbSetItem((it,b)=>{ tbMoveItem(it,JSON.parse(JSON.stringify(it)),dx,dy,b); }); return; }
+  const tool=TB_TOOLS.find(x=>x[2].toLowerCase()===k); if(tool&&t.closest&&!t.closest('.sheet')){ tbUi.tool=tool[0]; if(tool[0]!=='move') tbUi.sel=null; renderTactics(); }
+});
+tbLoad();
+
 
 /* ---------- Folder settings & start screen ---------- */
 async function pickFolder(){

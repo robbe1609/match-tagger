@@ -115,6 +115,19 @@ Players from another group: on an attendance page click **Other team players…*
 
 Your old planners' data comes as a file, `planner-import.json`. On the Calendar page, scroll down and click **Import planner data**, then choose that file. It adds your month calendar, your saved week plans and all fixtures with their squads. Matches that are already in the app (same date and opponent) are updated instead of duplicated, and players are matched to your squad by name.
 
+## Tactics board
+
+Open **Tactics** in the top menu. Every board is saved automatically to your folder or online storage, so it is on every computer you log in from.
+
+- **Add your players:** click a name in **My players** to place her on the pitch, or drag the name onto the spot you want. Each player is a circle with her shirt number and name. A tick shows who is already on the board. Clicking her again selects her on the pitch.
+- **Add other things:** under **Add**, click or drag a numbered player, an opponent, a ball, a cone or a mini goal.
+- **Shapes:** pick a formation and click **Our team 1–11** or **Opponents 1–11**. Use **Line-up from** to place the starting XI of a tagged match. A shape replaces the players of that team; **Undo** brings them back.
+- **Draw:** choose **Pass**, **Run** (dashed), **Dribble** (wavy), **Line**, **Draw** (freehand), **Area** or **Text** and drag on the pitch. Select an arrow and drag its white dot to curve it.
+- **Edit:** click anything to select it. Change the number, name, team or colour in the bar above the pitch, drag to move, press Delete to remove. Ctrl+Z / Ctrl+Y undo and redo. Double-click a player or a text to edit it.
+- **Pitch:** full pitch, full pitch upright, half pitch or no lines; grass or white (best for printing); small, medium or large players; short, full or no names.
+- **Boards:** **New board**, **Duplicate** (handy for step 1, step 2…), **Rename** and **Delete** at the top.
+- **Export:** **Export PDF** makes an A4 page with the board and your notes. **All boards PDF** puts every board in one file. **PNG** gives an image for WhatsApp or a slide.
+
 ## Daily use
 
 - **New match:** create it, then pick the video from your online storage, or click **Upload from this computer**. The video plays right away and uploads in the background, so you can start tagging immediately.
