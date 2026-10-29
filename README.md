@@ -109,6 +109,8 @@ The site opens on the **Calendar**. From there you plan everything:
 
 Click a training day in the calendar → **Take attendance** (or **Today's attendance** at the top of the calendar, or **Take attendance** on a day in the week planner). Tap a letter per player: **P**resent, **L**ate, **E**xcused, **A**bsent, **I**njured. **Mark the rest present** fills everyone you have not marked. Each player page shows her attendance for the season, the Players table has a **Train %** column, and **Export → Attendance (.csv)** gives a sheet per month or season.
 
+Players from another group: on an attendance page click **Other team players…** and then **Other team** next to their name, or use **Mark as other team** on the player's page. They leave the attendance list, counts and exports for that whole season (their matches and stats stay). **Back to my team** undoes it.
+
 ### Bringing over the old Week Planner and Wedstrijdplanner
 
 Your old planners' data comes as a file, `planner-import.json`. On the Calendar page, scroll down and click **Import planner data**, then choose that file. It adds your month calendar, your saved week plans and all fixtures with their squads. Matches that are already in the app (same date and opponent) are updated instead of duplicated, and players are matched to your squad by name.

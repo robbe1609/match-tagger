@@ -865,6 +865,10 @@ button.sync:hover{background:rgba(255,255,255,.08)}
 .att-dots{display:flex;flex-wrap:wrap;gap:4px}
 .att-dot{width:18px;height:18px;border-radius:4px;border:0;padding:0;cursor:pointer}
 .att-dot.present{background:var(--res-w)}.att-dot.late{background:var(--goal)}.att-dot.excused{background:var(--accent)}.att-dot.absent{background:var(--against)}.att-dot.injured{background:#8E5BD0}
+.att-otherlist{display:flex;flex-wrap:wrap;gap:6px}
+.att-other{display:inline-flex;align-items:center;gap:8px;border:1px dashed var(--line);border-radius:10px;padding:4px 4px 4px 10px;font-size:14px}
+.att-other b{font-family:var(--f-display);color:var(--muted)}
+.fx-pl small.ot{margin-left:6px;font-size:11px;font-weight:700;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:0 6px}
 .cal-att{font-style:normal;font-weight:700;color:var(--res-w);margin-left:4px}
 .cd-att{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
 .cd-att span{flex:1;min-width:160px;font-size:14px}
@@ -2973,10 +2977,10 @@ function renderPlayers(){
     ${ui.addOpen?`<form id="addPlayerForm" class="card"><div class="form three"><div class="field"><label for="apNum">Shirt number</label><input id="apNum" type="number" min="1" max="99"></div><div class="field"><label for="apName">Name</label><input id="apName" required placeholder="First and last name"></div><div class="field"><label for="apPos">Position</label><select id="apPos">${POSITIONS.map(p=>`<option value="${p}">${p||'–'}</option>`).join('')}</select></div></div><div class="row-actions"><button class="btn primary" type="submit">Add to squad</button><button class="btn ghost" type="button" id="btnAddCancel">Cancel</button></div></form>`:''}
     ${!list.length?(pq?`<div class="empty-state"><strong>No player matches “${esc(ui.pq.trim())}”</strong><p>Search by name or shirt number.</p><button class="btn" data-pclear>Clear search</button></div>`:`<div class="empty-state"><strong>No players yet</strong><p>Players appear here as soon as you name them in a match lineup, or add them yourself.</p></div>`):cards?
       `<div class="pgrid">${list.map(s=>{ const a=agg[s.id]; return `<button class="pcard" data-go="player" data-arg="${s.id}"><span class="bignum" aria-hidden="true">${esc(s.num||'')}</span>
-        <span class="ppos">${esc([s.num?'#'+s.num:'',s.pos].filter(Boolean).join(' · ')||'Squad')}</span><span class="pname">${esc(s.name)}</span>
+        <span class="ppos">${esc([s.num?'#'+s.num:'',s.pos,isOther(s,season==='all'?nowSeason():season)?'Other team':''].filter(Boolean).join(' · ')||'Squad')}</span><span class="pname">${esc(s.name)}</span>
         <span class="pstats">${[['Apps',a.apps],['Min',a.min],['Goals',a.line.g],['Assists',a.line.a]].map(([l,v])=>`<span><b class="tnum">${v}</b><span>${l}</span></span>`).join('')}</span></button>`; }).join('')}</div>`
       :`<div class="tbl-wrap"><table class="sortable"><thead><tr>${cols.map(([k,h,t])=>`<th class="${k==='name'?'name':''}"><button data-psort="${esc(k)}" title="${esc(t||h)}">${esc(h)}${ps.k===k?(ps.d>0===(['num','name','pos'].includes(k))?' ↑':' ↓'):''}</button></th>`).join('')}</tr></thead><tbody>
-        ${list.map(s=>{ const a=agg[s.id]; return `<tr>${cols.map(([k])=>{ if(k==='num') return `<td>${esc(s.num||'')}</td>`; if(k==='name') return `<td class="name"><button class="tlink" data-go="player" data-arg="${s.id}">${esc(s.name)}</button></td>`; if(k==='pos') return `<td>${esc(s.pos||'')}</td>`; if(k==='att'){ const r=attStats(s.id,season); return `<td class="${r.pct==null?'zero':''}" title="${r.sessions} session${r.sessions===1?'':'s'}">${r.pct==null?'–':r.pct+'%'}</td>`; } const v=['apps','starts','min'].includes(k)?a[k]:(a.line[k]||0); return `<td class="${v?'':'zero'}">${v}</td>`; }).join('')}</tr>`; }).join('')}
+        ${list.map(s=>{ const a=agg[s.id]; return `<tr>${cols.map(([k])=>{ if(k==='num') return `<td>${esc(s.num||'')}</td>`; if(k==='name') return `<td class="name"><button class="tlink" data-go="player" data-arg="${s.id}">${esc(s.name)}</button></td>`; if(k==='pos') return `<td>${esc(s.pos||'')}</td>`; if(k==='att'){ if(isOther(s,season==='all'?nowSeason():season)) return `<td class="zero" title="Marked as other team this season">other team</td>`; const r=attStats(s.id,season); return `<td class="${r.pct==null?'zero':''}" title="${r.sessions} session${r.sessions===1?'':'s'}">${r.pct==null?'–':r.pct+'%'}</td>`; } const v=['apps','starts','min'].includes(k)?a[k]:(a.line[k]||0); return `<td class="${v?'':'zero'}">${v}</td>`; }).join('')}</tr>`; }).join('')}
       </tbody></table></div>`}
   </div>`;
 }
@@ -3025,7 +3029,7 @@ function renderPlayer(){
     <button class="back" data-go="players">← All players</button>
     <header class="phead"><span class="shirtnum">${esc(s.num||'–')}</span>
       <div><span class="eyebrow">${esc([s.pos,teamName(),seasonText(season)].filter(Boolean).join(' · '))}</span><h1>${esc(s.name)}</h1></div>
-      <div class="page-actions">${seasonSelect()}<button class="btn" id="btnEditPlayer" aria-expanded="${!!ui.editP}">Edit player</button></div></header>
+      <div class="page-actions">${seasonSelect()}${(()=>{ const sx=season==='all'?nowSeason():season, on=isOther(s,sx); return `<button class="btn${on?' primary':''}" data-potherteam="${s.id}" data-season="${sx}" aria-pressed="${on}" title="Players from another group are left out of training attendance for this season">${on?'Other team · '+esc(sx):'Mark as other team'}</button>`; })()}<button class="btn" id="btnEditPlayer" aria-expanded="${!!ui.editP}">Edit player</button></div></header>
     ${ui.editP?`<form id="editPlayerForm" class="card"><div class="form three"><div class="field"><label for="epNum">Shirt number</label><input id="epNum" type="number" min="1" max="99" value="${esc(s.num)}"></div><div class="field"><label for="epName">Name</label><input id="epName" required value="${esc(s.name)}"></div><div class="field"><label for="epPos">Position</label><select id="epPos">${POSITIONS.map(p=>`<option value="${p}"${p===(s.pos||'')?' selected':''}>${p||'–'}</option>`).join('')}</select></div></div>
       <p class="hint">Renaming also updates her name in every match lineup.</p><div class="row-actions"><button class="btn primary" type="submit">Save</button><button class="btn ghost" type="button" id="btnEditCancel">Cancel</button><span style="flex:1"></span>${ui.confirmRmP?`<span class="confirm">Remove from the squad?<button class="btn sm danger" type="button" id="btnRmYes">Remove</button><button class="btn sm" type="button" id="btnRmNo">Keep</button></span>`:`<button class="btn sm ghost danger" type="button" id="btnRmP">Remove from squad</button>`}</div></form>`:''}
     <div class="kpis">${[['Appearances',a.apps,a.starts+' starts'],['Minutes',a.min,a.apps?Math.round(a.min/a.apps)+' per match':''],['Goals',L.g,per90(L.g)+' per 90'],['Assists',L.a,per90(L.a)+' per 90'],['Shots',L.sh,L.on+' on target'],['Key passes',L.kp,per90(L.kp)+' per 90'],['Ball recoveries',L.rec,per90(L.rec)+' per 90'],['Turnovers',L.to,per90(L.to)+' per 90']].map(([l,v,sub])=>`<div class="kpi"><span>${l}</span><b class="tnum">${v}</b><small>${esc(sub)}</small></div>`).join('')}</div>
@@ -3976,7 +3980,8 @@ function renderFixture(){
   const el=$('#view-fixture'), m=store[viewArg]; if(!m){ go('calendar'); return; }
   const sel=fxSel(m), list=fxPlayers(m), q=fold(plUi.fxQ||'').trim(), d=isoDate(m.date);
   const xi=m.players.filter(p=>p.slot!=null&&p.sq&&sel.ids.includes(p.sq)).length;
-  const roster=squad().slice().sort((a,b)=>(+a.num||999)-(+b.num||999)||a.name.localeCompare(b.name))
+  const ss=seasonOf(d||new Date().toISOString().slice(0,10));
+  const roster=squad().slice().sort((a,b)=>(isOther(a,ss)-isOther(b,ss))||(+a.num||999)-(+b.num||999)||a.name.localeCompare(b.name))
     .filter(s=>!q||fold(s.name).includes(q)||String(s.num||'')===q.replace('#','')||String(s.num||'').startsWith(q.replace('#','')));
   const vid=m.videoPath&&typeof videoIndex!=='undefined'?videoIndex.find(v=>v.id===m.videoPath):null;
   const pad=n=>String(n);
@@ -4000,7 +4005,7 @@ function renderFixture(){
     <div class="fx-cols">
       <section class="card"><div class="card-head"><h2>Squad</h2><span class="count-pill">${sel.ids.length} / ${SEL_MAX}</span></div>
         <div class="fx-tools"><input class="search" id="fxSearch" type="search" placeholder="Search name or number" value="${esc(plUi.fxQ||'')}" aria-label="Search players"><button class="btn sm ghost" data-fxselclear ${sel.ids.length?'':'disabled'}>Clear</button><button class="btn sm" data-fxselprev>Copy previous squad</button></div>
-        ${roster.length?`<div class="fx-roster">${roster.map(s=>{ const on=sel.ids.includes(s.id); return `<button class="fx-pl${on?' on':''}" data-fxsel="${s.id}" aria-pressed="${on}"><span class="num">${esc(s.num||'–')}</span><span class="nm">${esc(s.name)}</span><span class="tick">${on?'✓':''}</span></button>`; }).join('')}</div>`
+        ${roster.length?`<div class="fx-roster">${roster.map(s=>{ const on=sel.ids.includes(s.id); return `<button class="fx-pl${on?' on':''}" data-fxsel="${s.id}" aria-pressed="${on}"><span class="num">${esc(s.num||'–')}</span><span class="nm">${esc(s.name)}${isOther(s,ss)?'<small class="ot">other team</small>':''}</span><span class="tick">${on?'✓':''}</span></button>`; }).join('')}</div>`
           :`<p class="hint">${squad().length?'No player matches your search.':'No players yet. Add them on the Players page, or name them in a match lineup.'}</p>`}
         <p class="hint">Click players to select them for this match (the template has ${SEL_MAX} places). ${m.events.length?'This match already has tags, so the tagger lineup only changes when you click below.':'The selection is the lineup in the tagger: pick the starting XI there.'}</p>
         <div class="row-actions">${m.events.length?`<button class="btn sm" data-fxlineup="${m.id}">Update the tagger lineup from this squad</button>`:''}<button class="btn sm" data-fxxi="${m.id}">Pick the starting XI in the tagger →</button></div>
@@ -4229,20 +4234,24 @@ plLoad();
 const ATT=[['present','Present','P'],['late','Late','L'],['excused','Excused','E'],['absent','Absent','A'],['injured','Injured','I']];
 const ATT_LBL=Object.fromEntries(ATT.map(a=>[a[0],a[1]]));
 function attOf(ymd){ const e=plCal.days[ymd]; return (e&&e.att)||{}; }
-function attCount(ymd){ const c={present:0,late:0,excused:0,absent:0,injured:0,n:0}; Object.values(attOf(ymd)).forEach(v=>{ if(c[v]!=null){ c[v]++; c.n++; } }); return c; }
+/* players from another group: marked per season, left out of attendance */
+const isOther=(s,season)=>!!(s&&s.otherTeam&&s.otherTeam[season]);
+const nowSeason=()=>seasonOf(new Date().toISOString().slice(0,10));
+function setOther(sid,season,on){ const s=SQ(sid); if(!s) return; s.otherTeam=Object.assign({},s.otherTeam); if(on) s.otherTeam[season]=true; else delete s.otherTeam[season]; if(!Object.keys(s.otherTeam).length) delete s.otherTeam; saveSettings(); }
+function attCount(ymd){ const c={present:0,late:0,excused:0,absent:0,injured:0,n:0}, team=new Set(attSquad(seasonOf(ymd)).map(x=>x.id)); Object.entries(attOf(ymd)).forEach(([id,v])=>{ if(team.has(id)&&c[v]!=null){ c[v]++; c.n++; } }); return c; }
 const attTaken=ymd=>Object.keys(attOf(ymd)).length>0;
 function attBadge(ymd){ if(!attTaken(ymd)) return ''; const c=attCount(ymd); return (c.present+c.late)+'/'+c.n; }
-const attSquad=()=>squad().slice().sort((a,b)=>(+a.num||999)-(+b.num||999)||a.name.localeCompare(b.name));
+const attSquad=season=>squad().filter(x=>!season||!isOther(x,season)).sort((a,b)=>(+a.num||999)-(+b.num||999)||a.name.localeCompare(b.name));
 const trainingDates=()=>Object.keys(plCal.days).filter(d=>plCal.days[d].type==='training').sort();
 function attStats(sid,season){
   const r={present:0,late:0,excused:0,absent:0,injured:0,sessions:0,list:[]};
-  trainingDates().filter(d=>attTaken(d)&&(season==='all'||seasonOf(d)===season)).forEach(d=>{ const v=attOf(d)[sid]; if(!v||r[v]==null) return; r[v]++; r.sessions++; r.list.push({d,v}); });
+  const sq=SQ(sid); trainingDates().filter(d=>attTaken(d)&&(season==='all'||seasonOf(d)===season)&&!isOther(sq,seasonOf(d))).forEach(d=>{ const v=attOf(d)[sid]; if(!v||r[v]==null) return; r[v]++; r.sessions++; r.list.push({d,v}); });
   r.pct=r.sessions?Math.round(100*(r.present+r.late)/r.sessions):null; return r;
 }
 function renderTraining(){
   const el=$('#view-training'), ymd=viewArg, e=plCal.days[ymd]||{type:'none'}, dt=plParse(ymd);
   const dates=trainingDates(), prev=dates.filter(d=>d<ymd).pop(), next=dates.find(d=>d>ymd);
-  const att=attOf(ymd), c=attCount(ymd), all=attSquad(), q=fold(plUi.attQ||'').trim();
+  const season=seasonOf(ymd), att=attOf(ymd), c=attCount(ymd), all=attSquad(season), others=squad().filter(x=>isOther(x,season)).sort((a,b)=>(+a.num||999)-(+b.num||999)), manage=!!plUi.attManage, q=fold(plUi.attQ||'').trim();
   const list=all.filter(s=>!q||fold(s.name).includes(q)||String(s.num||'')===q.replace('#','')||String(s.num||'').startsWith(q.replace('#','')));
   const open=all.filter(s=>!att[s.id]).length;
   el.innerHTML=`<div class="wrap page">
@@ -4254,11 +4263,14 @@ function renderTraining(){
     ${e.type!=='training'?`<p class="notice">This day is not a training in your calendar. <button class="tlink" data-attmake="${ymd}">Make it a training day</button></p>`:''}
     <div class="att-sum">${ATT.map(([k,l])=>`<span class="att-chip ${k}"><b>${c[k]}</b> ${l}</span>`).join('')}<span class="att-chip none"><b>${open}</b> Not marked</span></div>
     <div class="fx-tools"><input class="search" id="attSearch" type="search" placeholder="Search name or number" value="${esc(plUi.attQ||'')}" aria-label="Search players">
-      <button class="btn sm primary" data-attrest ${open&&all.length?'':'disabled'}>Mark the rest present</button><button class="btn sm ghost" data-attclear ${c.n?'':'disabled'}>Clear</button></div>
+      <button class="btn sm primary" data-attrest ${open&&all.length?'':'disabled'}>Mark the rest present</button><button class="btn sm ghost" data-attclear ${c.n?'':'disabled'}>Clear</button><button class="btn sm${manage?' primary':''}" data-attmanage aria-pressed="${manage}">${manage?'Done':'Other team players…'}</button></div>
+    ${manage?`<p class="notice">Mark players from another group as <b>Other team</b>. They leave the attendance list, counts and exports for the whole ${esc(seasonText(season).toLowerCase())}. Their matches and stats stay.</p>`:''}
     ${all.length?(list.length?`<div class="att-list">${list.map(s=>{ const v=att[s.id]||''; return `<div class="att-row ${v}"><span class="num">${esc(s.num||'–')}</span><span class="nm">${esc(s.name)}</span>
-      <span class="att-btns" role="group" aria-label="Attendance for ${esc(s.name)}">${ATT.map(([k,l,a])=>`<button class="${k}" aria-pressed="${v===k}" title="${l}" aria-label="${l}" data-att="${s.id}" data-v="${k}">${a}</button>`).join('')}</span></div>`; }).join('')}</div>`:'<p class="hint">No player matches your search.</p>')
+      ${manage?`<button class="btn sm" data-attother="${s.id}">Other team</button>`:`<span class="att-btns" role="group" aria-label="Attendance for ${esc(s.name)}">${ATT.map(([k,l,a])=>`<button class="${k}" aria-pressed="${v===k}" title="${l}" aria-label="${l}" data-att="${s.id}" data-v="${k}">${a}</button>`).join('')}</span>`}</div>`; }).join('')}</div>`:'<p class="hint">No player matches your search.</p>')
       :'<div class="empty-state"><strong>No players yet</strong><p>Add your players on the Players page first.</p><button class="btn primary" data-go="players">Players</button></div>'}
     <p class="hint">Tap a letter: <b>P</b>resent, <b>L</b>ate, <b>E</b>xcused, <b>A</b>bsent, <b>I</b>njured. Tap it again to clear. Totals show on each player's page.</p>
+    ${others.length?`<section class="card att-others"><div class="card-head"><h2>Other team · ${others.length}</h2><span class="hint">Not in attendance for ${esc(seasonText(season).toLowerCase())}</span></div>
+      <div class="att-otherlist">${others.map(x=>`<span class="att-other"><b>${esc(x.num||'–')}</b> ${esc(x.name)}<button class="btn sm ghost" data-attmine="${x.id}">Back to my team</button></span>`).join('')}</div></section>`:''}
     <div class="field"><label for="attNote">Notes</label><textarea id="attNote" class="att-note" placeholder="Who left early, reasons for absence…">${esc(e.attNote||'')}</textarea></div>
   </div>`;
 }
@@ -4273,7 +4285,7 @@ function attCsv(scope){
   if(!dates.length){ toast('No attendance has been taken '+(scope==='all'?'this season':'this month')+' yet.'); return; }
   const q=v=>{ v=String(v==null?'':v); return /[",\n;]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; };
   const head=['#','Player'].concat(dates.map(d=>d.slice(8,10)+'/'+d.slice(5,7)),['Present','Late','Excused','Absent','Injured','Attendance %']);
-  const rows=attSquad().map(s=>{ const cells=dates.map(d=>{ const v=attOf(d)[s.id]; return v?ATT.find(a=>a[0]===v)[2]:''; });
+  const rows=attSquad(seasonOf((scope==='all'?month:month)+'-15')).map(s=>{ const cells=dates.map(d=>{ const v=attOf(d)[s.id]; return v?ATT.find(a=>a[0]===v)[2]:''; });
     const t={present:0,late:0,excused:0,absent:0,injured:0}; dates.forEach(d=>{ const v=attOf(d)[s.id]; if(v&&t[v]!=null) t[v]++; });
     const n=t.present+t.late+t.excused+t.absent+t.injured;
     return [s.num||'',s.name].concat(cells,[t.present,t.late,t.excused,t.absent,t.injured,n?Math.round(100*(t.present+t.late)/n)+'%':'']).map(q).join(','); });
@@ -4281,6 +4293,8 @@ function attCsv(scope){
   return offerFile(name,'﻿'+[head.map(q).join(',')].concat(rows,['','P = present · L = late · E = excused · A = absent · I = injured']).join('\r\n'));
 }
 function attPlayerCard(s,season){
+  const sx=season==='all'?nowSeason():season;
+  if(isOther(s,sx)) return `<section class="card"><div class="card-head"><h2>Training attendance</h2></div><p class="hint">${esc(s.name)} is marked as <b>other team</b> for ${esc(seasonText(sx).toLowerCase())}, so she is left out of attendance.</p><div class="row-actions"><button class="btn sm" data-potherteam="${s.id}" data-season="${sx}">Back to my team</button></div></section>`;
   const r=attStats(s.id,season);
   if(!r.sessions) return `<section class="card"><div class="card-head"><h2>Training attendance</h2></div><p class="hint">No attendance taken for ${esc(s.name)} in ${esc(seasonText(season).toLowerCase())} yet. Take it from a training day in the calendar.</p></section>`;
   return `<section class="card"><div class="card-head"><h2>Training attendance</h2><span class="hint">${r.sessions} session${r.sessions===1?'':'s'} with attendance</span></div>
@@ -4289,10 +4303,15 @@ function attPlayerCard(s,season){
     <div class="att-dots">${r.list.slice(-40).map(x=>`<button class="att-dot ${x.v}" data-go="training" data-arg="${x.d}" title="${esc(fmtDate(x.d,{weekday:'short',day:'numeric',month:'short'})+' · '+ATT_LBL[x.v])}" aria-label="${esc(fmtDate(x.d,{day:'numeric',month:'short'})+': '+ATT_LBL[x.v])}"></button>`).join('')}</div>
     <p class="hint">Each square is a training, oldest first. Click one to open that session.</p></section>`;
 }
+document.addEventListener('click',e=>{ const b=e.target.closest('[data-potherteam]'); if(!b) return; const sq=SQ(b.dataset.potherteam), on=!isOther(sq,b.dataset.season);
+  setOther(b.dataset.potherteam,b.dataset.season,on); renderView(); toast(on?sq.name+' is marked as other team for '+seasonText(b.dataset.season).toLowerCase()+': she is left out of attendance.':sq.name+' is back in your team for attendance.'); });
 document.addEventListener('click',e=>{
   if(view!=='training') return; const g=s=>e.target.closest(s); let b;
   if(b=g('[data-att]')){ attSet(viewArg,b.dataset.att,b.dataset.v); renderTraining(); return; }
-  if(b=g('[data-attrest]')){ const d=plCal.days[viewArg]; if(!d) return; d.att=d.att||{}; attSquad().forEach(s=>{ if(!d.att[s.id]) d.att[s.id]='present'; }); plTouch('cal'); renderTraining(); return; }
+  if(b=g('[data-attmanage]')){ plUi.attManage=!plUi.attManage; renderTraining(); return; }
+  if(b=g('[data-attother]')){ const sq=SQ(b.dataset.attother); setOther(b.dataset.attother,seasonOf(viewArg),true); renderTraining(); if(sq) toast(sq.name+' is now marked as other team for '+seasonText(seasonOf(viewArg)).toLowerCase()+'.',()=>{ setOther(sq.id,seasonOf(viewArg),false); renderTraining(); }); return; }
+  if(b=g('[data-attmine]')){ setOther(b.dataset.attmine,seasonOf(viewArg),false); renderTraining(); return; }
+  if(b=g('[data-attrest]')){ const d=plCal.days[viewArg]; if(!d) return; d.att=d.att||{}; attSquad(seasonOf(viewArg)).forEach(s=>{ if(!d.att[s.id]) d.att[s.id]='present'; }); plTouch('cal'); renderTraining(); return; }
   if(b=g('[data-attclear]')){ if(b.dataset.armed!=='1'){ b.dataset.armed='1'; b.textContent='Clear all? Click again'; setTimeout(()=>{ if(b.isConnected) renderTraining(); },3000); return; }
     const d=plCal.days[viewArg]; if(d){ d.att={}; plTouch('cal'); } renderTraining(); return; }
   if(b=g('[data-attmake]')){ plSetDay(b.dataset.attmake,'training'); renderTraining(); return; }
