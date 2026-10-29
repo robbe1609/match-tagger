@@ -44,6 +44,7 @@ const CLOUD=(function(){
   function forget(){ cfg={}; keep(); state='none'; }
 
   async function readText(path){ const r=await api('/api/obj/'+enc(path),{cache:'no-store'}); if(r.status===404) return null; await ok(r); return r.text(); }
+  async function readBlob(path){ const r=await api('/api/obj/'+enc(path),{cache:'no-store'}); if(r.status===404) return null; await ok(r); return r.blob(); }
   async function write(path,data){
     const blob=data instanceof Blob?data:new Blob([data],{type:/\.json$/i.test(path)?'application/json':'application/octet-stream'});
     if(blob.size>SMALL) return upload(blob,path);
@@ -129,7 +130,7 @@ const CLOUD=(function(){
     throw new Error('The upload could not be completed. Try again.');
   }
 
-  return {init,login,logout,forget,readText,write,remove,ensure,list,listVideos,upload,usage,
+  return {init,login,logout,forget,readText,readBlob,write,remove,ensure,list,listVideos,upload,usage,
     kind:'cloud', supported:true,
     pick:async()=>{ throw Object.assign(new Error('Not available'),{name:'AbortError'}); },
     reconnect:async()=>state,

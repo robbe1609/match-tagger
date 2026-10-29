@@ -474,7 +474,19 @@ button.res:hover{transform:translateY(-1px)}
 .pcard .bignum{position:absolute;right:12px;top:-10px;font-family:var(--f-display);font-weight:800;font-size:96px;line-height:1;color:var(--accent-soft);pointer-events:none}
 .pcard .ppos{position:relative;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
 .pcard .pname{position:relative;font-family:var(--f-display);font-weight:700;font-size:24px;line-height:1.05;margin-bottom:8px;max-width:80%}
-.pstats{position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;border-top:1px solid var(--line);padding-top:9px}
+.pcard .pph{position:absolute;top:12px;right:12px;width:76px;height:95px;border-radius:12px;background:var(--surface-2) center/cover no-repeat;box-shadow:0 0 0 1px var(--line)}
+.pcard.hasph .ppos,.pcard.hasph .pname{max-width:calc(100% - 92px)}
+.pcard.hasph .pname{min-height:78px}
+.pphoto{position:relative;display:block;width:112px;height:140px;border-radius:18px;overflow:hidden;cursor:pointer;box-shadow:inset 0 -6px 0 var(--hero-accent),0 0 0 1px var(--line);background:var(--surface-2)}
+.pphoto .pph{position:absolute;inset:0;background:center/cover no-repeat}
+.pphnum{position:absolute;left:8px;bottom:12px;min-width:34px;height:34px;padding:0 6px;border-radius:10px;background:var(--hero-bg);color:var(--hero-ink);font-family:var(--f-display);font-weight:800;font-size:22px;display:flex;align-items:center;justify-content:center}
+.pphoto:hover::after,.pphoto.over::after{content:"Change photo";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(7,9,12,.55);color:#fff;font-weight:700;font-size:13px}
+.shirtnum.addph{position:relative;cursor:pointer}
+.shirtnum .phadd{position:absolute;left:50%;bottom:-11px;transform:translateX(-50%);display:inline-flex;align-items:center;gap:3px;white-space:nowrap;font-family:var(--f-body);font-size:11px;font-weight:700;background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:3px 8px}
+.shirtnum .phadd svg{width:11px;height:11px}
+.shirtnum.over,.pphoto.over{outline:3px dashed var(--accent);outline-offset:3px}
+@media (max-width:520px){.pphoto{width:84px;height:105px;border-radius:14px}.pphnum{min-width:28px;height:28px;font-size:18px}}
+.pstats{position:relative;margin-top:auto;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;border-top:1px solid var(--line);padding-top:9px}
 .pstats b{display:block;font-family:var(--f-display);font-size:23px;font-weight:700;line-height:1}
 .pstats span span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:700}
 table.sortable th button{background:none;border:0;padding:0;font:inherit;color:inherit;letter-spacing:inherit;text-transform:inherit;white-space:nowrap}
@@ -1709,7 +1721,7 @@ async function connectDb(){
     col=true; lastSync=Date.now(); linkAll(); if(view==='match') renderLiveBar();
     if(changedCurrent){ if(store[M.id]) M=store[M.id]; renderAll(); } else renderDrawer();
     lsSave(); setSync('cloud'); flush();
-    refreshVideos(); plSync(); tbSync();
+    refreshVideos(); plSync(); tbSync(); phSync();
   }catch(e){ console.error(e); if(e&&e.name==='AuthError'){ authLost(); return; } setSync('error'); toast(FSX.kind==='cloud'?'Could not reach your online storage. Your work is kept in this browser and saved online as soon as the connection is back.':'Could not open your Match Tagger folder. Your work is kept in this browser. Click the status at the top to reconnect.'); clearTimeout(ui.retryT); if(FSX.kind==='cloud') ui.retryT=setTimeout(connectDb,20000); }
 }
 const localMode=()=>{ try{ return localStorage.getItem('matchTagger.localMode')==='1'; }catch(e){ return false; } };
@@ -3167,10 +3179,10 @@ function renderPlayers(){
   const pmode=['cards','table','chart'].includes(ui.pview)?ui.pview:'cards', cards=pmode==='cards';
   el.innerHTML=`<div class="wrap page">
     <header class="page-head"><div><span class="eyebrow">${esc(teamName())} · ${esc(seasonText(season))}</span><h1>Players</h1><p>${pq?list.length+' of '+all.length+' players match “'+esc(ui.pq.trim())+'”':all.length+' player'+(all.length===1?'':'s')+' · stats update automatically from every tagged match.'}</p></div>
-      <div class="page-actions"><input class="search" id="pSearch" type="search" placeholder="Search name or number" value="${esc(ui.pq||'')}" aria-label="Search players by name or shirt number" autocomplete="off">${seasonSelect()}<div class="seg" role="group" aria-label="Layout"><button data-pview="cards" aria-pressed="${cards}">Cards</button><button data-pview="table" aria-pressed="${pmode==='table'}">Table</button><button data-pview="chart" aria-pressed="${pmode==='chart'}">Chart</button></div><button class="btn primary" id="btnAddPlayer" aria-expanded="${!!ui.addOpen}">Add player</button></div></header>
+      <div class="page-actions"><input class="search" id="pSearch" type="search" placeholder="Search name or number" value="${esc(ui.pq||'')}" aria-label="Search players by name or shirt number" autocomplete="off">${seasonSelect()}<div class="seg" role="group" aria-label="Layout"><button data-pview="cards" aria-pressed="${cards}">Cards</button><button data-pview="table" aria-pressed="${pmode==='table'}">Table</button><button data-pview="chart" aria-pressed="${pmode==='chart'}">Chart</button></div>${all.length?`<label class="btn" title="Choose several photos at once. Name each file after the shirt number (49.jpg) or the player (Debaermaeker Emma.jpg).">${IC.plus} Add photos<input type="file" id="phBulk" accept="image/*" multiple hidden></label>`:''}<button class="btn primary" id="btnAddPlayer" aria-expanded="${!!ui.addOpen}">Add player</button></div></header>
     ${ui.addOpen?`<form id="addPlayerForm" class="card"><div class="form three"><div class="field"><label for="apNum">Shirt number</label><input id="apNum" type="number" min="1" max="99"></div><div class="field"><label for="apName">Name</label><input id="apName" required placeholder="First and last name"></div><div class="field"><label for="apPos">Position</label><select id="apPos">${POSITIONS.map(p=>`<option value="${p}">${p||'–'}</option>`).join('')}</select></div></div><div class="row-actions"><button class="btn primary" type="submit">Add to squad</button><button class="btn ghost" type="button" id="btnAddCancel">Cancel</button></div></form>`:''}
     ${!list.length?(pq?`<div class="empty-state"><strong>No player matches “${esc(ui.pq.trim())}”</strong><p>Search by name or shirt number.</p><button class="btn" data-pclear>Clear search</button></div>`:`<div class="empty-state"><strong>No players yet</strong><p>Players appear here as soon as you name them in a match lineup, or add them yourself.</p></div>`):pmode==='chart'?pchHtml(list,agg,season,cust):cards?
-      `<div class="pgrid">${list.map(s=>{ const a=agg[s.id]; return `<button class="pcard" data-go="player" data-arg="${s.id}"><span class="bignum" aria-hidden="true">${esc(s.num||'')}</span>
+      `<div class="pgrid">${list.map(s=>{ const a=agg[s.id], ph=s.photo?photoUrl(s):null; return `<button class="pcard${s.photo?' hasph':''}" data-go="player" data-arg="${s.id}">${s.photo?`<span class="pph${ph?' ready':''}" data-phid="${s.id}" style="${ph?`background-image:url('${ph}')`:''}" aria-hidden="true"></span>`:`<span class="bignum" aria-hidden="true">${esc(s.num||'')}</span>`}
         <span class="ppos">${esc([s.num?'#'+s.num:'',s.pos,isOther(s,season==='all'?nowSeason():season)?'Other team':''].filter(Boolean).join(' · ')||'Squad')}</span><span class="pname">${esc(s.name)}</span>
         <span class="pstats">${[['Apps',a.apps],['Min',a.min],['Goals',a.line.g],['Assists',a.line.a]].map(([l,v])=>`<span><b class="tnum">${v}</b><span>${l}</span></span>`).join('')}</span></button>`; }).join('')}</div>`
       :`<div class="tbl-wrap"><table class="sortable"><thead><tr>${cols.map(([k,h,t])=>`<th class="${k==='name'?'name':''}"><button data-psort="${esc(k)}" title="${esc(t||h)}">${esc(h)}${ps.k===k?(ps.d>0===(['num','name','pos'].includes(k))?' ↑':' ↓'):''}</button></th>`).join('')}</tr></thead><tbody>
@@ -3305,6 +3317,70 @@ async function pchPdf(){
 document.addEventListener('click',e=>{ if(view==='players'&&e.target.closest('[data-pchpdf]')) pchPdf(); });
 document.addEventListener('change',e=>{ if(view==='players'&&e.target.id==='pchMetric'){ pch.metric=e.target.value; pchSave(); renderPlayers(); } });
 
+/* =================== PLAYER PHOTOS ===================
+   Data/photos/<squadId>.jpg in the folder / online storage (portrait 480x600 JPG), cached in this browser (IndexedDB).
+   The squad entry keeps .photo = version, so every device knows when a photo changed. */
+const PH={urls:{}, tried:{}, db:null, PEND:'matchTagger.photoPending'};
+function phDb(){ if(!PH.db) PH.db=new Promise((res,rej)=>{ const r=indexedDB.open('matchTaggerPhotos',1); r.onupgradeneeded=()=>r.result.createObjectStore('p'); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); return PH.db; }
+async function phIdb(mode,fn){ const db=await phDb(); return new Promise((res,rej)=>{ const tx=db.transaction('p',mode), rq=fn(tx.objectStore('p')); tx.oncomplete=()=>res(rq&&rq.result); tx.onerror=()=>rej(tx.error); }); }
+const phGet=id=>phIdb('readonly',st=>st.get(id)).catch(()=>null);
+const phPut=(id,v)=>phIdb('readwrite',st=>st.put(v,id)).catch(()=>{});
+const phDel=id=>phIdb('readwrite',st=>st.delete(id)).catch(()=>{});
+const phPath=id=>'Data/photos/'+id+'.jpg';
+const phPending=()=>{ try{ return JSON.parse(localStorage.getItem(PH.PEND)||'[]'); }catch(e){ return []; } };
+const phSetPending=a=>{ try{ localStorage.setItem(PH.PEND,JSON.stringify([...new Set(a)])); }catch(e){} };
+function phApply(id){ const c=PH.urls[id]; document.querySelectorAll(`[data-phid="${id}"]`).forEach(el=>{ if(!c) return; if(el.tagName==='IMG') el.src=c.url; else el.style.backgroundImage=`url("${c.url}")`; el.classList.add('ready'); }); }
+function phSet(id,v,blob){ const old=PH.urls[id]; if(old) URL.revokeObjectURL(old.url); PH.urls[id]={v,url:URL.createObjectURL(blob)}; phApply(id); }
+/* the photo for a player (or ''), loading it in the background when needed */
+function photoUrl(s){ if(!s||!s.photo) return ''; const c=PH.urls[s.id]; if(c&&c.v===s.photo) return c.url; phLoad(s); return c?c.url:''; }
+async function phLoad(s){ const id=s.id, v=s.photo, key=id+':'+v+':'+(col?1:0); if(PH.tried[key]) return; PH.tried[key]=true;
+  try{ const r=await phGet(id); if(r&&r.blob&&r.v===v){ phSet(id,v,r.blob); return; }
+    let blob=null; if(col){ try{ blob=await FSX.readBlob(phPath(id)); }catch(e){ console.warn('photo',id,e); } }
+    if(blob){ blob=new Blob([blob],{type:'image/jpeg'}); await phPut(id,{v,blob}); phSet(id,v,blob); }
+    else if(r&&r.blob) phSet(id,r.v,r.blob);   // an older photo is better than none
+  }catch(e){ console.warn('photo',id,e); } }
+/* crop to a 4:5 portrait (keeping the top, where the face usually is) and shrink to 480x600 */
+async function phPrepare(file){
+  let img; try{ img=await createImageBitmap(file); }
+  catch(e){ img=await new Promise((res,rej)=>{ const i=new Image(), u=URL.createObjectURL(file); i.onload=()=>{ URL.revokeObjectURL(u); res(i); }; i.onerror=()=>{ URL.revokeObjectURL(u); rej(new Error('format')); }; i.src=u; }); }
+  const W=img.width, H=img.height, ar=4/5; let sw=W, sh=H, sx=0, sy=0;
+  if(W/H>ar){ sw=H*ar; sx=(W-sw)/2; } else { sh=W/ar; sy=(H-sh)*0.2; }
+  const c=document.createElement('canvas'); c.width=480; c.height=600; const x=c.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,480,600); x.imageSmoothingQuality='high'; x.drawImage(img,sx,sy,sw,sh,0,0,480,600);
+  if(img.close) img.close();
+  return await new Promise((res,rej)=>c.toBlob(b=>b?res(b):rej(new Error('format')),'image/jpeg',.86)); }
+async function phUpload(id){ const s=SQ(id); if(!s||!s.photo) return true; const r=await phGet(id); if(!r||!r.blob) return true;
+  try{ await FSX.write(phPath(id),r.blob); return true; }catch(e){ console.error(e); return false; } }
+async function phSave(s,file,quiet){
+  let blob; try{ blob=await phPrepare(file); }catch(e){ toast(`${file.name} can't be read. Use a JPG or PNG photo (on iPhone: share the photo and choose JPG, or take a screenshot).`); return false; }
+  const v=Date.now(); s.photo=v; await phPut(s.id,{v,blob}); phSet(s.id,v,blob); saveSettings();
+  if(col&&await phUpload(s.id)){ phSetPending(phPending().filter(x=>x!==s.id)); }
+  else { phSetPending(phPending().concat(s.id)); if(!quiet&&col) toast('Photo saved in this browser. It goes online as soon as the connection is back.'); }
+  return true; }
+async function phRemove(s){ if(!s||!s.photo) return; delete s.photo; saveSettings(); await phDel(s.id); const c=PH.urls[s.id]; if(c){ URL.revokeObjectURL(c.url); delete PH.urls[s.id]; }
+  phSetPending(phPending().filter(x=>x!==s.id)); if(col){ try{ await FSX.remove(phPath(s.id)); }catch(e){ console.warn(e); } } }
+/* after the folder / online storage connects: send photos made offline, fetch the rest */
+async function phSync(){ if(!col) return; const left=[]; for(const id of phPending()){ if(!(await phUpload(id))) left.push(id); } phSetPending(left);
+  squad().forEach(s=>{ if(s.photo&&!(PH.urls[s.id]&&PH.urls[s.id].v===s.photo)) phLoad(s); }); }
+/* bulk: match file names to players by shirt number ("49.jpg", "49 Emma.jpg") or by name ("Debaermaeker Emma.jpg") */
+function phMatchFile(name){ const base=fold(name.replace(/\.[^.]+$/,'').replace(/[_\-.]+/g,' ')), toks=base.split(/\s+/).filter(Boolean), sq=squad();
+  const nums=toks.filter(t=>/^\d{1,3}$/.test(t)); for(const n of nums){ const hit=sq.filter(s=>String(s.num||'')===String(+n)); if(hit.length===1) return hit[0]; }
+  const words=toks.filter(t=>!/^\d+$/.test(t)); if(!words.length) return null;
+  const full=sq.filter(s=>{ const nt=fold(s.name).split(/\s+/); return nt.every(t=>words.includes(t)); }); if(full.length===1) return full[0];
+  const part=sq.filter(s=>{ const nt=fold(s.name).split(/\s+/); return words.every(t=>nt.includes(t)); }); if(part.length===1) return part[0];
+  return null; }
+async function phBulk(files){ const used=new Set(), miss=[]; let n=0;
+  toast('Adding '+files.length+' photo'+(files.length===1?'':'s')+'…');
+  for(const f of files){ const s=phMatchFile(f.name); if(!s||used.has(s.id)){ miss.push(f.name); continue; } used.add(s.id); if(await phSave(s,f,true)) n++; }
+  renderView(); toast(`Added ${n} photo${n===1?'':'s'}.`+(miss.length?` Not matched: ${miss.slice(0,6).join(', ')}${miss.length>6?' and '+(miss.length-6)+' more':''}. Name the file after the shirt number or the player, or add it on her page.`:'')); }
+document.addEventListener('change',e=>{ const t=e.target;
+  if(t.id==='phBulk'){ const fs=[...t.files].filter(f=>/^image\//.test(f.type)||/\.(jpe?g|png|webp|heic|heif)$/i.test(f.name)); t.value=''; if(fs.length) phBulk(fs); return; }
+  if(t.dataset&&t.dataset.phfor){ const f=t.files[0], s=SQ(t.dataset.phfor); t.value=''; if(f&&s) phSave(s,f).then(ok=>{ if(ok){ renderView(); toast('Photo added for '+s.name+'.'); } }); } });
+document.addEventListener('click',e=>{ const b=e.target.closest('[data-phrm]'); if(!b) return; const s=SQ(b.dataset.phrm); if(s) phRemove(s).then(()=>{ renderView(); toast('Photo removed.'); }); });
+['dragover','drop'].forEach(ev=>document.addEventListener(ev,e=>{ const z=e.target.closest&&e.target.closest('[data-phdrop]'); if(!z) return; e.preventDefault();
+  if(ev==='dragover'){ z.classList.add('over'); return; } z.classList.remove('over'); const f=[...(e.dataTransfer.files||[])].find(x=>/^image\//.test(x.type)), s=SQ(z.dataset.phdrop);
+  if(f&&s) phSave(s,f).then(ok=>{ if(ok){ renderView(); toast('Photo added for '+s.name+'.'); } }); }));
+document.addEventListener('dragleave',e=>{ const z=e.target.closest&&e.target.closest('[data-phdrop]'); if(z) z.classList.remove('over'); });
+
 function addSquadPlayer(){
   const name=$('#apName').value.trim(); if(!name) return;
   if(squad().some(x=>norm(x.name)===norm(name))){ toast(name+' is already in the squad.'); return; }
@@ -3348,11 +3424,12 @@ function renderPlayer(){
   const logCols=[['g','G'],['a','A'],['sh','Sh'],['on','SoT'],['kp','KP'],['dr','Dr'],['rec','Rec'],['tk','Tck'],['to','TO'],['yc','YC']].concat(cust.map(k=>[k,tagInfo(k).label]));
   el.innerHTML=`<div class="wrap page">
     <button class="back" data-go="players">← All players</button>
-    <header class="phead"><span class="shirtnum">${esc(s.num||'–')}</span>
+    <header class="phead">${(()=>{ const ph=s.photo?photoUrl(s):''; return s.photo?`<label class="pphoto" data-phdrop="${s.id}" title="Change photo (or drop a new one here)"><span class="pph${ph?' ready':''}" data-phid="${s.id}" style="${ph?`background-image:url('${ph}')`:''}"></span><span class="pphnum">${esc(s.num||'–')}</span><input type="file" accept="image/*" data-phfor="${s.id}" hidden></label>`
+      :`<label class="shirtnum addph" data-phdrop="${s.id}" title="Add a photo (or drop one here)">${esc(s.num||'–')}<span class="phadd">${IC.plus} Photo</span><input type="file" accept="image/*" data-phfor="${s.id}" hidden></label>`; })()}
       <div><span class="eyebrow">${esc([s.pos,teamName(),seasonText(season)].filter(Boolean).join(' · '))}</span><h1>${esc(s.name)}</h1></div>
       <div class="page-actions">${seasonSelect()}${(()=>{ const sx=season==='all'?nowSeason():season, on=isOther(s,sx); return `<button class="btn${on?' primary':''}" data-potherteam="${s.id}" data-season="${sx}" aria-pressed="${on}" title="Players from another group are left out of training attendance for this season">${on?'Other team · '+esc(sx):'Mark as other team'}</button>`; })()}<button class="btn" id="btnEditPlayer" aria-expanded="${!!ui.editP}">Edit player</button></div></header>
     ${ui.editP?`<form id="editPlayerForm" class="card"><div class="form three"><div class="field"><label for="epNum">Shirt number</label><input id="epNum" type="number" min="1" max="99" value="${esc(s.num)}"></div><div class="field"><label for="epName">Name</label><input id="epName" required value="${esc(s.name)}"></div><div class="field"><label for="epPos">Position</label><select id="epPos">${POSITIONS.map(p=>`<option value="${p}"${p===(s.pos||'')?' selected':''}>${p||'–'}</option>`).join('')}</select></div></div>
-      <p class="hint">Renaming also updates her name in every match lineup.</p><div class="row-actions"><button class="btn primary" type="submit">Save</button><button class="btn ghost" type="button" id="btnEditCancel">Cancel</button><span style="flex:1"></span>${ui.confirmRmP?`<span class="confirm">Remove from the squad?<button class="btn sm danger" type="button" id="btnRmYes">Remove</button><button class="btn sm" type="button" id="btnRmNo">Keep</button></span>`:`<button class="btn sm ghost danger" type="button" id="btnRmP">Remove from squad</button>`}</div></form>`:''}
+      <p class="hint">Renaming also updates her name in every match lineup.</p><div class="row-actions"><button class="btn primary" type="submit">Save</button><button class="btn ghost" type="button" id="btnEditCancel">Cancel</button>${s.photo?`<button class="btn sm ghost" type="button" data-phrm="${s.id}">Remove photo</button>`:''}<span style="flex:1"></span>${ui.confirmRmP?`<span class="confirm">Remove from the squad?<button class="btn sm danger" type="button" id="btnRmYes">Remove</button><button class="btn sm" type="button" id="btnRmNo">Keep</button></span>`:`<button class="btn sm ghost danger" type="button" id="btnRmP">Remove from squad</button>`}</div></form>`:''}
     <div class="kpis">${[['Appearances',a.apps,a.starts+' starts'],['Minutes',a.min,a.apps?Math.round(a.min/a.apps)+' per match':''],['Goals',L.g,per90(L.g)+' per 90'],['Assists',L.a,per90(L.a)+' per 90'],['Shots',L.sh,L.on+' on target'],['Key passes',L.kp,per90(L.kp)+' per 90'],['Ball recoveries',L.rec,per90(L.rec)+' per 90'],['Turnovers',L.to,per90(L.to)+' per 90']].map(([l,v,sub])=>`<div class="kpi"><span>${l}</span><b class="tnum">${v}</b><small>${esc(sub)}</small></div>`).join('')}</div>
     <section class="card"><div class="card-head"><h2>Clips</h2><span class="hint">${allClips.length} tagged moment${allClips.length===1?'':'s'}</span></div>
       ${allClips.length?`<div class="ev-tools">
@@ -3418,7 +3495,7 @@ function savePlayerEdit(){
 function removeSquadPlayer(){
   const s=SQ(viewArg); if(!s) return;
   Object.values(store).forEach(m=>{ let ch=false; m.players.forEach(p=>{ if(p.sq===s.id){ p.sq=null; p.sqSkip=true; ch=true; } }); if(ch){ m.updatedAt=Date.now(); dirty.add(m.id); } });
-  settings.squad=squad().filter(x=>x!==s); saveSettings(); lsSave(); flush(); ui.editP=false; ui.confirmRmP=false;
+  if(s.photo) phRemove(s); settings.squad=squad().filter(x=>x!==s); saveSettings(); lsSave(); flush(); ui.editP=false; ui.confirmRmP=false;
   go('players'); toast(s.name+' removed from the squad. Her tags stay in the matches.');
 }
 

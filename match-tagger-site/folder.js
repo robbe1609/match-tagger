@@ -51,6 +51,7 @@ const FOLDER=(function(){
     try{ return await d.getFileHandle(name,{create:!!create}); }catch(e){ if(e.name==='NotFoundError'&&!create) return null; throw e; }
   }
   async function readText(path){ const h=await fileAt(path); return h?(await h.getFile()).text():null; }
+  async function readBlob(path){ const h=await fileAt(path); return h?await h.getFile():null; }
   async function write(path,data){ const h=await fileAt(path,true); const w=await h.createWritable(); try{ await w.write(data); await w.close(); }catch(e){ try{ await w.abort(); }catch(x){} throw e; } }
   async function remove(path){ const parts=path.split('/').filter(Boolean), name=parts.pop(), d=await dirAt(parts.join('/')); if(!d) return; try{ await d.removeEntry(name); }catch(e){ if(e.name!=='NotFoundError') throw e; } }
   async function ensure(path){ await dirAt(path,true); }
@@ -66,6 +67,6 @@ const FOLDER=(function(){
     }
     await walk(d0,'',0); return out;
   }
-  return {init,reconnect,pick,forget,readText,write,remove,ensure,list,listVideos,kind:'folder',
+  return {init,reconnect,pick,forget,readText,readBlob,write,remove,ensure,list,listVideos,kind:'folder',
     get supported(){ return supported; }, get state(){ return state; }, get name(){ return root?root.name:''; }};
 })();

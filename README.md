@@ -115,6 +115,13 @@ Players from another group: on an attendance page click **Other team players…*
 
 Your old planners' data comes as a file, `planner-import.json`. On the Calendar page, scroll down and click **Import planner data**, then choose that file. It adds your month calendar, your saved week plans and all fixtures with their squads. Matches that are already in the app (same date and opponent) are updated instead of duplicated, and players are matched to your squad by name.
 
+## Player photos
+
+- **One player:** open her page and click the number box (**+ Photo**) at the top left, or drop a photo on it. Click the photo later to change it. **Edit player** → **Remove photo** removes it.
+- **Many at once:** on **Players**, click **Add photos** and select all the files. Name each file after the shirt number (`49.jpg`) or the player (`Debaermaeker Emma.jpg`). Files that don't match are listed so you can add them on the player's page.
+- Photos are cropped to a portrait (the top of the picture is kept) and shrunk to a small JPG, then saved in your storage (`Data/photos`) so they show on every computer. Each browser also keeps a copy, so they load instantly and work offline.
+- Use JPG or PNG. iPhone photos in HEIC format may not open in Chrome: share them as JPG first.
+
 ## Match types
 
 Every match is a **Competition**, **Cup** or **Friendly** match. Pick it in the **Match type** dropdown when you add a match (calendar **+ Match** or **New match**), on the match page (**Edit match**) or in the tagger under **Setup**. Existing matches count as Competition.
