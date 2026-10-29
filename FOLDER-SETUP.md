@@ -29,14 +29,7 @@ OneDrive
 
 ### 1 · Put the new version online
 
-If your site is already on Netlify:
-
-1. Unzip **match-tagger.zip**.
-2. Log in at **app.netlify.com** and open your project (for example *yla-match-tagger*).
-3. Go to **Deploys**. At the bottom of the page is a box "Need to update your project? Drag and drop your project output folder here".
-4. Drag the folder **match-tagger-site** (the folder itself) onto that box. After a few seconds the new version is live on the same address.
-
-New on Netlify? Go to **app.netlify.com/drop** and drag the folder there.
+The website is published by Cloudflare Pages from the GitHub repository `match-tagger`: every update is online automatically about a minute later. Nothing to do here.
 
 ### 2 · Make sure OneDrive is on your computer
 

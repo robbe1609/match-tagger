@@ -8,7 +8,7 @@ The folder setup (a Match Tagger folder in OneDrive) still works too. You choose
 
 | Folder | What it is | Where it goes |
 |---|---|---|
-| `match-tagger-site` | The website | Netlify (drag and drop) |
+| `match-tagger-site` | The website | Cloudflare Pages (published from GitHub) |
 | `storage-service/worker.js` | The small storage service that guards your videos | Cloudflare (copy and paste) |
 
 ## What it costs
@@ -75,9 +75,9 @@ Write down the address. You need it to log in.
 
 ## Setup · part 2 · the website
 
-1. Unzip this file.
-2. Log in at **app.netlify.com**, open your project and go to **Deploys**.
-3. Drag the folder **match-tagger-site** onto the box at the bottom ("Drag and drop your project output folder here").
+1. The website is published by **Cloudflare Pages** straight from the GitHub repository `match-tagger`. Every change pushed to `main` is online about a minute later, free (up to 500 updates a month).
+2. Pages settings, in case you ever set it up again (**Workers & Pages** → **Create application** → **Pages** → **Connect to Git**): production branch `main`, framework preset **None**, build command empty, build output directory `match-tagger-site`.
+3. The old Netlify site is no longer used (Netlify charges credits for every update).
 4. Open your site.
    - **First time on this computer:** choose **Use online storage**.
    - **Already using a folder:** click the status at the top right → **Switch to online storage**.

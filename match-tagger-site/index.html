@@ -4019,6 +4019,10 @@ function plFit(){ document.querySelectorAll('.pl-slidewrap').forEach(w=>{ const 
 window.addEventListener('resize',()=>{ clearTimeout(plUi.fitT); plUi.fitT=setTimeout(plFit,80); });
 
 /* =================== MONTH CALENDAR VIEW =================== */
+/* years to offer: everything with planner or match data, plus two years either side of today and the shown year */
+function plYears(shown){ const now=plToday().getUTCFullYear(), ys=[now-2,now+2,shown];
+  Object.keys(plCal.days||{}).forEach(d=>ys.push(+d.slice(0,4))); Object.values(store).forEach(m=>{ const d=isoDate(m.date); if(/^\d{4}/.test(d)) ys.push(+d.slice(0,4)); });
+  const v=ys.filter(y=>y>1990&&y<2100), lo=Math.min(...v), hi=Math.max(...v), out=[]; for(let y=lo;y<=hi;y++) out.push(y); return out; }
 function plDefaultMonth(){ const t=plToday(); return t.getUTCFullYear()+'-'+plPad(t.getUTCMonth()+1); }
 function renderCalendar(){
   const el=$('#view-calendar'); if(!plUi.month) plUi.month=plDefaultMonth();
@@ -4039,7 +4043,7 @@ function renderCalendar(){
     <header class="page-head"><div><span class="eyebrow">${esc(teamName())} · Calendar</span><h1>${esc(cal.title)}</h1>
       <p><b>${tr}</b> training${tr===1?'':'s'} · <b>${mt}</b> match${mt===1?'':'es'} · <b>${off}</b> without training${open?` · ${open} weekday${open===1?'':'s'} still empty`:''}</p></div>
       <div class="page-actions"><div class="seg" role="group" aria-label="Month"><button data-calnav="-1" aria-label="Previous month">‹</button><button data-calnav="0">Today</button><button data-calnav="1" aria-label="Next month">›</button></div>
-        <input type="month" class="cal-monthpick" id="calMonth" value="${plUi.month}" aria-label="Choose month">
+        <select class="cal-monthpick" id="calMon" aria-label="Month">${PL_MON.map((n,i)=>`<option value="${plPad(i+1)}"${i+1===mm?' selected':''}>${n}</option>`).join('')}</select><select class="cal-monthpick" id="calYear" aria-label="Year">${plYears(yy).map(y=>`<option${y===yy?' selected':''}>${y}</option>`).join('')}</select>
         <button class="btn" data-calexport aria-expanded="${plUi.exportOpen}">Export</button>
         ${plCal.days[today]&&plCal.days[today].type==='training'?`<button class="btn" data-go="training" data-arg="${today}">Today's attendance</button>`:''}<button class="btn" data-go="week" data-arg="${plKey(plYmd(plMonday(plToday())))}">This week</button>
         <button class="btn primary" data-caladd="${today.slice(0,7)===plUi.month?today:plUi.month+'-01'}">+ Match</button></div></header>
@@ -4460,6 +4464,7 @@ function wkAct(t,e){
 document.addEventListener('input',e=>{
   const t=e.target;
   if(t.id==='calMonth'){ if(t.value){ plUi.month=t.value; renderCalendar(); } return; }
+  if(t.id==='calMon'||t.id==='calYear'){ const m=$('#calMon'), y=$('#calYear'); if(m&&y){ plUi.month=y.value+'-'+m.value; renderCalendar(); } return; }
   if(t.id==='calLabel'){ plCal.label=t.value; plTouch('cal'); return; }
   if(t.dataset.patf){ plPattern()[+t.dataset.k][t.dataset.patf]=t.value; plTouch('cal'); return; }
   if(t.dataset.cdf){ const en=plCal.days[plUi.daySel]; if(!en) return; en[t.dataset.cdf]=t.value; plCalChanged(plUi.daySel); clearTimeout(plUi.cdT); plUi.cdT=setTimeout(()=>{ if(view==='calendar') renderCalendar(); },500); return; }
