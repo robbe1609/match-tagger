@@ -843,6 +843,33 @@ button.sync:hover{background:rgba(255,255,255,.08)}
 .od-inline input{flex:1;min-width:200px;border:1px solid var(--line);background:var(--surface-2);border-radius:8px;padding:7px 9px}
 
 /* Online storage */
+/* training attendance */
+.att-sum{display:flex;flex-wrap:wrap;gap:6px}
+.att-chip{border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:13px;background:var(--surface);color:var(--muted)}
+.att-chip b{color:var(--ink);font-variant-numeric:tabular-nums}
+.att-chip.present{border-color:rgba(31,122,79,.5)}.att-chip.late{border-color:rgba(213,159,15,.6)}.att-chip.excused{border-color:rgba(0,120,191,.5)}.att-chip.absent{border-color:rgba(190,68,48,.55)}.att-chip.injured{border-color:rgba(142,91,208,.55)}
+.att-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(400px,1fr));gap:6px}
+.att-row{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-left-width:4px;border-radius:10px;background:var(--surface);padding:6px 8px 6px 10px;min-width:0}
+.att-row .num{min-width:30px;text-align:center;font-family:var(--f-display);font-weight:700;font-size:17px;color:var(--muted)}
+.att-row .nm{flex:1;min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.att-row.present{border-left-color:var(--res-w)}.att-row.late{border-left-color:var(--goal)}.att-row.excused{border-left-color:var(--accent)}.att-row.absent{border-left-color:var(--against)}.att-row.injured{border-left-color:#8E5BD0}
+.att-btns{display:flex;gap:4px;flex:none}
+.att-btns button{width:36px;height:36px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);font-family:var(--f-display);font-weight:700;font-size:17px;color:var(--muted);padding:0}
+.att-btns button:hover{border-color:var(--muted);color:var(--ink)}
+.att-btns button[aria-pressed="true"]{color:#fff;border-color:transparent}
+.att-btns button.present[aria-pressed="true"]{background:var(--res-w)}.att-btns button.late[aria-pressed="true"]{background:var(--goal)}.att-btns button.excused[aria-pressed="true"]{background:var(--accent)}.att-btns button.absent[aria-pressed="true"]{background:var(--against)}.att-btns button.injured[aria-pressed="true"]{background:#8E5BD0}
+.att-note{width:100%;min-height:70px;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--surface);font:inherit;color:inherit;resize:vertical}
+.att-kpi{display:flex;align-items:baseline;gap:8px}
+.att-kpi b{font-family:var(--f-display);font-size:44px;line-height:1}
+.att-kpi span{color:var(--muted)}
+.att-dots{display:flex;flex-wrap:wrap;gap:4px}
+.att-dot{width:18px;height:18px;border-radius:4px;border:0;padding:0;cursor:pointer}
+.att-dot.present{background:var(--res-w)}.att-dot.late{background:var(--goal)}.att-dot.excused{background:var(--accent)}.att-dot.absent{background:var(--against)}.att-dot.injured{background:#8E5BD0}
+.cal-att{font-style:normal;font-weight:700;color:var(--res-w);margin-left:4px}
+.cd-att{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.cd-att span{flex:1;min-width:160px;font-size:14px}
+@media (max-width:420px){.att-list{grid-template-columns:minmax(0,1fr)}.att-btns button{width:32px;height:34px;font-size:15px}.att-row{gap:6px}}
+
 /* ===== Calendar, week planner, match pages ===== */
 @font-face{font-family:"DM Sans";src:url(vendor/fonts/DMSans-Regular.ttf) format("truetype");font-weight:400;font-display:swap}
 @font-face{font-family:"DM Sans";src:url(vendor/fonts/DMSans-Bold.ttf) format("truetype");font-weight:700;font-display:swap}
@@ -1116,6 +1143,7 @@ button.sync:hover{background:rgba(255,255,255,.08)}
 <section class="view" id="view-calendar"></section>
 <section class="view" id="view-week" hidden></section>
 <section class="view" id="view-fixture" hidden></section>
+<section class="view" id="view-training" hidden></section>
 <section class="view" id="view-matches" hidden></section>
 <section class="view" id="view-report" hidden></section>
 <section class="view" id="view-players" hidden></section>
@@ -2710,19 +2738,23 @@ function matchMin(t){ const c=matchClock(t); return c.phase==='pre'?null:c.secs/
 /* ---------- Router ---------- */
 let view='home', viewArg=null;
 const sessionFiles={};
-const VIEWS=['home','calendar','week','fixture','matches','report','players','player','team','new','match'];
+const VIEWS=['home','calendar','week','fixture','training','matches','report','players','player','team','new','match'];
 function parseHash(){ let h=''; try{ h=(location.hash||'').slice(1); }catch(e){}
   if(/^(home|matches|players|team|new|calendar)$/.test(h)) return [h,null];
   const w=h.match(/^week(?:-(\d{4}-W\d{2}))?$/); if(w) return ['week',w[1]||null];
+  const tr=h.match(/^training-(\d{4}-\d{2}-\d{2})$/); if(tr) return ['training',tr[1]];
   const k=h.match(/^(match|report|player|fixture)-([A-Za-z0-9]+)$/); return k?[k[1],k[2]]:['calendar',null]; }
-const navKey=v=>({report:'matches',match:'matches',player:'players',new:'calendar',fixture:'calendar'}[v]||v);
+const navKey=v=>({report:'matches',match:'matches',player:'players',new:'calendar',fixture:'calendar',training:'calendar'}[v]||v);
 function go(v,arg){
+  if(typeof plUi!=='undefined'&&(plUi.daySel||plUi.addMatch)){ plUi.daySel=null; plUi.addMatch=null; renderDayModal(); renderAddMatch(); }
   if(!VIEWS.includes(v)) v='calendar';
   if(v==='fixture'&&!(arg&&store[arg])){ v='calendar'; arg=null; }
+  if(v==='training'&&!(arg&&/^\d{4}-\d{2}-\d{2}$/.test(arg))){ v='calendar'; arg=null; }
   if(v==='week'&&!(arg&&/^\d{4}-W\d{2}$/.test(arg))) arg=plCurKey();
   if(v==='match'||v==='report'){ if(!(arg&&store[arg])){ if(v==='match'&&store[M.id]) arg=M.id; else { v='matches'; arg=null; } } }
   if(v==='player'&&!(arg&&SQ(arg))){ v='players'; arg=null; }
-  if(!['match','report','player','fixture','week'].includes(v)) arg=null;
+  if(!['match','report','player','fixture','week','training'].includes(v)) arg=null;
+  if(view==='training'&&(v!=='training'||arg!==viewArg)) plUi.attQ='';
   if(view==='fixture'&&(v!=='fixture'||arg!==viewArg)){ plUi.fxEdit=false; plUi.fxQ=''; ui.fxDel=null; }
   if(view==='match'&&v!=='match'){ V().pause(); stopClips(); ui.tray=null; ui.numBuf=''; }
   if(view==='player'&&v!=='player') stopPv();
@@ -2735,7 +2767,7 @@ function go(v,arg){
   try{ window.scrollTo(0,0); }catch(e){}
 }
 window.addEventListener('hashchange',()=>{ let h=''; try{ h=location.hash.slice(1); }catch(e){} if(ui.hashLock===h){ ui.hashLock=null; return; } const [v,a]=parseHash(); if(v!==view||a!==viewArg) go(v,a); });
-function renderView(){ const f={calendar:renderCalendar,week:renderWeek,fixture:renderFixture,home:renderHome,matches:renderMatches,report:renderReport,players:renderPlayers,player:renderPlayer,team:renderTeam,new:renderNew}[view]; if(f) f(); }
+function renderView(){ const f={training:renderTraining,calendar:renderCalendar,week:renderWeek,fixture:renderFixture,home:renderHome,matches:renderMatches,report:renderReport,players:renderPlayers,player:renderPlayer,team:renderTeam,new:renderNew}[view]; if(f) f(); }
 function watchEvent(mid,eid){ const m=store[mid]; const e=m&&m.events.find(x=>x.id===eid); if(!e) return; ui.pendingSeek=e.t; go('match',mid); if(hasVideo()){ ui.pendingSeek=null; seek(e.t-3); } else toast('Load the video for this match to watch the moment.'); }
 
 const IC={
@@ -2930,10 +2962,10 @@ function renderPlayers(){
   const el=$('#view-players'), season=curSeason(), agg=playerAgg(season), all=squad().slice(), pq=fold(ui.pq||'').trim();
   const list=pq?all.filter(s=>{ const num=String(s.num||'').trim(), nm=fold(s.name); if(/^#?\d+$/.test(pq)) return num===pq.replace('#','')||num.startsWith(pq.replace('#',''))||nm.includes(pq); return nm.includes(pq)||nm.split(' ').some(w=>w.startsWith(pq)); }):all;
   const cust=customKeys(Object.values(agg).map(a=>a.line)).filter(k=>tagInfo(k).kind==='player');
-  const val=(s,k)=>{ const a=agg[s.id]; if(k==='num') return +s.num||999; if(k==='name') return norm(s.name); if(k==='pos') return s.pos||'zz'; if(k==='apps'||k==='starts'||k==='min') return a[k]; return a.line[k]||0; };
+  const val=(s,k)=>{ const a=agg[s.id]; if(k==='num') return +s.num||999; if(k==='name') return norm(s.name); if(k==='pos') return s.pos||'zz'; if(k==='apps'||k==='starts'||k==='min') return a[k]; if(k==='att'){ const r=attStats(s.id,season); return r.pct==null?-1:r.pct; } return a.line[k]||0; };
   const ps=ui.psort||{k:'num',d:1};
   list.sort((x,y)=>{ const a=val(x,ps.k), b=val(y,ps.k); return (a<b?-1:a>b?1:0)*(['num','name','pos'].includes(ps.k)?ps.d:-ps.d)||(+x.num||999)-(+y.num||999); });
-  const cols=[['num','#'],['name','Player'],['pos','Pos'],['apps','Apps'],['starts','Starts'],['min','Min']].concat(STAT_COLS.map(c=>[c[0],c[1],c[2]]),cust.map(k=>[k,tagInfo(k).label]));
+  const cols=[['num','#'],['name','Player'],['pos','Pos'],['apps','Apps'],['starts','Starts'],['min','Min'],['att','Train %','Training attendance: present or late']].concat(STAT_COLS.map(c=>[c[0],c[1],c[2]]),cust.map(k=>[k,tagInfo(k).label]));
   const cards=ui.pview!=='table';
   el.innerHTML=`<div class="wrap page">
     <header class="page-head"><div><span class="eyebrow">${esc(teamName())} · ${esc(seasonText(season))}</span><h1>Players</h1><p>${pq?list.length+' of '+all.length+' players match “'+esc(ui.pq.trim())+'”':all.length+' player'+(all.length===1?'':'s')+' · stats update automatically from every tagged match.'}</p></div>
@@ -2944,7 +2976,7 @@ function renderPlayers(){
         <span class="ppos">${esc([s.num?'#'+s.num:'',s.pos].filter(Boolean).join(' · ')||'Squad')}</span><span class="pname">${esc(s.name)}</span>
         <span class="pstats">${[['Apps',a.apps],['Min',a.min],['Goals',a.line.g],['Assists',a.line.a]].map(([l,v])=>`<span><b class="tnum">${v}</b><span>${l}</span></span>`).join('')}</span></button>`; }).join('')}</div>`
       :`<div class="tbl-wrap"><table class="sortable"><thead><tr>${cols.map(([k,h,t])=>`<th class="${k==='name'?'name':''}"><button data-psort="${esc(k)}" title="${esc(t||h)}">${esc(h)}${ps.k===k?(ps.d>0===(['num','name','pos'].includes(k))?' ↑':' ↓'):''}</button></th>`).join('')}</tr></thead><tbody>
-        ${list.map(s=>{ const a=agg[s.id]; return `<tr>${cols.map(([k])=>{ if(k==='num') return `<td>${esc(s.num||'')}</td>`; if(k==='name') return `<td class="name"><button class="tlink" data-go="player" data-arg="${s.id}">${esc(s.name)}</button></td>`; if(k==='pos') return `<td>${esc(s.pos||'')}</td>`; const v=['apps','starts','min'].includes(k)?a[k]:(a.line[k]||0); return `<td class="${v?'':'zero'}">${v}</td>`; }).join('')}</tr>`; }).join('')}
+        ${list.map(s=>{ const a=agg[s.id]; return `<tr>${cols.map(([k])=>{ if(k==='num') return `<td>${esc(s.num||'')}</td>`; if(k==='name') return `<td class="name"><button class="tlink" data-go="player" data-arg="${s.id}">${esc(s.name)}</button></td>`; if(k==='pos') return `<td>${esc(s.pos||'')}</td>`; if(k==='att'){ const r=attStats(s.id,season); return `<td class="${r.pct==null?'zero':''}" title="${r.sessions} session${r.sessions===1?'':'s'}">${r.pct==null?'–':r.pct+'%'}</td>`; } const v=['apps','starts','min'].includes(k)?a[k]:(a.line[k]||0); return `<td class="${v?'':'zero'}">${v}</td>`; }).join('')}</tr>`; }).join('')}
       </tbody></table></div>`}
   </div>`;
 }
@@ -3014,6 +3046,7 @@ function renderPlayer(){
         ${a.log.map(r=>`<tr><td class="name"><button class="tlink" data-go="report" data-arg="${r.m.id}">${esc(fmtDate(r.m.date,{day:'numeric',month:'short'})+' '+vsLabel(r.m))}</button></td><td>${resChip(r.m)} <span class="tnum">${finalScore(r.m)}</span></td><td>${r.started?'Start':r.cameOn?'Sub':'–'}</td><td>${r.min==null?'–':r.min}</td>${logCols.map(([k])=>`<td class="${r.line[k]?'':'zero'}">${r.line[k]||0}</td>`).join('')}</tr>`).join('')}
       </tbody></table></div>`:'<p class="hint">She has not played in a tagged match yet.</p>'}</section>
     </div>
+    ${attPlayerCard(s,season)}
   </div>`;
   const slot=$('#pvSlot'); if(slot) slot.replaceWith(pvVideo());
   renderPvState();
@@ -3602,11 +3635,14 @@ function plCalModel(month, forExport){
   }
   return {title:PL_MON[m-1]+' '+y,label:plCal.label||'',weeks,projected:false,offLabel:plCal.offLabel||'No training'};
 }
+function plPutDay(ymd,obj){ const old=plCal.days[ymd]; const keep=old&&old.att&&Object.keys(old.att).length?{att:old.att,attNote:old.attNote||''}:(old&&old.attNote?{attNote:old.attNote}:null);
+  if(!obj){ if(keep) plCal.days[ymd]=Object.assign({type:'none'},keep); else delete plCal.days[ymd]; return; }
+  plCal.days[ymd]=Object.assign(obj,keep||{}); }
 function plSetDay(ymd,type){
   const k=(plParse(ymd).getUTCDay()+6)%7;
-  if(type==='none') delete plCal.days[ymd];
-  else if(type==='off') plCal.days[ymd]={type:'off',reason:(plCal.days[ymd]&&plCal.days[ymd].reason)||''};
-  else { const pat=plPattern(), pt=(pat[k]&&pat[k].start)?pat[k]:(pat.find(x=>x.on&&x.start)||{start:'',end:'',place:''}); plCal.days[ymd]={type:'training',start:pt.start,end:pt.end,place:pt.place}; }
+  if(type==='none') plPutDay(ymd,null);
+  else if(type==='off'){ const old=plCal.days[ymd]||{}; plPutDay(ymd,Object.assign({type:'off',reason:old.reason||''},old.start||old.end||old.place?{start:old.start||'',end:old.end||'',place:old.place||''}:{})); }
+  else { const old=plCal.days[ymd], pat=plPattern(), pt=old&&(old.type==='training'||old.start||old.end)?old:((pat[k]&&pat[k].start)?pat[k]:(pat.find(x=>x.on&&x.start)||{start:'',end:'',place:''})); plPutDay(ymd,{type:'training',start:pt.start||'',end:pt.end||'',place:pt.place||''}); }
   plCalChanged(ymd);
 }
 function plCalChanged(ymd){ plTouch('cal'); if(ymd){ const k=plKey(plYmd(plMonday(plParse(ymd)))); if(plWeeks[k]&&plSyncWeek(plWeeks[k])) plTouch(k); } }
@@ -3623,9 +3659,9 @@ function plSyncWeek(st){ // month -> week
 }
 function plPushDay(st,i){ // week -> month
   const d=st.days[i], date=plYmd(plAdd(plParse(st.meta.weekStart),i));
-  if(d.active){ const t=plSplit(d.time); plCal.days[date]={type:'training',start:t.start,end:t.end,place:d.place||''}; }
-  else if(d.hidden) delete plCal.days[date];
-  else plCal.days[date]={type:'off',reason:d.reason||''};
+  if(d.active){ const t=plSplit(d.time); plPutDay(date,{type:'training',start:t.start,end:t.end,place:d.place||''}); }
+  else if(d.hidden) plPutDay(date,null);
+  else plPutDay(date,{type:'off',reason:d.reason||''});
   plTouch('cal');
 }
 function plNewWeek(mon){
@@ -3719,7 +3755,7 @@ function renderCalendar(){
     const dow=(plParse(d.date).getUTCDay()+6)%7;
     const items=d.items.map(it=>it.kind==='match'
       ?`<button class="cal-ev mt" data-go="fixture" data-arg="${it.id}" title="Open the match page"><b>${esc(it.time||'Match')}</b> ${esc(it.opponent)} <i>${it.venue==='H'?'H':'A'}</i></button>`
-      :it.kind==='training'?`<span class="cal-ev tr"><b>${esc(it.time||'Training')}</b>${it.place?' '+esc(it.place):''}</span>`
+      :it.kind==='training'?`<span class="cal-ev tr"><b>${esc(it.time||'Training')}</b>${attTaken(d.date)?`<em class="cal-att" title="Present or late / marked">✓ ${attBadge(d.date)}</em>`:''}${it.place?' '+esc(it.place):''}</span>`
       :`<span class="cal-ev off">${esc(cal.offLabel)}${it.reason?' · '+esc(it.reason):''}</span>`).join('');
     return `<div class="cal-day${d.inMonth?'':' out'}${d.date===today?' today':''}${dow>4?' we':''}${plUi.daySel===d.date?' sel':''}" data-calday="${d.date}" role="button" tabindex="0" aria-label="${esc(fmtDate(d.date,{weekday:'long',day:'numeric',month:'long'}))}"><span class="cal-dn">${d.dayNum}</span>${items}</div>`;
   };
@@ -3729,13 +3765,14 @@ function renderCalendar(){
       <div class="page-actions"><div class="seg" role="group" aria-label="Month"><button data-calnav="-1" aria-label="Previous month">‹</button><button data-calnav="0">Today</button><button data-calnav="1" aria-label="Next month">›</button></div>
         <input type="month" class="cal-monthpick" id="calMonth" value="${plUi.month}" aria-label="Choose month">
         <button class="btn" data-calexport aria-expanded="${plUi.exportOpen}">Export</button>
-        <button class="btn" data-go="week" data-arg="${plKey(plYmd(plMonday(plToday())))}">This week</button>
+        ${plCal.days[today]&&plCal.days[today].type==='training'?`<button class="btn" data-go="training" data-arg="${today}">Today's attendance</button>`:''}<button class="btn" data-go="week" data-arg="${plKey(plYmd(plMonday(plToday())))}">This week</button>
         <button class="btn primary" data-caladd="${today.slice(0,7)===plUi.month?today:plUi.month+'-01'}">+ Match</button></div></header>
     ${plUi.exportOpen?`<div class="card cal-export"><div class="card-head"><h2>Export ${esc(cal.title)}</h2><button class="btn sm ghost" data-calexport>Close</button></div>
       <div class="cal-exrow"><span class="hint">Slide style</span><div class="seg" role="group" aria-label="Slide style"><button data-caltheme="dark" aria-pressed="${plCal.theme!=='light'}">Dark</button><button data-caltheme="light" aria-pressed="${plCal.theme==='light'}">Light (print)</button></div>
         <button class="btn primary" data-calex="pdf">PDF</button><button class="btn" data-calex="pptx">PowerPoint</button>
-        <span class="cal-sep"></span><button class="btn" data-calics="month">Calendar file (.ics) · this month</button><button class="btn" data-calics="all">.ics · everything</button></div>
-      <p class="hint">The PDF and PowerPoint show this month as one slide, like the week planner. The calendar file adds trainings and matches to Google, Outlook or Apple Calendar.</p>
+        <span class="cal-sep"></span><button class="btn" data-calics="month">Calendar file (.ics) · this month</button><button class="btn" data-calics="all">.ics · everything</button>
+        <span class="cal-sep"></span><button class="btn" data-attcsv="month">Attendance (.csv) · this month</button><button class="btn" data-attcsv="all">· this season</button></div>
+      <p class="hint">The PDF and PowerPoint show this month as one slide, like the week planner. The calendar file adds trainings and matches to Google, Outlook or Apple Calendar. The attendance file opens in Excel: one row per player, one column per training.</p>
       <div class="pl-slidewrap cal-prev"><div class="pl-slide" id="calSlide"></div></div></div>`:''}
     <div class="cal-legend"><span><i class="lg tr"></i>Training</span><span><i class="lg mt"></i>Match</span><span><i class="lg off"></i>${esc(cal.offLabel)}</span><span class="hint">Click a day to plan it · click a match to open it · click a week number to plan that week</span></div>
     <div class="cal-grid" role="grid">
@@ -3773,7 +3810,8 @@ function renderDayModal(){
   $('#calDaySheet').innerHTML=`<div class="sheet-head"><div><h2 id="calDayTitle">${esc(fmtDate(ymd,{weekday:'long',day:'numeric',month:'long',year:'numeric'}))}</h2><p>Week ${plIsoWeek(dt).week}</p></div><button class="btn sm ghost" data-calclose>Close</button></div>
     <div class="seg" role="group" aria-label="Day type">${seg}</div>
     ${e.type==='training'?`<div class="form"><div class="field"><label for="cdStart">Start</label><input type="time" id="cdStart" data-cdf="start" value="${esc(e.start||'')}"></div><div class="field"><label for="cdEnd">End</label><input type="time" id="cdEnd" data-cdf="end" value="${esc(e.end||'')}"></div>
-      <div class="field full"><label for="cdPlace">Location</label><input id="cdPlace" data-cdf="place" value="${esc(e.place||'')}" placeholder="KTA, The Nest, Tempelhof…"></div></div>`
+      <div class="field full"><label for="cdPlace">Location</label><input id="cdPlace" data-cdf="place" value="${esc(e.place||'')}" placeholder="KTA, The Nest, Tempelhof…"></div></div>
+      <div class="cd-att"><span>${attTaken(ymd)?(()=>{ const c=attCount(ymd); return `<b>Attendance:</b> ${c.present} present${c.late?', '+c.late+' late':''}${c.excused?', '+c.excused+' excused':''}${c.absent?', '+c.absent+' absent':''}${c.injured?', '+c.injured+' injured':''}`; })():'<b>Attendance</b> not taken yet'}</span><button class="btn sm primary" data-go="training" data-arg="${ymd}">${attTaken(ymd)?'Edit attendance':'Take attendance'}</button></div>`
     :e.type==='off'?`<div class="field"><label for="cdReason">Reason (optional)</label><input id="cdReason" data-cdf="reason" value="${esc(e.reason||'')}" placeholder="Rest day after a match, exams, pitch closed…"></div>`:''}
     <div class="cd-matches"><span class="eyebrow">Matches</span>${ms.length?ms.map(m=>`<button class="cal-ev mt big" data-go="fixture" data-arg="${m.id}"><b>${esc(m.kickoff||'')}</b> ${esc(vsLabel(m))}</button>`).join(''):'<span class="hint">No match on this day.</span>'}</div>
     <div class="row-actions"><button class="btn primary" data-caladd="${ymd}">+ Match on this day</button><button class="btn" data-go="week" data-arg="${plKey(plYmd(plMonday(dt)))}">Open the week plan</button></div>`;
@@ -3862,10 +3900,10 @@ function wkPlan(st){
     const budget=d.active?`<span class="wk-budget${len&&planned>len?' over':''}" title="Gym + warm-up + kern minutes vs session length">${planned}’${len?' / '+len+'’':''}</span>`:`<span class="wk-budget">${d.hidden?'Not on slide':esc(st.meta.noTrainingLabel||'No training')}</span>`;
     h+=`<div class="wk-day${d.active?'':' off'}" data-expanded="${open}">
       <div class="wk-dayhead" data-wkact="toggleDay" data-i="${i}"><button class="pl-switch" role="switch" aria-checked="${d.active}" aria-label="${esc(d.name)} has training" data-wkact="activeDay" data-i="${i}"></button>
-        <span class="nm">${esc(d.name)} <small>${date.getUTCDate()}/${date.getUTCMonth()+1}</small></span><span class="sub">${esc(d.active?[d.time,d.place].filter(Boolean).join(' · '):(d.reason||''))}${dm.length?` <em>· Match ${esc(dm.map(m=>(m.kickoff||'')+' vs '+m.them).join(', '))}</em>`:''}</span>${budget}<span class="caret">›</span></div>`;
+        <span class="nm">${esc(d.name)} <small>${date.getUTCDate()}/${date.getUTCMonth()+1}</small></span><span class="sub">${esc(d.active?[d.time,d.place].filter(Boolean).join(' · '):(d.reason||''))}${dm.length?` <em>· Match ${esc(dm.map(m=>(m.kickoff||'')+' vs '+m.them).join(', '))}</em>`:''}</span>${d.active&&attTaken(plYmd(date))?`<span class="cal-att" title="Attendance: present or late / marked">✓ ${attBadge(plYmd(date))}</span>`:''}${budget}<span class="caret">›</span></div>`;
     if(open&&!d.active) h+=`<div class="wk-daybody">${wkNoTraining(st,i)}</div>`;
     else if(open){ const p='days.'+i;
-      h+=`<div class="wk-daybody"><div class="wk-ctx"><span class="hint">Times and locations come from the month calendar.</span><button class="btn sm" data-wkact="openSession" data-i="${i}">Edit time &amp; location</button></div>
+      h+=`<div class="wk-daybody"><div class="wk-ctx"><span class="hint">Times and locations come from the month calendar.</span><button class="btn sm" data-wkact="openSession" data-i="${i}">Edit time &amp; location</button><button class="btn sm" data-go="training" data-arg="${plYmd(date)}">${attTaken(plYmd(date))?'Attendance · '+attBadge(plYmd(date)):'Take attendance'}</button></div>
         <div class="wk-lane"><div class="wk-lanehead"><span class="wk-tag gym">${esc(st.meta.gymLabel||'Gym')}</span><span class="hint">Counts toward session time · no detail box</span><button class="pl-switch" role="switch" aria-checked="${!!d.gym.on}" aria-label="Gym on ${esc(d.name)}" data-wkact="toggleOn" data-path="${p}.gym"></button></div>${d.gym.on?wkBlock(st,p+'.gym',d.gym,'gym'):''}</div>
         <div class="wk-lane"><div class="wk-lanehead"><span class="wk-tag warm">${esc(st.meta.warmLabel||'Warm-up')}</span><span class="hint"></span><button class="pl-switch" role="switch" aria-checked="${!!d.warmup.on}" aria-label="Warm-up on ${esc(d.name)}" data-wkact="toggleOn" data-path="${p}.warmup"></button></div>${d.warmup.on?wkBlock(st,p+'.warmup',d.warmup,'warm'):''}</div>
         <div class="wk-lane"><div class="wk-lanehead"><span class="wk-tag kern">${esc(st.meta.kernLabel||'Kern')}</span><span class="hint">${d.kern.length} form${d.kern.length===1?'':'s'} · blocks resize to fit</span></div>
@@ -4077,6 +4115,7 @@ document.addEventListener('click',e=>{
     if(b=g('[data-caltheme]')){ plCal.theme=b.dataset.caltheme; plTouch('cal'); renderCalendar(); return; }
     if(b=g('[data-calex]')){ plCalExport(b.dataset.calex,plCal.theme||'dark'); return; }
     if(b=g('[data-calics]')){ plIcs(b.dataset.calics); return; }
+    if(b=g('[data-attcsv]')){ attCsv(b.dataset.attcsv); return; }
     if(b=g('[data-caladd]')){ plUi.daySel=null; renderDayModal(); plUi.addMatch={date:b.dataset.caladd}; renderAddMatch(); return; }
     if(b=g('[data-fxaddclose]')||(e.target.id==='fxAddModal'&&e.target)){ plUi.addMatch=null; renderAddMatch(); return; }
     if(b=g('[data-calclose]')||(e.target.id==='calDayModal'&&e.target)){ plUi.daySel=null; renderDayModal(); if(view==='calendar') renderCalendar(); return; }
@@ -4085,8 +4124,8 @@ document.addEventListener('click',e=>{
     if(b=g('[data-calfill]')){ const all=b.dataset.calfill==='all';
       if(all&&b.dataset.armed!=='1'){ b.dataset.armed='1'; b.textContent='Overwrite every weekday? Click again'; b.classList.add('danger'); setTimeout(()=>{ if(b.isConnected) renderCalendar(); },3500); return; }
       const [y,m]=plUi.month.split('-').map(Number), last=new Date(Date.UTC(y,m,0)).getUTCDate(), pat=plPattern(); let n=0;
-      for(let dd=1;dd<=last;dd++){ const dt=new Date(Date.UTC(y,m-1,dd)), k=(dt.getUTCDay()+6)%7, key=plYmd(dt); if(k>5) continue; if(!all&&plCal.days[key]) continue;
-        if(pat[k].on){ plCal.days[key]={type:'training',start:pat[k].start,end:pat[k].end,place:pat[k].place}; n++; } else if(all){ delete plCal.days[key]; n++; } }
+      for(let dd=1;dd<=last;dd++){ const dt=new Date(Date.UTC(y,m-1,dd)), k=(dt.getUTCDay()+6)%7, key=plYmd(dt); if(k>5) continue; if(!all&&plCal.days[key]&&plCal.days[key].type!=='none') continue;
+        if(pat[k].on){ plPutDay(key,{type:'training',start:pat[k].start,end:pat[k].end,place:pat[k].place}); n++; } else if(all){ plPutDay(key,null); n++; } }
       plTouch('cal'); Object.keys(plWeeks).forEach(k=>{ if(plSyncWeek(plWeeks[k])) plTouch(k); }); renderCalendar(); toast('Filled '+n+' days of '+PL_MON[m-1]+' from your standard week.'); return; }
     if(b=g('[data-calday]')){ if(g('[data-go]')) return; plUi.daySel=b.dataset.calday; renderDayModal(); if(view==='calendar') renderCalendar(); return; }
     /* week */
@@ -4184,6 +4223,85 @@ document.addEventListener('keydown',e=>{
   if((e.key==='Enter'||e.key===' ')&&e.target.dataset&&e.target.dataset.calday&&e.target.classList.contains('cal-day')){ e.preventDefault(); e.target.click(); e.stopImmediatePropagation(); }
 },true);
 plLoad();
+
+/* =================== TRAINING ATTENDANCE ===================
+   Stored with the day in the month calendar: plCal.days[date].att = {squadId: status}, .attNote = text */
+const ATT=[['present','Present','P'],['late','Late','L'],['excused','Excused','E'],['absent','Absent','A'],['injured','Injured','I']];
+const ATT_LBL=Object.fromEntries(ATT.map(a=>[a[0],a[1]]));
+function attOf(ymd){ const e=plCal.days[ymd]; return (e&&e.att)||{}; }
+function attCount(ymd){ const c={present:0,late:0,excused:0,absent:0,injured:0,n:0}; Object.values(attOf(ymd)).forEach(v=>{ if(c[v]!=null){ c[v]++; c.n++; } }); return c; }
+const attTaken=ymd=>Object.keys(attOf(ymd)).length>0;
+function attBadge(ymd){ if(!attTaken(ymd)) return ''; const c=attCount(ymd); return (c.present+c.late)+'/'+c.n; }
+const attSquad=()=>squad().slice().sort((a,b)=>(+a.num||999)-(+b.num||999)||a.name.localeCompare(b.name));
+const trainingDates=()=>Object.keys(plCal.days).filter(d=>plCal.days[d].type==='training').sort();
+function attStats(sid,season){
+  const r={present:0,late:0,excused:0,absent:0,injured:0,sessions:0,list:[]};
+  trainingDates().filter(d=>attTaken(d)&&(season==='all'||seasonOf(d)===season)).forEach(d=>{ const v=attOf(d)[sid]; if(!v||r[v]==null) return; r[v]++; r.sessions++; r.list.push({d,v}); });
+  r.pct=r.sessions?Math.round(100*(r.present+r.late)/r.sessions):null; return r;
+}
+function renderTraining(){
+  const el=$('#view-training'), ymd=viewArg, e=plCal.days[ymd]||{type:'none'}, dt=plParse(ymd);
+  const dates=trainingDates(), prev=dates.filter(d=>d<ymd).pop(), next=dates.find(d=>d>ymd);
+  const att=attOf(ymd), c=attCount(ymd), all=attSquad(), q=fold(plUi.attQ||'').trim();
+  const list=all.filter(s=>!q||fold(s.name).includes(q)||String(s.num||'')===q.replace('#','')||String(s.num||'').startsWith(q.replace('#','')));
+  const open=all.filter(s=>!att[s.id]).length;
+  el.innerHTML=`<div class="wrap page">
+    <header class="page-head"><div><button class="back" style="display:block;margin-bottom:6px" data-go="calendar" data-calto="${ymd.slice(0,7)}">← Calendar</button>
+      <span class="eyebrow">Training attendance · Week ${plIsoWeek(dt).week}</span><h1>${esc(fmtDate(ymd,{weekday:'short',day:'numeric',month:'short'}))}</h1>
+      <p>${esc(e.type==='training'?[plRange(e),e.place].filter(Boolean).join(' · ')||'Training':e.type==='off'?(plCal.offLabel||'No training')+(e.reason?' · '+e.reason:''):'Not planned in the calendar')}</p></div>
+      <div class="page-actions"><div class="seg" role="group" aria-label="Training"><button data-go="training" data-arg="${prev||''}" ${prev?'':'disabled'} aria-label="Previous training">‹ Previous</button><button data-go="training" data-arg="${next||''}" ${next?'':'disabled'} aria-label="Next training">Next ›</button></div>
+        <button class="btn" data-go="week" data-arg="${plKey(plYmd(plMonday(dt)))}">Week plan</button></div></header>
+    ${e.type!=='training'?`<p class="notice">This day is not a training in your calendar. <button class="tlink" data-attmake="${ymd}">Make it a training day</button></p>`:''}
+    <div class="att-sum">${ATT.map(([k,l])=>`<span class="att-chip ${k}"><b>${c[k]}</b> ${l}</span>`).join('')}<span class="att-chip none"><b>${open}</b> Not marked</span></div>
+    <div class="fx-tools"><input class="search" id="attSearch" type="search" placeholder="Search name or number" value="${esc(plUi.attQ||'')}" aria-label="Search players">
+      <button class="btn sm primary" data-attrest ${open&&all.length?'':'disabled'}>Mark the rest present</button><button class="btn sm ghost" data-attclear ${c.n?'':'disabled'}>Clear</button></div>
+    ${all.length?(list.length?`<div class="att-list">${list.map(s=>{ const v=att[s.id]||''; return `<div class="att-row ${v}"><span class="num">${esc(s.num||'–')}</span><span class="nm">${esc(s.name)}</span>
+      <span class="att-btns" role="group" aria-label="Attendance for ${esc(s.name)}">${ATT.map(([k,l,a])=>`<button class="${k}" aria-pressed="${v===k}" title="${l}" aria-label="${l}" data-att="${s.id}" data-v="${k}">${a}</button>`).join('')}</span></div>`; }).join('')}</div>`:'<p class="hint">No player matches your search.</p>')
+      :'<div class="empty-state"><strong>No players yet</strong><p>Add your players on the Players page first.</p><button class="btn primary" data-go="players">Players</button></div>'}
+    <p class="hint">Tap a letter: <b>P</b>resent, <b>L</b>ate, <b>E</b>xcused, <b>A</b>bsent, <b>I</b>njured. Tap it again to clear. Totals show on each player's page.</p>
+    <div class="field"><label for="attNote">Notes</label><textarea id="attNote" class="att-note" placeholder="Who left early, reasons for absence…">${esc(e.attNote||'')}</textarea></div>
+  </div>`;
+}
+function attSet(ymd,sid,v){
+  const e=plCal.days[ymd]; if(!e||e.type!=='training'){ toast('Make this day a training first.'); return; } e.att=e.att||{};
+  if(!v||e.att[sid]===v) delete e.att[sid]; else e.att[sid]=v;
+  plTouch('cal');
+}
+/* CSV: one row per player, one column per session */
+function attCsv(scope){
+  const month=plUi.month, dates=trainingDates().filter(d=>attTaken(d)&&(scope==='all'?seasonOf(d)===seasonOf(month+'-15'):d.slice(0,7)===month));
+  if(!dates.length){ toast('No attendance has been taken '+(scope==='all'?'this season':'this month')+' yet.'); return; }
+  const q=v=>{ v=String(v==null?'':v); return /[",\n;]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; };
+  const head=['#','Player'].concat(dates.map(d=>d.slice(8,10)+'/'+d.slice(5,7)),['Present','Late','Excused','Absent','Injured','Attendance %']);
+  const rows=attSquad().map(s=>{ const cells=dates.map(d=>{ const v=attOf(d)[s.id]; return v?ATT.find(a=>a[0]===v)[2]:''; });
+    const t={present:0,late:0,excused:0,absent:0,injured:0}; dates.forEach(d=>{ const v=attOf(d)[s.id]; if(v&&t[v]!=null) t[v]++; });
+    const n=t.present+t.late+t.excused+t.absent+t.injured;
+    return [s.num||'',s.name].concat(cells,[t.present,t.late,t.excused,t.absent,t.injured,n?Math.round(100*(t.present+t.late)/n)+'%':'']).map(q).join(','); });
+  const name=fileSafe('Attendance '+(scope==='all'?'season '+seasonOf(month+'-15'):plCalModel(month).title))+'.csv';
+  return offerFile(name,'﻿'+[head.map(q).join(',')].concat(rows,['','P = present · L = late · E = excused · A = absent · I = injured']).join('\r\n'));
+}
+function attPlayerCard(s,season){
+  const r=attStats(s.id,season);
+  if(!r.sessions) return `<section class="card"><div class="card-head"><h2>Training attendance</h2></div><p class="hint">No attendance taken for ${esc(s.name)} in ${esc(seasonText(season).toLowerCase())} yet. Take it from a training day in the calendar.</p></section>`;
+  return `<section class="card"><div class="card-head"><h2>Training attendance</h2><span class="hint">${r.sessions} session${r.sessions===1?'':'s'} with attendance</span></div>
+    <div class="att-kpi"><b>${r.pct}%</b><span>present or late</span></div>
+    <div class="att-sum">${ATT.map(([k,l])=>`<span class="att-chip ${k}"><b>${r[k]}</b> ${l}</span>`).join('')}</div>
+    <div class="att-dots">${r.list.slice(-40).map(x=>`<button class="att-dot ${x.v}" data-go="training" data-arg="${x.d}" title="${esc(fmtDate(x.d,{weekday:'short',day:'numeric',month:'short'})+' · '+ATT_LBL[x.v])}" aria-label="${esc(fmtDate(x.d,{day:'numeric',month:'short'})+': '+ATT_LBL[x.v])}"></button>`).join('')}</div>
+    <p class="hint">Each square is a training, oldest first. Click one to open that session.</p></section>`;
+}
+document.addEventListener('click',e=>{
+  if(view!=='training') return; const g=s=>e.target.closest(s); let b;
+  if(b=g('[data-att]')){ attSet(viewArg,b.dataset.att,b.dataset.v); renderTraining(); return; }
+  if(b=g('[data-attrest]')){ const d=plCal.days[viewArg]; if(!d) return; d.att=d.att||{}; attSquad().forEach(s=>{ if(!d.att[s.id]) d.att[s.id]='present'; }); plTouch('cal'); renderTraining(); return; }
+  if(b=g('[data-attclear]')){ if(b.dataset.armed!=='1'){ b.dataset.armed='1'; b.textContent='Clear all? Click again'; setTimeout(()=>{ if(b.isConnected) renderTraining(); },3000); return; }
+    const d=plCal.days[viewArg]; if(d){ d.att={}; plTouch('cal'); } renderTraining(); return; }
+  if(b=g('[data-attmake]')){ plSetDay(b.dataset.attmake,'training'); renderTraining(); return; }
+});
+document.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.id==='attSearch'){ plUi.attQ=t.value; const pos=t.selectionStart; renderTraining(); const n=$('#attSearch'); if(n){ n.focus(); try{ n.setSelectionRange(pos,pos); }catch(err){} } return; }
+  if(t.id==='attNote'){ const d=plCal.days[viewArg]; if(!d) return; d.attNote=t.value; plTouch('cal'); }
+});
 
 /* ---------- Folder settings & start screen ---------- */
 async function pickFolder(){
