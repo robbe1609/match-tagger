@@ -141,7 +141,16 @@ Open **Tactics** in the top menu. Every board is saved automatically to your fol
 - **Boards:** **New board**, **Duplicate** (handy for step 1, step 2…), **Rename** and **Delete** at the top.
 - **Export:** **Export PDF** makes an A4 page with the board and your notes. **All boards PDF** puts every board in one file. **PNG** gives an image for WhatsApp or a slide.
 
-## Daily use
+## Lock screen
+
+With online storage, the site locks itself after **1 hour without activity** (no mouse, keyboard, touch or scrolling, and no video playing). It also locks when you open it again after more than an hour away. Unlock it with your storage password (`ADMIN_PASSWORD`).
+
+- **Lock now:** click **Saved online** at the top right → **Lock now**. All open tabs lock together and unlock together.
+- **No internet** (for example at an away ground): the right password still unlocks. The site keeps a scrambled check of your password in the browser for this.
+- **Changed the password in Cloudflare?** The new one works the next time you unlock with internet.
+- The lock covers the screen; it is not a replacement for logging out on a shared computer (**Saved online** → **Log out**).
+
+
 
 - **New match:** create it, then pick the video from your online storage, or click **Upload from this computer**. The video plays right away and uploads in the background, so you can start tagging immediately.
 - **Keep the tab open while uploading.** The status at the top right shows the progress. If an upload stops (internet drop, closed tab), choose the same file again and it continues where it stopped.

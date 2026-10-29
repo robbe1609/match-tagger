@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex">
+<script>/* lock: with online storage, ask for the password after 1 hour without activity */
+try{ if(localStorage.getItem('matchTagger.backend')==='cloud'){ var la=+localStorage.getItem('matchTagger.lastActive')||0; if(!la||Date.now()-la>3600000||localStorage.getItem('matchTagger.locked')==='1') document.documentElement.classList.add('locked'); } }catch(e){}</script>
 <title>Match Tagger</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -843,6 +845,9 @@ button.sync:hover{background:rgba(255,255,255,.08)}
 .od-inline input{flex:1;min-width:200px;border:1px solid var(--line);background:var(--surface-2);border-radius:8px;padding:7px 9px}
 
 /* Online storage */
+html.locked body>*:not(#gate):not(#toasts){visibility:hidden}
+.gate-lockic{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);color:var(--hero-accent-text)}
+.gate-lockic svg{width:24px;height:24px}
 /* training attendance */
 .att-sum{display:flex;flex-wrap:wrap;gap:6px}
 .att-chip{border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:13px;background:var(--surface);color:var(--muted)}
@@ -1632,6 +1637,36 @@ function setSync(st){ const s=$('#sync'); if(!s) return; const k=st===true?'clou
   const up=upLabel();
   s.classList.toggle('cloud',k==='cloud'&&!up); s.classList.toggle('err',k==='error'); s.classList.toggle('busy',k==='syncing'||!!up); s.lastElementChild.textContent=up||map[k]||map.local;
   s.title=online?'Your online storage':'Your Match Tagger folder'; }
+/* ---------- lock after 1 hour without activity (online storage only) ----------
+   The password is checked against your storage. A salted hash is kept in this browser so it also unlocks without internet. */
+const LOCK_MS=60*60*1000, LK_ACT='matchTagger.lastActive', LK_ON='matchTagger.locked', LK_HASH='matchTagger.lockHash';
+const isLocked=()=>document.documentElement.classList.contains('locked');
+const lockable=()=>FSX.kind==='cloud'&&!!FSX.api;
+let lastAct=0;
+const lkGet=()=>{ try{ return +localStorage.getItem(LK_ACT)||0; }catch(e){ return 0; } };
+function markActive(force){ if(!lockable()||isLocked()) return; const t=Date.now(); if(!force&&t-lastAct<10000) return;
+  const prev=lkGet(); if(prev&&t-prev>LOCK_MS){ lockNow(); return; }   // back after a long break: lock first, the movement does not count
+  lastAct=t; try{ localStorage.setItem(LK_ACT,String(t)); }catch(e){} }
+function applyLock(){ document.documentElement.classList.add('locked'); try{ const v=V(); if(v&&!v.paused) v.pause(); }catch(e){} if(ui.odOpen){ ui.odOpen=false; renderOdModal(); } renderGate('lock'); }
+function lockNow(){ if(!lockable()) return; try{ localStorage.setItem(LK_ON,'1'); }catch(e){} applyLock(); }
+function unlocked(){ document.documentElement.classList.remove('locked'); lastAct=Date.now(); try{ localStorage.removeItem(LK_ON); localStorage.setItem(LK_ACT,String(lastAct)); }catch(e){} $('#gate').hidden=true; ui.authLost=false; }
+async function lkHash(pw,salt){ const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveBits']);
+  const b=await crypto.subtle.deriveBits({name:'PBKDF2',salt:new TextEncoder().encode(salt),iterations:200000,hash:'SHA-256'},k,256); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join(''); }
+async function lkRemember(pw){ try{ const salt=Math.random().toString(36).slice(2)+Date.now().toString(36); localStorage.setItem(LK_HASH,JSON.stringify({salt,h:await lkHash(pw,salt),api:FSX.api})); }catch(e){} }
+async function lkCheckLocal(pw){ try{ const r=JSON.parse(localStorage.getItem(LK_HASH)||'null'); if(!r||r.api!==FSX.api) return false; return (await lkHash(pw,r.salt))===r.h; }catch(e){ return false; } }
+async function unlockWith(pw){
+  if(await lkCheckLocal(pw)){ unlocked(); FSX.login('',pw).catch(()=>{}); return; }   // refresh the online login in the background
+  const slow=new Promise((_,rej)=>setTimeout(()=>rej(new Error('Cannot reach your storage. Check your internet connection.')),8000));
+  try{ await Promise.race([FSX.login('',pw),slow]); }
+  catch(e){ if(/^Cannot reach/.test(e.message)&&localStorage.getItem(LK_HASH)) throw new Error('Wrong password.'); throw e; }
+  await lkRemember(pw); unlocked(); }
+['pointermove','pointerdown','keydown','wheel','touchstart','scroll'].forEach(ev=>document.addEventListener(ev,()=>markActive(),{capture:true,passive:true}));
+window.addEventListener('keydown',e=>{ if(isLocked()&&!(e.target.closest&&e.target.closest('#gate'))){ e.stopImmediatePropagation(); e.preventDefault(); } },true);
+setInterval(()=>{ if(!lockable()||isLocked()) return; const v=V(); if(v&&!v.paused&&!v.ended){ markActive(true); return; } const a=lkGet(); if(a&&Date.now()-a>LOCK_MS) lockNow(); },20000);
+document.addEventListener('visibilitychange',()=>{ if(document.hidden||!lockable()||isLocked()) return; const a=lkGet(); if(a&&Date.now()-a>LOCK_MS) lockNow(); });
+window.addEventListener('storage',e=>{ if(!lockable()||e.key!==LK_ON) return;
+  if(e.newValue==='1'&&!isLocked()) applyLock();
+  else if(!e.newValue&&isLocked()&&ui.gateState==='lock'){ document.documentElement.classList.remove('locked'); $('#gate').hidden=true; lastAct=Date.now(); if(!col) connectDb(); } });
 function authLost(){ if(FSX.kind!=='cloud') return; col=false; setSync('signedout'); if(!ui.authLost){ ui.authLost=true; renderGate('prompt'); } }
 function save(){
   M.updatedAt=Date.now(); store[M.id]=M; lsSave(); dirty.add(M.id); updBackupState();
@@ -5108,7 +5143,7 @@ function renderCloudModal(){
       ${videoIndex.length?`<div class="cl-list">${videoIndex.map(v=>{ const used=Object.values(store).filter(m=>m.videoPath===v.id||(!m.videoPath&&m.videoName===v.name)).map(vsLabel);
         return `<div class="cl-row"><b>${esc(v.name)}</b><span class="acts">${ui.clDel===v.key?`<button class="btn sm danger" data-cldelyes="${esc(v.key)}">Delete for good</button><button class="btn sm ghost" data-cldelno>Keep</button>`:`<button class="btn sm" data-cldl="${esc(v.key)}">Download</button><button class="btn sm ghost" data-cldel="${esc(v.key)}">Delete</button>`}</span><small>${esc([fmtBytes(v.size||0),v.modified?fmtDate(String(v.modified).slice(0,10)):'',v.folder,used.length?'Used in '+used.join(', '):'Not linked to a match yet'].filter(Boolean).join(' · '))}</small></div>`; }).join('')}</div>`:'<p class="hint" style="margin:0">No videos yet. Click <b>Upload videos</b> and select one or more match videos. Matches that were tagged on a video with the same file name are linked automatically.</p>'}
       <p class="hint" style="margin:0">Uploads run while this tab is open. If an upload is interrupted, choose the same file again and it continues where it stopped.</p>
-      <div class="row-actions"><button class="btn ghost" id="btnCloudLogout">Log out</button><span style="flex:1"></span><button class="btn ghost" id="gateUseFolder">Use a folder on this computer instead</button></div>`
+      <div class="row-actions"><button class="btn" id="btnCloudLock">Lock now</button><button class="btn ghost" id="btnCloudLogout">Log out</button><span style="flex:1"></span><button class="btn ghost" id="gateUseFolder">Use a folder on this computer instead</button></div>`
     :`<div class="row-actions"><button class="btn primary" id="btnCloudLogin">Log in</button><button class="btn ghost" id="btnOdClose2">Not now</button></div>`}`;
 }
 function renderOdModal(){
@@ -5129,10 +5164,15 @@ function renderOdModal(){
 const backendChosen=()=>{ try{ return !!localStorage.getItem('matchTagger.backend'); }catch(e){ return false; } };
 function cloudGate(state,err){
   const host=FSX.host;
+  if(state==='lock') return `<span class="gate-lockic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+    <span class="eyebrow">Locked</span><h1>Match Tagger</h1>
+    <p>Locked after an hour without activity. Enter your password to continue.</p>
+    <div class="gate-form"><label>Password<input type="password" id="gatePw" autocomplete="current-password"></label>${err?`<p class="gate-err">${esc(err)}</p>`:''}</div>
+    <div class="row-actions"><button class="btn primary" id="gateLogin">Unlock</button></div>`;
   if(state==='prompt') return `<span class="eyebrow">Welcome back</span><h1>Log in</h1>
     <p>Your matches and videos are in your online storage${host?' at <b>'+esc(host)+'</b>':''}.</p>
     <div class="gate-form"><label>Password<input type="password" id="gatePw" autocomplete="current-password"></label>${err?`<p class="gate-err">${esc(err)}</p>`:''}</div>
-    <div class="row-actions"><button class="btn primary" id="gateLogin">Log in</button><button class="btn ghost" id="gateLocal">Not now</button></div>
+    <div class="row-actions"><button class="btn primary" id="gateLogin">Log in</button></div>
     <button class="linkish" id="gateCloudReset">Use another storage address</button>`;
   return `<span class="eyebrow">Online storage</span><h1>Log in to your storage</h1>
     <p>Enter the address of your storage service and the password you set for it. The setup guide shows how to create both in Cloudflare.</p>
@@ -5142,7 +5182,7 @@ function cloudGate(state,err){
 }
 function renderGate(state,err){
   const g=$('#gate'); g.hidden=false; let inner; ui.gateState=state;
-  if(FSX.kind==='cloud'){ g.innerHTML=PITCH_SVG+`<div class="gate-card">${cloudGate(state,err)}</div>`; const f=$(state==='prompt'?'#gatePw':(ui.gateApi||FSX.api?'#gatePw':'#gateApi')); if(f) setTimeout(()=>f.focus(),30); return; }
+  if(FSX.kind==='cloud'){ g.innerHTML=PITCH_SVG+`<div class="gate-card">${cloudGate(state,err)}</div>`; const f=$(state==='prompt'||state==='lock'?'#gatePw':(ui.gateApi||FSX.api?'#gatePw':'#gateApi')); if(f) setTimeout(()=>f.focus(),30); return; }
   if(!backendChosen()&&(state==='none'||state==='unsupported')){
     inner=`<span class="eyebrow">Set up · one time</span><h1>Where do your videos live?</h1>
     <p>Choose once. You can switch later from the status at the top right.</p>
@@ -5221,8 +5261,11 @@ document.addEventListener('click',e=>{
   if(b=g('#gateUseFolder')){ if(upActive().length){ toast('Wait until the uploads are done.'); return; } try{ localStorage.setItem('matchTagger.backend','folder'); }catch(err){} location.reload(); return; }
   if(b=g('#gateUseFolderPick')){ try{ localStorage.setItem('matchTagger.backend','folder'); }catch(err){} renderGate('none'); return; }
   if(b=g('#gateLogin')){ const api=$('#gateApi'), pw=$('#gatePw'); if(api) ui.gateApi=api.value; b.disabled=true; b.textContent='Logging in…';
-    FSX.login(api?api.value:'',pw?pw.value:'').then(()=>{ $('#gate').hidden=true; ui.authLost=false; try{ localStorage.removeItem('matchTagger.localMode'); }catch(err){} toast('Logged in to your online storage.'); connectDb(); })
-      .catch(err=>{ renderGate(ui.gateState==='prompt'?'prompt':'none',err.message); }); return; }
+    const was=ui.gateState, pwv=pw?pw.value:'';
+    if(was==='lock'){ b.textContent='Unlocking…'; unlockWith(pwv).then(()=>{ if(!col) connectDb(); }).catch(err=>renderGate('lock',err.message)); return; }
+    FSX.login(api?api.value:'',pwv).then(()=>{ lkRemember(pwv); unlocked(); try{ localStorage.removeItem('matchTagger.localMode'); }catch(err){} toast('Logged in to your online storage.'); connectDb(); })
+      .catch(err=>{ renderGate(was==='prompt'?'prompt':'none',err.message); }); return; }
+  if(b=g('#btnCloudLock')){ lockNow(); return; }
   if(b=g('#gateCloudReset')){ FSX.forget(); renderGate('none'); return; }
   if(b=g('#btnCloudLogout')){ if(upActive().length){ toast('Wait until the uploads are done.'); return; } FSX.logout(); col=false; ui.odOpen=false; renderOdModal(); setSync('signedout'); renderGate('prompt'); return; }
   if(b=g('#btnCloudLogin')){ ui.odOpen=false; renderOdModal(); renderGate(FSX.api?'prompt':'none'); return; }
@@ -5489,8 +5532,9 @@ renderAll();
 { const [hv,ha]=parseHash(); go(hv,ha); }
 (async()=>{
   let st='unsupported'; try{ st=await FSX.init(); }catch(e){ console.error(e); }
-  if(st==='granted'){ $('#gate').hidden=true; connectDb(); }
-  else if(localMode()&&st!=='prompt'){ $('#gate').hidden=true; setSync('local'); }
+  if(st==='granted'&&FSX.kind==='cloud'&&isLocked()){ try{ localStorage.setItem(LK_ON,'1'); }catch(e){} setSync('signedout'); renderGate('lock'); }
+  else if(st==='granted'){ $('#gate').hidden=true; document.documentElement.classList.remove('locked'); markActive(true); connectDb(); }
+  else if(localMode()&&st!=='prompt'&&FSX.kind!=='cloud'){ $('#gate').hidden=true; setSync('local'); }
   else { setSync('signedout'); renderGate(st); }
 })();
 })();
