@@ -281,6 +281,8 @@ td.zero{color:var(--line)}
 .field input,.field select{border:1px solid var(--line);background:var(--surface-2);border-radius:7px;padding:7px 9px;min-width:0;width:100%}
 .lu-rows{display:flex;flex-direction:column;gap:5px}
 .lu-row{display:grid;grid-template-columns:44px 56px minmax(0,1fr) auto;gap:6px;align-items:center}
+.lu-row .lu-fill{grid-column:2 / span 2;width:100%;border:1px dashed var(--accent);background:var(--accent-soft);border-radius:7px;padding:6px 8px;font:inherit;color:inherit;min-width:0}
+.lu-out .rm{font-size:14px}
 .lu-row .role{font-family:var(--f-display);font-weight:600;font-size:14px;color:var(--muted);letter-spacing:.05em}
 .lu-row input,.lu-row select{border:1px solid var(--line);background:var(--surface-2);border-radius:7px;padding:6px 8px;min-width:0;width:100%;font-size:14px}
 .lu-row select{width:auto;max-width:130px;font-size:12px}
@@ -841,6 +843,188 @@ button.sync:hover{background:rgba(255,255,255,.08)}
 .od-inline input{flex:1;min-width:200px;border:1px solid var(--line);background:var(--surface-2);border-radius:8px;padding:7px 9px}
 
 /* Online storage */
+/* ===== Calendar, week planner, match pages ===== */
+@font-face{font-family:"DM Sans";src:url(vendor/fonts/DMSans-Regular.ttf) format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"DM Sans";src:url(vendor/fonts/DMSans-Bold.ttf) format("truetype");font-weight:700;font-display:swap}
+.notice{border-left:3px solid var(--accent);background:var(--accent-soft);padding:8px 12px;border-radius:0 8px 8px 0;margin:0;font-size:14px}
+.count-pill{font-size:13px;font-weight:700;border:1px solid var(--line);border-radius:999px;padding:2px 10px;color:var(--muted);font-variant-numeric:tabular-nums}
+.pl-switch{position:relative;width:34px;height:20px;border-radius:999px;background:var(--line);border:0;flex:none;padding:0;cursor:pointer}
+.pl-switch::after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.pl-switch[aria-checked="true"]{background:var(--accent)}
+.pl-switch[aria-checked="true"]::after{left:17px}
+.pl-slidewrap{position:relative;width:100%;aspect-ratio:16/9;border-radius:8px;overflow:hidden;background:#0A0A0C;box-shadow:0 0 0 1px var(--line)}
+.pl-slidewrap.mini{display:block;border-radius:0;box-shadow:none}
+.pl-slide{position:absolute;left:0;top:0;width:1333.333px;height:750px;transform-origin:0 0;font-family:"DM Sans",var(--f-body);display:block}
+.pl-slide .s,.pl-slide .t{position:absolute}
+.pl-slide .t{overflow:hidden;white-space:normal;word-break:break-word}
+.pl-slide .t p{margin:0;white-space:pre-wrap}
+.pl-slide .warnflag{position:absolute;border:2px dashed var(--against);border-radius:8px;pointer-events:none}
+.pl-slide [data-wkopen],.pl-slide [data-calday]{cursor:pointer}
+.pl-slide [data-wkopen]:hover,.pl-slide [data-calday]:hover{outline:2px solid #3B8CF0;outline-offset:-2px}
+/* month calendar */
+.cal-monthpick{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:5px 8px;font:inherit;color:inherit}
+.cal-legend{display:flex;gap:6px 16px;flex-wrap:wrap;align-items:center;font-size:13px;font-weight:600}
+.cal-legend .hint{font-weight:400}
+.lg{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.lg.tr{background:var(--accent-soft);border:1px solid rgba(0,120,191,.4)} .lg.mt{background:#FFC000} .lg.off{border:1px dashed var(--muted)}
+.cal-grid{display:grid;grid-template-columns:58px repeat(7,minmax(0,1fr));gap:4px}
+.cal-h{font-family:var(--f-display);font-weight:700;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:center;padding:2px 0}
+.cal-h.we{color:var(--ink)}
+.cal-wk{border:1px dashed var(--line);border-radius:10px;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--muted);cursor:pointer;padding:4px}
+.cal-wk b{font-family:var(--f-display);font-size:20px;color:var(--ink);line-height:1}
+.cal-wk span{font-size:11px;font-weight:700}
+.cal-wk:hover{border-color:var(--accent);color:var(--accent)}
+.cal-wk.planned{border-style:solid;border-color:rgba(0,120,191,.45);background:var(--accent-soft);color:var(--accent)}
+.cal-day{min-height:112px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px;display:flex;flex-direction:column;gap:4px;cursor:pointer;min-width:0}
+.cal-day:hover{border-color:var(--muted)}
+.cal-day.we{background:var(--surface-2)}
+.cal-day.out{opacity:.45}
+.cal-day.today{box-shadow:inset 0 0 0 2px var(--accent)}
+.cal-day.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.cal-dn{font-family:var(--f-display);font-weight:700;font-size:16px;line-height:1}
+.cal-day.today .cal-dn{color:var(--accent)}
+.cal-ev{display:block;text-align:left;border-radius:6px;padding:3px 6px;font-size:12px;line-height:1.3;border:1px solid transparent;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%;min-width:0;font-family:inherit;color:inherit}
+.cal-ev b{font-weight:700}
+.cal-ev.tr{background:var(--accent-soft);border-color:rgba(0,120,191,.35)}
+.cal-ev.mt{background:#FFC000;color:#0B0F14;border:0;cursor:pointer}
+.cal-ev.mt:hover{filter:brightness(1.07)}
+.cal-ev.mt i{font-style:normal;font-weight:800;opacity:.65}
+.cal-ev.off{color:var(--muted);border:1px dashed var(--line)}
+.cal-ev.big{font-size:14px;padding:8px 10px;white-space:normal}
+.cal-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+.cal-pat{display:flex;flex-direction:column;gap:6px}
+.cal-patrow{display:grid;grid-template-columns:38px 36px 104px 104px minmax(0,1fr);gap:8px;align-items:center}
+.cal-patrow .dn{font-weight:700}
+.cal-patrow.off .dn{color:var(--muted)}
+.cal-patrow input{border:1px solid var(--line);background:var(--surface-2);border-radius:7px;padding:6px 8px;min-width:0;width:100%;font:inherit;color:inherit}
+.cal-patrow input:disabled{opacity:.5}
+.cal-exrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.cal-sep{width:1px;height:26px;background:var(--line);margin:0 4px}
+.cal-prev{max-width:760px}
+.cd-matches{display:flex;flex-direction:column;gap:6px}
+@media (max-width:900px){.cal-cols{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:760px){.cal-grid{grid-template-columns:30px repeat(7,minmax(0,1fr));gap:2px}.cal-day{min-height:70px;padding:3px;border-radius:6px;gap:2px}.cal-ev{font-size:10px;padding:1px 3px;border-radius:4px}.cal-wk span{display:none}.cal-wk b{font-size:14px}.cal-h{font-size:11px;letter-spacing:.02em}.cal-patrow{grid-template-columns:34px 36px 1fr 1fr}.cal-patrow input[data-patf="place"]{grid-column:1/-1}}
+/* week planner */
+.wk-layout{display:grid;grid-template-columns:minmax(0,560px) minmax(0,1fr);gap:20px;align-items:start}
+.wk-preview{position:sticky;top:12px}
+@media (max-width:1100px){.wk-layout{grid-template-columns:minmax(0,1fr)}.wk-preview{position:static}}
+#wkSel{border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--surface);color:inherit;font:inherit;max-width:min(340px,80vw)}
+.wk-tabs{display:flex;gap:2px;border-bottom:2px solid var(--line);margin-bottom:12px;flex-wrap:wrap}
+.wk-tabs button{background:none;border:0;padding:9px 12px;font-weight:700;font-size:15px;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-2px}
+.wk-tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.wk-tabs .wk-tabx{padding:9px 6px;font-size:16px}
+#wkEditor{display:flex;flex-direction:column;gap:12px}
+.wk-roster{display:flex;flex-wrap:wrap;gap:8px}
+.wk-staff{display:inline-flex;align-items:center}
+.wk-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:5px 12px;background:var(--surface);color:var(--muted);font-weight:600;font-size:13px}
+.wk-chip i{width:8px;height:8px;border-radius:50%;border:1.5px solid currentColor}
+.wk-chip[aria-pressed="true"]{color:var(--ink);border-color:var(--accent);background:var(--accent-soft)}
+.wk-chip[aria-pressed="true"] i{background:var(--accent);border-color:var(--accent)}
+.wk-chip.mini{padding:3px 9px;font-size:12px}
+.wk-chip.absent{color:var(--against);border-color:rgba(190,68,48,.5);text-decoration:line-through}
+.wk-x{border:0;background:none;color:var(--muted);font-size:15px;padding:0 4px}
+.wk-x:hover{color:var(--against)}
+.wk-addstaff{display:flex;gap:8px}
+.wk-addstaff input{flex:1;min-width:0;border:1px solid var(--line);background:var(--surface-2);border-radius:7px;padding:6px 9px;font:inherit;color:inherit}
+.wk-day{border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden;min-width:0}
+.wk-dayhead{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;user-select:none}
+.wk-day.off .wk-dayhead{opacity:.7}
+.wk-dayhead .nm{font-weight:700;font-size:15px;white-space:nowrap}
+.wk-dayhead .nm small{color:var(--muted);font-weight:600;font-size:12px}
+.wk-dayhead .sub{flex:1;min-width:0;color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wk-dayhead .sub em{font-style:normal;color:var(--goal);font-weight:700}
+.wk-budget{font-variant-numeric:tabular-nums;font-size:12px;color:var(--muted);white-space:nowrap}
+.wk-budget.over{color:var(--against)}
+.wk-dayhead .caret{color:var(--muted);transition:transform .15s}
+.wk-day[data-expanded="true"] .caret{transform:rotate(90deg)}
+.wk-daybody{border-top:1px solid var(--line);padding:10px 14px 14px;display:flex;flex-direction:column;gap:12px}
+.wk-ctx{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.wk-lane{display:flex;flex-direction:column;gap:8px}
+.wk-lanehead{display:flex;align-items:center;gap:8px}
+.wk-lanehead .hint{flex:1}
+.wk-tag{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;border-radius:5px;padding:2px 8px;color:#0A0A0C}
+.wk-tag.gym{background:#FFC000}.wk-tag.warm{background:#E3E7EE}.wk-tag.kern{background:var(--accent);color:#fff}
+.wk-block{border:1.5px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:8px;background:var(--surface-2)}
+.wk-block.gym{border-color:rgba(224,168,0,.65)}.wk-block.warm{border-color:#9AA3B0}.wk-block.kern{border-color:rgba(0,120,191,.6)}
+.wk-block .field input{background:var(--surface)}
+.wk-b3{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1.3fr) 76px;gap:8px}
+.wk-tools{display:flex;gap:4px;justify-content:flex-end}
+.wk-ib{width:28px;height:28px;border:1px solid var(--line);background:var(--surface);border-radius:6px;color:var(--muted);padding:0;font-size:13px}
+.wk-ib:hover{color:var(--ink);border-color:var(--muted)}
+.wk-ib.del:hover{color:var(--against);border-color:var(--against)}
+.wk-ib:disabled{opacity:.35}
+.wk-staffpick{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.wk-staffpick .lbl{font-size:12px;color:var(--muted);font-weight:700}
+.wk-inline{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px}
+.wk-detail h3{margin:0;font-size:17px}
+.wk-detail h3 small{color:var(--muted);font-weight:400;font-size:13px}
+.wk-vorm{border:1.5px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px}
+.wk-vorm.warm{border-color:#9AA3B0}.wk-vorm.kern{border-color:rgba(0,120,191,.6)}
+.wk-vh{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.wk-vh .n{color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.wk-vh span{color:var(--muted);font-size:13px}
+.wk-vh em{color:var(--goal);font-style:normal;font-size:13px;font-weight:600}
+.wk-vorm textarea{width:100%;min-height:100px;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--surface-2);font:inherit;color:inherit;resize:vertical;line-height:1.5}
+.wk-daypick{display:flex;flex-wrap:wrap;gap:6px}
+.wk-daypick button{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:5px 10px;font-size:13px;color:inherit}
+.wk-daypick button[aria-current="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.wk-daypick button.off{opacity:.6}
+.wk-sum{display:flex;gap:16px;font-variant-numeric:tabular-nums;font-size:13px;color:var(--muted);flex-wrap:wrap}
+.wk-sum b{color:var(--ink)} .wk-sum .over{color:var(--against)}
+.wk-thumbs{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.wk-thumb{flex:none;width:136px;border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:0;overflow:hidden;text-align:left;color:inherit}
+.wk-thumb[aria-current="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.wk-thumb .cap{display:block;font-size:11px;color:var(--muted);padding:3px 6px}
+.wk-exrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.wk-check{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--muted)}
+@media (max-width:520px){.wk-b3{grid-template-columns:minmax(0,1fr) 76px}.wk-b3 .field:first-child{grid-column:1/-1}}
+/* match page */
+.fx-status{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.fx-stat{border:1px solid var(--line);border-radius:12px;padding:10px 14px;background:var(--surface);display:flex;flex-direction:column;gap:3px;min-width:0}
+.fx-stat b{font-family:var(--f-display);font-size:26px;line-height:1}
+.fx-stat span{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fx-stat.ok{border-color:rgba(31,122,79,.45)} .fx-stat.ok b{color:var(--res-w)}
+.fx-cols{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;align-items:start}
+.fx-cols>section:first-child{grid-row:span 2}
+@media (max-width:1000px){.fx-cols{grid-template-columns:minmax(0,1fr)}.fx-cols>section:first-child{grid-row:auto}}
+@media (max-width:700px){.fx-status{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.fx-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.fx-tools .search{flex:1;min-width:160px;width:auto}
+#fxVidPick{flex:1;min-width:180px;border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--surface);color:inherit;font:inherit}
+.fx-roster{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:6px}
+.fx-pl{display:flex;align-items:center;gap:10px;text-align:left;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:7px 10px;font:inherit;color:inherit;cursor:pointer;min-width:0}
+.fx-pl:hover{border-color:var(--muted)}
+.fx-pl .num{min-width:32px;text-align:center;font-family:var(--f-display);font-weight:700;font-size:16px;background:var(--surface);border-radius:6px;padding:1px 4px;color:var(--muted)}
+.fx-pl .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.fx-pl .tick{width:16px;color:var(--res-w);font-weight:800}
+.fx-pl.on{background:var(--accent-soft);border-color:var(--accent)}
+.fx-pl.on .num{background:var(--accent);color:#fff}
+.fx-form{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:600px){.fx-form{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.fx-logo{height:34px;border:1px solid var(--line);border-radius:6px;background:#000;padding:2px}
+.fx-slides{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:600px){.fx-slides{grid-template-columns:1fr}}
+.fx-slide{container-type:inline-size;aspect-ratio:16/9;background:#000;color:#fff;border-radius:6px;padding:3% 4%;display:flex;flex-direction:column;overflow:hidden;font-family:"Segoe UI",Roboto,Arial,sans-serif}
+.fx-slide .head{display:flex;gap:6px;border-bottom:1px solid #fff;padding-bottom:3px;align-items:center}
+.fx-slide .head b{flex:1;text-align:center;font-size:4cqw;letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fx-slide .head span{font-size:2.6cqw;letter-spacing:.2em;font-weight:700}
+.fx-slide .vs{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5%}
+.fx-slide .logos{display:flex;align-items:center;gap:6%}
+.fx-slide .logos img{height:17cqw;width:17cqw;object-fit:contain}
+.fx-slide .logos span{font-size:6cqw;font-weight:800}
+.fx-slide .loc{font-size:2.4cqw;border:1px solid #fff;padding:.5% 2%;min-height:1em;letter-spacing:.08em}
+.fx-slide .times{display:grid;grid-template-columns:repeat(6,1fr);gap:1.5%}
+.fx-slide .times div{text-align:center;display:flex;flex-direction:column;gap:3px}
+.fx-slide .times span{font-size:1.8cqw;border:1px solid #fff;padding:3% 0;letter-spacing:.06em}
+.fx-slide .times b{font-size:3.4cqw}
+.fx-slide .cols{display:flex;gap:4%;padding:3% 4% 0;justify-content:center}
+.fx-slide .cols>div{flex:1;display:flex;flex-direction:column;gap:2.2cqw}
+.fx-slide .r{display:flex;gap:3px;font-weight:700}
+.fx-slide .r span{border:1px solid #fff;font-size:2.3cqw;padding:.4% 0;text-align:center}
+.fx-slide .r span:first-child{width:16%}
+.fx-slide .r span:last-child{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fx-slide .empty{margin:auto;color:#5a6472;font-size:3cqw}
+
 .gate-opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 @media (max-width:640px){.gate-opts{grid-template-columns:minmax(0,1fr)}}
 .gate-opt{border:1px solid var(--hero-line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px;background:rgba(255,255,255,.04)}
@@ -921,14 +1105,17 @@ button.sync:hover{background:rgba(255,255,255,.08)}
 <body>
 
 <nav class="nav" aria-label="Main"><div class="wrap nav-in">
-  <button class="nav-brand" data-go="home" aria-label="Match Tagger home"><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="1.5" y="5.5" width="29" height="21" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><line x1="16" y1="5.5" x2="16" y2="26.5" stroke="currentColor" stroke-width="2"/><circle cx="16" cy="16" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="25" cy="16" r="3" fill="var(--hero-accent)"/></svg><span>Match Tagger</span></button>
-  <div class="nav-links"><button data-go="home" data-nav="home">Home</button><button data-go="matches" data-nav="matches">Analyses</button><button data-go="players" data-nav="players">Players</button><button data-go="team" data-nav="team">Team</button></div>
+  <button class="nav-brand" data-go="calendar" aria-label="Match Tagger calendar"><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="1.5" y="5.5" width="29" height="21" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><line x1="16" y1="5.5" x2="16" y2="26.5" stroke="currentColor" stroke-width="2"/><circle cx="16" cy="16" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="25" cy="16" r="3" fill="var(--hero-accent)"/></svg><span>Match Tagger</span></button>
+  <div class="nav-links"><button data-go="calendar" data-nav="calendar">Calendar</button><button data-go="week" data-nav="week">Week</button><button data-go="matches" data-nav="matches">Analyses</button><button data-go="players" data-nav="players">Players</button><button data-go="team" data-nav="team">Team</button><button data-go="home" data-nav="home">Overview</button></div>
   <span class="spacer"></span>
   <button class="sync" id="sync" data-od title="Your Match Tagger folder"><i></i><span>Opening folder…</span></button>
   <button class="btn primary sm" data-go="new">New match</button>
 </div></nav>
 <main id="views">
-<section class="view" id="view-home"></section>
+<section class="view" id="view-home" hidden></section>
+<section class="view" id="view-calendar"></section>
+<section class="view" id="view-week" hidden></section>
+<section class="view" id="view-fixture" hidden></section>
 <section class="view" id="view-matches" hidden></section>
 <section class="view" id="view-report" hidden></section>
 <section class="view" id="view-players" hidden></section>
@@ -944,6 +1131,7 @@ button.sync:hover{background:rgba(255,255,255,.08)}
       <span class="match-meta" id="meta"></span>
     </div>
     <div class="top-actions">
+      <button class="btn" id="btnFixture" data-go="fixture">Match page</button>
       <button class="btn" id="btnReport" data-go="report">Match report</button>
       <button class="btn primary" data-export>Export clips</button>
       <button class="btn" id="btnCsv">Export CSV</button>
@@ -1023,11 +1211,14 @@ button.sync:hover{background:rgba(255,255,255,.08)}
 <div class="modal" id="odModal" hidden role="dialog" aria-modal="true" aria-labelledby="odTitle"><div class="sheet" id="odSheet"></div></div>
 <div class="modal" id="tagsModal" hidden role="dialog" aria-modal="true" aria-labelledby="tgTitle"><div class="sheet wide" id="tagsSheet"></div></div>
 <div class="modal" id="pexModal" hidden role="dialog" aria-modal="true" aria-labelledby="pexTitle"><div class="sheet" id="pexSheet"></div></div>
+<div class="modal" id="calDayModal" hidden role="dialog" aria-modal="true" aria-labelledby="calDayTitle"><div class="sheet" id="calDaySheet"></div></div>
+<div class="modal" id="fxAddModal" hidden role="dialog" aria-modal="true" aria-labelledby="fxAddTitle"><div class="sheet" id="fxAddSheet"></div></div>
 <div class="modal" id="bkModal" hidden role="dialog" aria-modal="true" aria-labelledby="bkTitle"><div class="sheet" id="bkSheet"></div></div>
 <div class="modal" id="exportModal" hidden role="dialog" aria-modal="true" aria-labelledby="exTitle"><div class="sheet" id="exportSheet"></div></div>
 
 <script src="folder.js"></script>
 <script src="cloud.js"></script>
+<script src="planner-engine.js"></script>
 <script>var FSX=(function(){ var b=''; try{ b=localStorage.getItem('matchTagger.backend')||''; }catch(e){} return b==='cloud'?CLOUD:FOLDER; })();</script>
 <script>
 /* Lossless MP4/MOV clip cutter: copies original video + audio samples into a new MP4 (no re-encoding). */
@@ -1304,7 +1495,7 @@ async function connectDb(){
     col=true; lastSync=Date.now(); linkAll(); if(view==='match') renderLiveBar();
     if(changedCurrent){ if(store[M.id]) M=store[M.id]; renderAll(); } else renderDrawer();
     lsSave(); setSync('cloud'); flush();
-    refreshVideos();
+    refreshVideos(); plSync();
   }catch(e){ console.error(e); if(e&&e.name==='AuthError'){ authLost(); return; } setSync('error'); toast(FSX.kind==='cloud'?'Could not reach your online storage. Your work is kept in this browser and saved online as soon as the connection is back.':'Could not open your Match Tagger folder. Your work is kept in this browser. Click the status at the top to reconnect.'); clearTimeout(ui.retryT); if(FSX.kind==='cloud') ui.retryT=setTimeout(connectDb,20000); }
 }
 const localMode=()=>{ try{ return localStorage.getItem('matchTagger.localMode')==='1'; }catch(e){ return false; } };
@@ -1388,7 +1579,7 @@ function renderHeader(){
   $('#meta').textContent=[d,M.comp,(M.home?'Home':'Away'),M.halfLen+' min halves'].filter(Boolean).join(' · ');
   $('#bugHome').textContent=(M.home?M.usShort:M.themShort)||'HOM';
   $('#bugAway').textContent=(M.home?M.themShort:M.usShort)||'AWY';
-  $('#btnReport').dataset.arg=M.id; updBackupState();
+  $('#btnReport').dataset.arg=M.id; $('#btnFixture').dataset.arg=M.id; updBackupState();
   $('#bugHome').className='bug-team '+(M.home?'us':'them'); $('#bugAway').className='bug-team '+(M.home?'them':'us');
 }
 function renderDrawer(){ if(view!=='match') renderView(); }
@@ -1869,9 +2060,10 @@ function renderLineupEditor(){
       <div class="field"><label for="liveFormation">Change during the match</label><select id="liveFormation" title="Tags a formation change at the current video time">${Object.keys(FORMATIONS).map(f=>`<option${f===lineupAt(now()).formation?' selected':''}>${f}</option>`).join('')}</select></div>
       <button class="btn primary" id="btnDoneLineup" style="align-self:flex-end">Done</button></div>
     <span class="section-label">Starting XI</span>
-    <div class="lu-rows">${starters.map(s=>`<div class="lu-row"><span class="role">${s.r}</span>
-      <input type="number" min="1" max="99" aria-label="${s.r} shirt number" data-pnum="${s.p?s.p.id:''}" value="${s.p?esc(s.p.num):''}" ${s.p?'':'disabled'}>
-      <input aria-label="${s.r} name" placeholder="Name" list="squadList" data-pname="${s.p?s.p.id:''}" value="${s.p?esc(s.p.name):''}" ${s.p?'':'disabled'}><span></span></div>`).join('')}</div>
+    <div class="lu-rows">${starters.map(s=>s.p?`<div class="lu-row"><span class="role">${s.r}</span>
+      <input type="number" min="1" max="99" aria-label="${s.r} shirt number" data-pnum="${s.p.id}" value="${esc(s.p.num)}">
+      <input aria-label="${s.r} name" placeholder="Name" list="squadList" data-pname="${s.p.id}" value="${esc(s.p.name)}"><span class="lu-out"><button class="rm" data-tobench="${s.p.id}" title="Move to the bench" aria-label="Move ${esc(s.p.name||s.r)} to the bench">↓</button></span></div>`
+      :`<div class="lu-row"><span class="role">${s.r}</span><select class="lu-fill" data-fillslot="${s.i}" aria-label="Choose the ${s.r}"><option value="">${bench.length?'Choose a player…':'Add players to the bench first'}</option>${bench.map(p=>`<option value="${p.id}">${esc((p.num?p.num+' · ':'')+(p.name||'Unnamed'))}</option>`).join('')}</select><span></span></div>`).join('')}</div>
     <span class="section-label">Bench</span>
     <div class="lu-rows">${bench.map(p=>`<div class="lu-row"><span class="role">SUB</span>
       <input type="number" min="1" max="99" aria-label="Shirt number" data-pnum="${p.id}" value="${esc(p.num)}">
@@ -2518,16 +2710,20 @@ function matchMin(t){ const c=matchClock(t); return c.phase==='pre'?null:c.secs/
 /* ---------- Router ---------- */
 let view='home', viewArg=null;
 const sessionFiles={};
-const VIEWS=['home','matches','report','players','player','team','new','match'];
+const VIEWS=['home','calendar','week','fixture','matches','report','players','player','team','new','match'];
 function parseHash(){ let h=''; try{ h=(location.hash||'').slice(1); }catch(e){}
-  if(/^(home|matches|players|team|new)$/.test(h)) return [h,null];
-  const k=h.match(/^(match|report|player)-([A-Za-z0-9]+)$/); return k?[k[1],k[2]]:['home',null]; }
-const navKey=v=>({report:'matches',match:'matches',player:'players',new:'home'}[v]||v);
+  if(/^(home|matches|players|team|new|calendar)$/.test(h)) return [h,null];
+  const w=h.match(/^week(?:-(\d{4}-W\d{2}))?$/); if(w) return ['week',w[1]||null];
+  const k=h.match(/^(match|report|player|fixture)-([A-Za-z0-9]+)$/); return k?[k[1],k[2]]:['calendar',null]; }
+const navKey=v=>({report:'matches',match:'matches',player:'players',new:'calendar',fixture:'calendar'}[v]||v);
 function go(v,arg){
-  if(!VIEWS.includes(v)) v='home';
+  if(!VIEWS.includes(v)) v='calendar';
+  if(v==='fixture'&&!(arg&&store[arg])){ v='calendar'; arg=null; }
+  if(v==='week'&&!(arg&&/^\d{4}-W\d{2}$/.test(arg))) arg=plCurKey();
   if(v==='match'||v==='report'){ if(!(arg&&store[arg])){ if(v==='match'&&store[M.id]) arg=M.id; else { v='matches'; arg=null; } } }
   if(v==='player'&&!(arg&&SQ(arg))){ v='players'; arg=null; }
-  if(!['match','report','player'].includes(v)) arg=null;
+  if(!['match','report','player','fixture','week'].includes(v)) arg=null;
+  if(view==='fixture'&&(v!=='fixture'||arg!==viewArg)){ plUi.fxEdit=false; plUi.fxQ=''; ui.fxDel=null; }
   if(view==='match'&&v!=='match'){ V().pause(); stopClips(); ui.tray=null; ui.numBuf=''; }
   if(view==='player'&&v!=='player') stopPv();
   view=v; viewArg=arg;
@@ -2539,7 +2735,7 @@ function go(v,arg){
   try{ window.scrollTo(0,0); }catch(e){}
 }
 window.addEventListener('hashchange',()=>{ let h=''; try{ h=location.hash.slice(1); }catch(e){} if(ui.hashLock===h){ ui.hashLock=null; return; } const [v,a]=parseHash(); if(v!==view||a!==viewArg) go(v,a); });
-function renderView(){ const f={home:renderHome,matches:renderMatches,report:renderReport,players:renderPlayers,player:renderPlayer,team:renderTeam,new:renderNew}[view]; if(f) f(); }
+function renderView(){ const f={calendar:renderCalendar,week:renderWeek,fixture:renderFixture,home:renderHome,matches:renderMatches,report:renderReport,players:renderPlayers,player:renderPlayer,team:renderTeam,new:renderNew}[view]; if(f) f(); }
 function watchEvent(mid,eid){ const m=store[mid]; const e=m&&m.events.find(x=>x.id===eid); if(!e) return; ui.pendingSeek=e.t; go('match',mid); if(hasVideo()){ ui.pendingSeek=null; seek(e.t-3); } else toast('Load the video for this match to watch the moment.'); }
 
 const IC={
@@ -2559,7 +2755,7 @@ function matchRow(m,opts){
     <div class="mdate"><b>${d?d.getDate():'–'}</b><span>${d?d.toLocaleDateString('en-GB',{month:'short'}):''}${d&&opts.year?' '+String(d.getFullYear()).slice(2):''}</span></div>
     <div class="mmain"><button class="mtitle" data-go="report" data-arg="${m.id}">${esc(vsLabel(m))}</button><span class="msub">${esc(meta)}</span></div>
     <div class="mscore">${resChip(m)}<b class="tnum">${isPlayed(m)?finalScore(m):'–'}</b></div>
-    <div class="macts"><button class="btn sm" data-go="report" data-arg="${m.id}">Report</button>${opts.del?`<button class="btn sm" data-backupid="${m.id}" title="Save this match to a backup file">Backup</button>`:''}<button class="btn sm${opts.primaryOpen?' primary':''}" data-go="match" data-arg="${m.id}">Open tagger</button>${opts.del?(ui.confirmDel===m.id?`<span class="confirm"><button class="btn sm danger" data-delyes="${m.id}">Delete</button><button class="btn sm" data-delno>Keep</button></span>`:`<button class="btn sm ghost" data-del="${m.id}" aria-label="Delete match">Delete</button>`):''}</div>
+    <div class="macts"><button class="btn sm" data-go="fixture" data-arg="${m.id}">Match page</button><button class="btn sm" data-go="report" data-arg="${m.id}">Report</button>${opts.del?`<button class="btn sm" data-backupid="${m.id}" title="Save this match to a backup file">Backup</button>`:''}<button class="btn sm${opts.primaryOpen?' primary':''}" data-go="match" data-arg="${m.id}">Open tagger</button>${opts.del?(ui.confirmDel===m.id?`<span class="confirm"><button class="btn sm danger" data-delyes="${m.id}">Delete</button><button class="btn sm" data-delno>Keep</button></span>`:`<button class="btn sm ghost" data-del="${m.id}" aria-label="Delete match">Delete</button>`):''}</div>
   </div>`;
 }
 
@@ -2568,7 +2764,8 @@ function renderHome(){
   const el=$('#view-home'), ss=seasons(), season=ss[0]||seasonOf(new Date().toISOString().slice(0,10));
   const played=matchesIn(season).filter(isPlayed), rec=recordOf(played), last=played[0];
   const form=played.slice(0,5).reverse();
-  const recent=Object.values(store).filter(m=>!isUntouchedBlank(m)).sort(byDateDesc).slice(0,5);
+  const todayIso=new Date().toISOString().slice(0,10), isUpcoming=m=>!isPlayed(m)&&isoDate(m.date)>todayIso;
+  const recent=Object.values(store).filter(m=>!isUntouchedBlank(m)&&!isUpcoming(m)).sort(byDateDesc).slice(0,5);
   const agg=playerAgg(season);
   const lead=[['Goals','g'],['Assists','a'],['Minutes','min'],['Ball recoveries','rec']];
   const lastCard=last?withMatch(last,()=>{ const s=goalsFA(last), hs=last.home?s.f:s.a, as=last.home?s.a:s.f;
@@ -2603,10 +2800,11 @@ function renderHome(){
 /* ---------- Analyses (all matches) ---------- */
 function renderMatches(){
   const el=$('#view-matches'), season=curSeason(), q=norm(ui.mq||'');
-  const list=matchesIn(season).filter(m=>!q||norm([m.them,m.comp,m.us,m.date].join(' ')).includes(q)); if(oldestFirst()) list.reverse();
+  const todayIso=new Date().toISOString().slice(0,10), upcoming=matchesIn(season).filter(m=>!isPlayed(m)&&isoDate(m.date)>todayIso);
+  const list=matchesIn(season).filter(m=>!upcoming.includes(m)&&(!q||norm([m.them,m.comp,m.us,m.date].join(' ')).includes(q))); if(oldestFirst()) list.reverse();
   const rec=recordOf(list.filter(isPlayed));
   el.innerHTML=`<div class="wrap page">
-    <header class="page-head"><div><span class="eyebrow">${esc(seasonText(season))}</span><h1>Analyses</h1><p>${list.length} match${list.length===1?'':'es'} · ${rec.w} won, ${rec.d} drawn, ${rec.l} lost</p></div>
+    <header class="page-head"><div><span class="eyebrow">${esc(seasonText(season))}</span><h1>Analyses</h1><p>${list.length} match${list.length===1?'':'es'}${upcoming.length?` · <button class="tlink" data-go="calendar">${upcoming.length} upcoming in the calendar</button>`:''} · ${rec.w} won, ${rec.d} drawn, ${rec.l} lost</p></div>
       <div class="page-actions">${seasonSelect()}<input class="search" id="mSearch" type="search" placeholder="Search opponent or competition" value="${esc(ui.mq||'')}" aria-label="Search matches"><div class="seg" role="group" aria-label="Order"><button data-msort="desc" aria-pressed="${!oldestFirst()}">Newest first</button><button data-msort="asc" aria-pressed="${oldestFirst()}">Oldest first</button></div><button class="btn" data-openbackup>Open backup</button><button class="btn primary" data-go="new">New match</button></div></header>
     ${list.length?`<div class="mlist big">${list.map(m=>matchRow(m,{del:true,year:season==='all'})).join('')}</div>`:`<div class="empty-state"><strong>${Object.keys(store).length?'No matches found':'No analyses yet'}</strong><p>${Object.keys(store).length?'Try another season or search term.':'Create your first match to start analysing.'}</p><button class="btn primary" data-go="new">New match</button></div>`}
     <div class="row-actions foot"><span class="hint">Your folder saves everything automatically. A backup file is an extra copy of all matches, tags, lineups and players.</span><span style="flex:1"></span><button class="btn sm" id="btnBackup">Back up all matches</button><button class="btn sm" data-openbackup>Open backup</button></div>
@@ -3312,6 +3510,681 @@ document.addEventListener('pointerup',e=>{
 });
 window.addEventListener('resize',()=>{ clearTimeout(ui.cvRT); ui.cvRT=setTimeout(()=>{ if(view==='match'&&!ui.editLineup) renderLineup(); },150); });
 
+/* ===================================================================
+   CALENDAR · WEEK PLANNER · MATCH PAGES (squad selection)
+   Month calendar (trainings, days off, matches) -> week plans (staff, gym,
+   warm-up, kern forms) -> match pages (info, squad, video, tagger).
+   Saved in this browser and, when connected, in Data/planner/ of your
+   folder or online storage. Slides and PDFs use the week planner engine.
+   =================================================================== */
+const PL_LS='matchTagger.planner.v1';
+const plPad=n=>String(n).padStart(2,'0');
+const plYmd=d=>d.getUTCFullYear()+'-'+plPad(d.getUTCMonth()+1)+'-'+plPad(d.getUTCDate());
+const plParse=v=>{ const m=String(v||'').match(/^(\d{4})-(\d{2})-(\d{2})$/); return m?new Date(Date.UTC(+m[1],+m[2]-1,+m[3])):null; };
+const plAdd=(d,n)=>new Date(d.getTime()+n*864e5);
+const plMonday=d=>plAdd(d,-((d.getUTCDay()+6)%7));
+function plIsoWeek(d){ const t=plAdd(d,3-((d.getUTCDay()+6)%7)), y=t.getUTCFullYear(); return {year:y,week:1+Math.floor((t-Date.UTC(y,0,1))/864e5/7)}; }
+const plKey=mon=>{ const w=plIsoWeek(plParse(mon)); return w.year+'-W'+plPad(w.week); };
+function plMonOfKey(k){ const m=String(k||'').match(/^(\d{4})-W(\d{2})$/); if(!m) return null; return plYmd(plAdd(plMonday(new Date(Date.UTC(+m[1],0,4))),(+m[2]-1)*7)); }
+function plToday(){ const n=new Date(); return new Date(Date.UTC(n.getFullYear(),n.getMonth(),n.getDate())); }
+const PL_MON=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const PL_DOW=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const PL_DAYS=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+function plWeekLabel(mon){ const a=plParse(mon), b=plAdd(a,6), w=plIsoWeek(a); return 'Week '+w.week+' · '+a.getUTCDate()+' '+PL_MON[a.getUTCMonth()].slice(0,3)+' – '+b.getUTCDate()+' '+PL_MON[b.getUTCMonth()].slice(0,3)+' '+b.getUTCFullYear(); }
+const plUid=()=>Math.random().toString(36).slice(2,9);
+const plBlk=(title,type,min,staff)=>({id:plUid(),title:title||'',type:type||'',min:min==null?'':min,staff:staff||[],notes:''});
+const plOff=()=>Object.assign({on:false},plBlk());
+function plSplit(t){ const m=String(t||'').match(/(\d{1,2})[:.h](\d{2})\D+(\d{1,2})[:.h](\d{2})/); return m?{start:plPad(m[1])+':'+m[2],end:plPad(m[3])+':'+m[4]}:{start:'',end:''}; }
+const plRange=e=>e.start&&e.end?e.start+' – '+e.end:(e.start||e.end||'');
+
+/* ---------- state ---------- */
+let plCal=null; const plWeeks={}; const plDirty=new Set(); let plTimer=null, plSyncing=false;
+const plUi={month:null, wtab:'plan', open:new Set([0]), slide:0, sessionDay:null, week:null, daySel:null, exportOpen:false, fxQ:'', fxEdit:false};
+function plLoad(){
+  try{ const x=JSON.parse(localStorage.getItem(PL_LS)||'null'); if(x){ plCal=x.cal||null; Object.assign(plWeeks,x.weeks||{}); } }catch(e){}
+  if(!plCal||typeof plCal!=='object') plCal={};
+  plCal=Object.assign({label:'Calendar',days:{},pattern:null,theme:'dark',offLabel:'No training',updatedAt:0},plCal);
+  Object.values(plWeeks).forEach(plMigrate);
+}
+function plStoreLocal(){ try{ localStorage.setItem(PL_LS,JSON.stringify({cal:plCal,weeks:plWeeks})); }catch(e){} }
+function plMigrate(s){
+  if(!s||!s.meta) return s;
+  s.days=s.days||[]; s.staff=s.staff||[]; s.options=s.options||{detail:true};
+  s.days.forEach(d=>{ if(d.hidden===undefined) d.hidden=(!d.active&&/^(sat|zat)/i.test(d.name||'')); if(d.reason===undefined) d.reason=''; d.gym=d.gym||plOff(); d.warmup=d.warmup||plOff(); d.kern=d.kern||[]; });
+  if(!s.meta.noTrainingLabel) s.meta.noTrainingLabel='No training';
+  return s;
+}
+function plTouch(key){ const now=Date.now(); if(key==='cal') plCal.updatedAt=now; else if(plWeeks[key]) plWeeks[key].updatedAt=now; plDirty.add(key); plStoreLocal(); clearTimeout(plTimer); plTimer=setTimeout(plFlush,900); }
+async function plFlush(){
+  if(!col||!plDirty.size) return;
+  const keys=[...plDirty]; plDirty.clear();
+  for(const k of keys){
+    try{ if(k==='cal') await FSX.write('Data/planner/calendar.json',JSON.stringify(plCal,null,1)); else if(plWeeks[k]) await FSX.write('Data/planner/weeks/'+k+'.json',JSON.stringify(plWeeks[k],null,1)); }
+    catch(e){ console.error(e); plDirty.add(k); if(e&&e.name==='AuthError'&&typeof authLost==='function'){ authLost(); return; } clearTimeout(plTimer); plTimer=setTimeout(plFlush,15000); return; }
+  }
+}
+/* after the folder / online storage connects: newest copy wins, both ways */
+async function plSync(){
+  if(!col||plSyncing) return; plSyncing=true; let changed=false;
+  try{
+    try{ const t=await FSX.readText('Data/planner/calendar.json'); if(t){ const r=JSON.parse(t); if(r&&r.days&&(r.updatedAt||0)>(plCal.updatedAt||0)){ plCal=Object.assign({label:'Calendar',days:{},pattern:null,theme:'dark',offLabel:'No training'},r); changed=true; } else if((plCal.updatedAt||0)>((r&&r.updatedAt)||0)) plDirty.add('cal'); } else if(plCal.updatedAt||Object.keys(plCal.days).length) plDirty.add('cal'); }catch(e){ console.warn(e); }
+    let items=[]; try{ items=(await FSX.list('Data/planner/weeks'))||[]; }catch(e){}
+    const remote=new Set();
+    for(const it of items.filter(x=>x.kind==='file'&&/^\d{4}-W\d{2}\.json$/.test(x.name))){
+      const k=it.name.replace(/\.json$/,''); remote.add(k);
+      try{ const r=JSON.parse(await (await it.handle.getFile()).text()); if(r&&r.days&&(!plWeeks[k]||(r.updatedAt||0)>(plWeeks[k].updatedAt||0))){ plWeeks[k]=plMigrate(r); changed=true; } else if(plWeeks[k]&&(plWeeks[k].updatedAt||0)>(r.updatedAt||0)) plDirty.add(k); }catch(e){ console.warn('planner week',k,e); }
+    }
+    Object.keys(plWeeks).forEach(k=>{ if(!remote.has(k)) plDirty.add(k); });
+    plStoreLocal(); await plFlush();
+  } finally { plSyncing=false; }
+  if(changed&&['calendar','week'].includes(view)) renderView();
+}
+
+/* ---------- month calendar data ---------- */
+function plPattern(){
+  if(!plCal.pattern){ const last=plLatestWeek();
+    plCal.pattern=[0,1,2,3,4,5].map(i=>{ const d=last&&last.days[i]; const t=plSplit(d&&d.time); return {on:!!(d&&d.active), start:t.start||'', end:t.end||'', place:(d&&d.place)||''}; }); }
+  return plCal.pattern;
+}
+function plLatestWeek(before){ const ks=Object.keys(plWeeks).filter(k=>!before||k<before).sort(); return ks.length?plWeeks[ks[ks.length-1]]:null; }
+function plMatchesOn(ymd){ return Object.values(store).filter(m=>isoDate(m.date)===ymd).sort((a,b)=>String(a.kickoff||'').localeCompare(String(b.kickoff||''))); }
+function plCalModel(month, forExport){
+  const [y,m]=month.split('-').map(Number), first=new Date(Date.UTC(y,m-1,1)), last=new Date(Date.UTC(y,m,0));
+  const weeks=[];
+  for(let d=plMonday(first); d<=last; d=plAdd(d,7)){
+    const mon=plYmd(d), days=[];
+    for(let i=0;i<7;i++){ const dt=plAdd(d,i), ymd=plYmd(dt), e=plCal.days[ymd], items=[];
+      if(e&&e.type==='training') items.push({kind:'training',time:plRange(e),place:e.place||''});
+      if(e&&e.type==='off') items.push({kind:'off',reason:e.reason||''});
+      plMatchesOn(ymd).forEach(x=>items.push({kind:'match',time:x.kickoff||'',opponent:x.them||'',venue:x.home?'H':'A',id:x.id}));
+      days.push({date:ymd,dayNum:dt.getUTCDate(),inMonth:dt.getUTCMonth()===m-1,items}); }
+    weeks.push({week:plIsoWeek(d).week,mon,days});
+  }
+  return {title:PL_MON[m-1]+' '+y,label:plCal.label||'',weeks,projected:false,offLabel:plCal.offLabel||'No training'};
+}
+function plSetDay(ymd,type){
+  const k=(plParse(ymd).getUTCDay()+6)%7;
+  if(type==='none') delete plCal.days[ymd];
+  else if(type==='off') plCal.days[ymd]={type:'off',reason:(plCal.days[ymd]&&plCal.days[ymd].reason)||''};
+  else { const pat=plPattern(), pt=(pat[k]&&pat[k].start)?pat[k]:(pat.find(x=>x.on&&x.start)||{start:'',end:'',place:''}); plCal.days[ymd]={type:'training',start:pt.start,end:pt.end,place:pt.place}; }
+  plCalChanged(ymd);
+}
+function plCalChanged(ymd){ plTouch('cal'); if(ymd){ const k=plKey(plYmd(plMonday(plParse(ymd)))); if(plWeeks[k]&&plSyncWeek(plWeeks[k])) plTouch(k); } }
+
+/* ---------- week plans ---------- */
+function plSyncWeek(st){ // month -> week
+  let changed=false;
+  st.days.forEach((d,i)=>{ const e=plCal.days[plYmd(plAdd(plParse(st.meta.weekStart),i))]; if(!e) return;
+    const before=JSON.stringify([d.active,d.time,d.place,d.reason,d.hidden]);
+    if(e.type==='training'){ d.active=true; d.time=plRange(e); d.place=e.place||''; }
+    else if(e.type==='off'){ d.active=false; d.hidden=false; d.reason=e.reason||''; }
+    if(before!==JSON.stringify([d.active,d.time,d.place,d.reason,d.hidden])) changed=true; });
+  return changed;
+}
+function plPushDay(st,i){ // week -> month
+  const d=st.days[i], date=plYmd(plAdd(plParse(st.meta.weekStart),i));
+  if(d.active){ const t=plSplit(d.time); plCal.days[date]={type:'training',start:t.start,end:t.end,place:d.place||''}; }
+  else if(d.hidden) delete plCal.days[date];
+  else plCal.days[date]={type:'off',reason:d.reason||''};
+  plTouch('cal');
+}
+function plNewWeek(mon){
+  const prev=plLatestWeek(plKey(mon));
+  let s;
+  if(prev){ s=JSON.parse(JSON.stringify(prev)); s.days.forEach(d=>[d.gym,d.warmup,...(d.kern||[])].forEach(b=>{ if(b) b.notes=''; })); s.staff.forEach(x=>x.present=true); }
+  else s={v:1,meta:{title:'Week plan',subtitle:'',gymLabel:'Gym',warmLabel:'Warm-up',kernLabel:'Kern',detailLabel:'Training',noTrainingLabel:'No training'},
+    staff:[{id:plUid(),name:'Robbe',present:true}],
+    days:PL_DAYS.map((n,i)=>({id:plUid(),name:n,active:i<5,hidden:i===5,reason:'',time:'',place:'',gym:plOff(),warmup:Object.assign({on:true},plBlk('Warm-up','',20,[])),kern:[]})),options:{detail:true,theme:'dark'}};
+  s.meta.weekStart=mon; const w=plIsoWeek(plParse(mon));
+  s.meta.title='Week '+w.week; s.meta.subtitle=String(s.meta.subtitle||'').replace(/(Week\s+)\d{1,2}\/\d{1,2}/i,'$1'+plPad(plParse(mon).getUTCDate())+'/'+plPad(plParse(mon).getUTCMonth()+1));
+  delete s.updatedAt; plMigrate(s); plSyncWeek(s);
+  return s;
+}
+function plWeek(key){ if(!plWeeks[key]){ const mon=plMonOfKey(key); if(!mon) return null; const s=plNewWeek(mon); plWeeks[key]=s; } return plWeeks[key]; }
+const plCurKey=()=>plUi.week&&plMonOfKey(plUi.week)?plUi.week:plKey(plYmd(plMonday(plToday())));
+function plWeekMatches(st){ const a=st.meta.weekStart, b=plYmd(plAdd(plParse(a),6)); return Object.values(store).filter(m=>{ const d=isoDate(m.date); return d>=a&&d<=b; }).sort((x,y)=>(isoDate(x.date)+(x.kickoff||'')).localeCompare(isoDate(y.date)+(y.kickoff||''))); }
+function plGet(st,path){ return path.split('.').reduce((o,k)=>o==null?o:o[k],st); }
+function plSet(st,path,val){ const ks=path.split('.'), last=ks.pop(); ks.reduce((o,k)=>o[k],st)[last]=val; }
+
+/* ---------- exports (PowerPoint, PDF, calendar file) ---------- */
+let plFonts=null;
+async function plPdfFonts(){
+  if(plFonts) return plFonts;
+  const b64=buf=>{ const u=new Uint8Array(buf); let s=''; for(let i=0;i<u.length;i+=0x8000) s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000)); return btoa(s); };
+  try{ const [r,b]=await Promise.all(['vendor/fonts/DMSans-Regular.ttf','vendor/fonts/DMSans-Bold.ttf'].map(u=>fetch(u).then(x=>{ if(!x.ok) throw 0; return x.arrayBuffer(); }))); plFonts={regular:b64(r),bold:b64(b)}; }catch(e){ plFonts={}; }
+  return plFonts;
+}
+async function plLib(kind){
+  if(kind==='pdf'){ if(!(window.jspdf&&window.jspdf.jsPDF)) await loadScript('vendor/jspdf.umd.min.js'); return window.jspdf.jsPDF; }
+  if(!window.PptxGenJS) await loadScript('vendor/pptxgen.bundle.js'); return window.PptxGenJS;
+}
+async function plExport(kind,st,slides,base){
+  try{
+    toast(kind==='pdf'?'Building the PDF…':'Building the slides…');
+    const Lib=await plLib(kind);
+    const blob=kind==='pdf'?plBuildPdf(Lib,st,st.options.detail,await plPdfFonts(),slides).output('blob'):await plBuildDeck(Lib,st,st.options.detail,slides).write({outputType:'blob'});
+    return offerFile(base.replace(/[\\/:*?"<>|]+/g,'-').trim()+(st.options.theme==='light'?' (print)':'')+'.'+kind,blob);
+  }catch(e){ console.error(e); toast('The export stopped: '+((e&&e.message)||e)); }
+}
+function plCalExport(kind,theme){
+  const cal=plCalModel(plUi.month);
+  return plExport(kind,{meta:{title:plCal.label||'Calendar',subtitle:cal.title},options:{theme,detail:false},days:[],staff:[]},[{kind:'cal',cal}],(plCal.label||'Calendar')+' '+cal.title);
+}
+function plIcs(scope){
+  const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Match Tagger//Calendar//EN','CALSCALE:GREGORIAN','X-WR-CALNAME:'+icsEsc(teamName())];
+  const stamp=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+/,'');
+  const inScope=d=>scope==='all'||String(d).slice(0,7)===plUi.month;
+  const dt=(ymd,hm)=>ymd.replace(/-/g,'')+'T'+String(hm||'00:00').replace(':','')+'00';
+  const plusMin=(ymd,hm,mins)=>{ const [h,mi]=String(hm||'00:00').split(':').map(Number); const t=new Date(Date.UTC(+ymd.slice(0,4),+ymd.slice(5,7)-1,+ymd.slice(8,10),h,mi+mins)); return plYmd(t).replace(/-/g,'')+'T'+plPad(t.getUTCHours())+plPad(t.getUTCMinutes())+'00'; };
+  Object.entries(plCal.days).filter(([d,e])=>inScope(d)&&e.type==='training'&&e.start).forEach(([d,e])=>{
+    lines.push('BEGIN:VEVENT','UID:tr-'+d+'@matchtagger','DTSTAMP:'+stamp,'DTSTART:'+dt(d,e.start),'DTEND:'+(e.end?dt(d,e.end):plusMin(d,e.start,90)),'SUMMARY:'+icsEsc('Training'+(e.place?' · '+e.place:'')),e.place?'LOCATION:'+icsEsc(e.place):'','END:VEVENT'); });
+  Object.values(store).filter(m=>m.date&&inScope(isoDate(m.date))).forEach(m=>{ const d=isoDate(m.date);
+    const ev=['BEGIN:VEVENT','UID:match-'+m.id+'@matchtagger','DTSTAMP:'+stamp];
+    if(m.kickoff){ ev.push('DTSTART:'+dt(d,m.kickoff),'DTEND:'+plusMin(d,m.kickoff,(m.halfLen||45)*2+15)); } else ev.push('DTSTART;VALUE=DATE:'+d.replace(/-/g,''));
+    ev.push('SUMMARY:'+icsEsc(matchName(m)+(m.comp?' · '+m.comp:'')), m.place?'LOCATION:'+icsEsc(m.place):'', 'END:VEVENT'); lines.push(...ev); });
+  lines.push('END:VCALENDAR');
+  const name=fileSafe(teamName()+' '+(scope==='all'?'calendar':plCalModel(plUi.month).title))+'.ics';
+  return offerFile(name,new Blob([lines.filter(Boolean).join('\r\n')],{type:'text/calendar'}));
+}
+const icsEsc=s=>String(s||'').replace(/\\/g,'\\\\').replace(/[,;]/g,m=>'\\'+m).replace(/\n/g,'\\n');
+
+/* ---------- slide preview (HTML copy of the engine's shapes) ---------- */
+function plDraw(el,shapes,interactive){
+  const PX=100, PT=100/72;
+  el.innerHTML=shapes.map(sh=>{
+    const box=`left:${sh.x*PX}px;top:${sh.y*PX}px;width:${sh.w*PX}px;height:${sh.h*PX}px;`;
+    const ctx=interactive&&sh.day!=null?` data-wkopen="${sh.day}" title="Click to edit this day"`:interactive&&sh.date?` data-calday="${sh.date}" title="Click to edit this day"`:'';
+    if(sh.t==='rect'||sh.t==='oval'){ const rad=sh.t==='oval'?'50%':(sh.r?sh.r*PX+'px':'0');
+      const border=sh.line?(sh.dash?`border:${(sh.lineW||1)*PT}px dashed #${sh.line};box-sizing:border-box;`:`box-shadow:inset 0 0 0 ${(sh.lineW||1)*PT}px #${sh.line};`):'';
+      return `<div class="s" style="${box}background:#${sh.fill};border-radius:${rad};${border}"${ctx}></div>`; }
+    if(sh.t==='flag') return `<div class="warnflag" style="${box}" title="Assigned staff member is absent"></div>`;
+    const just=sh.valign==='middle'?'display:flex;flex-direction:column;justify-content:center;':'';
+    const ps=sh.paras.map(p=>`<p style="line-height:${p.ls*PT}px;text-align:${sh.align||'left'};${sh.valign==='middle'?'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;':''}">${p.runs.map(r=>`<span style="font-size:${r.size*PT}px;color:#${r.color};font-weight:${r.bold?700:400}">${esc(r.text)||'&#8203;'}</span>`).join('')}</p>`).join('');
+    return `<div class="t" style="${box}${just}"${ctx}>${ps}</div>`;
+  }).join('');
+}
+function plFit(){ document.querySelectorAll('.pl-slidewrap').forEach(w=>{ const s=w.firstElementChild; if(s&&w.clientWidth) s.style.transform=`scale(${w.clientWidth/1333.333})`; }); }
+window.addEventListener('resize',()=>{ clearTimeout(plUi.fitT); plUi.fitT=setTimeout(plFit,80); });
+
+/* =================== MONTH CALENDAR VIEW =================== */
+function plDefaultMonth(){ const t=plToday(); return t.getUTCFullYear()+'-'+plPad(t.getUTCMonth()+1); }
+function renderCalendar(){
+  const el=$('#view-calendar'); if(!plUi.month) plUi.month=plDefaultMonth();
+  const cal=plCalModel(plUi.month), today=plYmd(plToday()), [yy,mm]=plUi.month.split('-').map(Number);
+  let tr=0, mt=0, off=0, open=0;
+  cal.weeks.forEach(w=>w.days.forEach((d,i)=>{ if(!d.inMonth) return; let has=false; d.items.forEach(it=>{ if(it.kind==='training'){tr++;has=true;} if(it.kind==='match'){mt++;has=true;} if(it.kind==='off'){off++;has=true;} }); if(!has&&i<5) open++; }));
+  const upcoming=Object.values(store).filter(m=>isoDate(m.date)>=today&&!isPlayed(m)).sort((a,b)=>(isoDate(a.date)+(a.kickoff||'')).localeCompare(isoDate(b.date)+(b.kickoff||''))).slice(0,6);
+  const pat=plPattern();
+  const cell=d=>{
+    const dow=(plParse(d.date).getUTCDay()+6)%7;
+    const items=d.items.map(it=>it.kind==='match'
+      ?`<button class="cal-ev mt" data-go="fixture" data-arg="${it.id}" title="Open the match page"><b>${esc(it.time||'Match')}</b> ${esc(it.opponent)} <i>${it.venue==='H'?'H':'A'}</i></button>`
+      :it.kind==='training'?`<span class="cal-ev tr"><b>${esc(it.time||'Training')}</b>${it.place?' '+esc(it.place):''}</span>`
+      :`<span class="cal-ev off">${esc(cal.offLabel)}${it.reason?' · '+esc(it.reason):''}</span>`).join('');
+    return `<div class="cal-day${d.inMonth?'':' out'}${d.date===today?' today':''}${dow>4?' we':''}${plUi.daySel===d.date?' sel':''}" data-calday="${d.date}" role="button" tabindex="0" aria-label="${esc(fmtDate(d.date,{weekday:'long',day:'numeric',month:'long'}))}"><span class="cal-dn">${d.dayNum}</span>${items}</div>`;
+  };
+  el.innerHTML=`<div class="wrap page">
+    <header class="page-head"><div><span class="eyebrow">${esc(teamName())} · Calendar</span><h1>${esc(cal.title)}</h1>
+      <p><b>${tr}</b> training${tr===1?'':'s'} · <b>${mt}</b> match${mt===1?'':'es'} · <b>${off}</b> without training${open?` · ${open} weekday${open===1?'':'s'} still empty`:''}</p></div>
+      <div class="page-actions"><div class="seg" role="group" aria-label="Month"><button data-calnav="-1" aria-label="Previous month">‹</button><button data-calnav="0">Today</button><button data-calnav="1" aria-label="Next month">›</button></div>
+        <input type="month" class="cal-monthpick" id="calMonth" value="${plUi.month}" aria-label="Choose month">
+        <button class="btn" data-calexport aria-expanded="${plUi.exportOpen}">Export</button>
+        <button class="btn" data-go="week" data-arg="${plKey(plYmd(plMonday(plToday())))}">This week</button>
+        <button class="btn primary" data-caladd="${today.slice(0,7)===plUi.month?today:plUi.month+'-01'}">+ Match</button></div></header>
+    ${plUi.exportOpen?`<div class="card cal-export"><div class="card-head"><h2>Export ${esc(cal.title)}</h2><button class="btn sm ghost" data-calexport>Close</button></div>
+      <div class="cal-exrow"><span class="hint">Slide style</span><div class="seg" role="group" aria-label="Slide style"><button data-caltheme="dark" aria-pressed="${plCal.theme!=='light'}">Dark</button><button data-caltheme="light" aria-pressed="${plCal.theme==='light'}">Light (print)</button></div>
+        <button class="btn primary" data-calex="pdf">PDF</button><button class="btn" data-calex="pptx">PowerPoint</button>
+        <span class="cal-sep"></span><button class="btn" data-calics="month">Calendar file (.ics) · this month</button><button class="btn" data-calics="all">.ics · everything</button></div>
+      <p class="hint">The PDF and PowerPoint show this month as one slide, like the week planner. The calendar file adds trainings and matches to Google, Outlook or Apple Calendar.</p>
+      <div class="pl-slidewrap cal-prev"><div class="pl-slide" id="calSlide"></div></div></div>`:''}
+    <div class="cal-legend"><span><i class="lg tr"></i>Training</span><span><i class="lg mt"></i>Match</span><span><i class="lg off"></i>${esc(cal.offLabel)}</span><span class="hint">Click a day to plan it · click a match to open it · click a week number to plan that week</span></div>
+    <div class="cal-grid" role="grid">
+      <div class="cal-h wk">Wk</div>${PL_DOW.map((d,i)=>`<div class="cal-h${i>4?' we':''}">${d}</div>`).join('')}
+      ${cal.weeks.map(w=>`<button class="cal-wk${plWeeks[plKey(w.mon)]?' planned':''}" data-go="week" data-arg="${plKey(w.mon)}" title="${plWeeks[plKey(w.mon)]?'Open the week plan':'Plan this week'}"><b>${w.week}</b><span>${plWeeks[plKey(w.mon)]?'Plan':'+ Plan'}</span></button>${w.days.map(cell).join('')}`).join('')}
+    </div>
+    <div class="cal-cols">
+      <section class="card"><div class="card-head"><h2>Coming up</h2><button class="btn sm" data-caladd="${today}">+ Match</button></div>
+        ${upcoming.length?`<div class="fx-list">${upcoming.map(fxRow).join('')}</div>`:'<p class="hint">No upcoming matches. Add one with + Match or click a day in the calendar.</p>'}</section>
+      <section class="card"><div class="card-head"><h2>Standard week</h2></div>
+        <p class="hint">Your usual training days. Fill the month in one go, then change single days by clicking them.</p>
+        <div class="cal-pat">${pat.map((p,k)=>`<div class="cal-patrow${p.on?'':' off'}"><span class="dn">${PL_DOW[k]}</span><button class="pl-switch" role="switch" aria-checked="${p.on}" aria-label="Train on ${PL_DOW[k]}" data-calpat="${k}"></button>
+          <input type="time" aria-label="${PL_DOW[k]} start" data-patf="start" data-k="${k}" value="${esc(p.start)}" ${p.on?'':'disabled'}><input type="time" aria-label="${PL_DOW[k]} end" data-patf="end" data-k="${k}" value="${esc(p.end)}" ${p.on?'':'disabled'}>
+          <input aria-label="${PL_DOW[k]} location" data-patf="place" data-k="${k}" value="${esc(p.place)}" placeholder="Location" ${p.on?'':'disabled'}></div>`).join('')}</div>
+        <div class="page-actions"><button class="btn sm" data-calfill="empty">Fill empty days in ${PL_MON[mm-1]}</button><button class="btn sm ghost" data-calfill="all">Overwrite all of ${PL_MON[mm-1]}</button></div>
+        <div class="field"><label for="calLabel">Label on the exported slide</label><input id="calLabel" value="${esc(plCal.label||'')}" placeholder="Calendar"></div>
+      </section>
+    </div>
+    <div class="row-actions foot"><span class="hint">Coming from the old Week Planner or Wedstrijdplanner? Import their data once.</span><span style="flex:1"></span><label class="btn sm"><input type="file" id="plImportFile" accept=".json,application/json" hidden>Import planner data</label></div>
+  </div>`;
+  if(plUi.exportOpen){ plDraw($('#calSlide'),shapesFor({options:{theme:plCal.theme}},{kind:'cal',cal},false)); $('#calSlide').parentElement.style.background=plCal.theme==='light'?'#fff':'#0A0A0C'; }
+  plFit(); renderDayModal();
+}
+function fxRow(m){
+  const d=isoDate(m.date), sel=((m.selection||{}).ids||[]).length, vid=m.videoName?'Video linked':'No video yet';
+  return `<div class="mrow"><div class="mdate"><b>${d?+d.slice(8,10):'–'}</b><span>${d?PL_MON[+d.slice(5,7)-1].slice(0,3):''}</span></div>
+    <div class="mmain"><button class="mtitle" data-go="fixture" data-arg="${m.id}">${esc(vsLabel(m))}</button><span class="msub">${esc([m.kickoff,m.comp,m.home?'Home':'Away',sel?sel+' selected':'No squad yet',vid].filter(Boolean).join(' · '))}</span></div>
+    <div class="macts"><button class="btn sm" data-go="fixture" data-arg="${m.id}">Open</button></div></div>`;
+}
+/* day editor (small dialog) */
+function renderDayModal(){
+  const mod=$('#calDayModal'); if(!mod) return; const ymd=plUi.daySel; mod.hidden=!ymd; if(!ymd) return;
+  const e=plCal.days[ymd]||{type:'none'}, ms=plMatchesOn(ymd), dt=plParse(ymd);
+  const seg=[['training','Training'],['off',esc(plCal.offLabel||'No training')],['none','Nothing']].map(([v,l])=>`<button data-caltype="${v}" aria-pressed="${e.type===v}">${l}</button>`).join('');
+  $('#calDaySheet').innerHTML=`<div class="sheet-head"><div><h2 id="calDayTitle">${esc(fmtDate(ymd,{weekday:'long',day:'numeric',month:'long',year:'numeric'}))}</h2><p>Week ${plIsoWeek(dt).week}</p></div><button class="btn sm ghost" data-calclose>Close</button></div>
+    <div class="seg" role="group" aria-label="Day type">${seg}</div>
+    ${e.type==='training'?`<div class="form"><div class="field"><label for="cdStart">Start</label><input type="time" id="cdStart" data-cdf="start" value="${esc(e.start||'')}"></div><div class="field"><label for="cdEnd">End</label><input type="time" id="cdEnd" data-cdf="end" value="${esc(e.end||'')}"></div>
+      <div class="field full"><label for="cdPlace">Location</label><input id="cdPlace" data-cdf="place" value="${esc(e.place||'')}" placeholder="KTA, The Nest, Tempelhof…"></div></div>`
+    :e.type==='off'?`<div class="field"><label for="cdReason">Reason (optional)</label><input id="cdReason" data-cdf="reason" value="${esc(e.reason||'')}" placeholder="Rest day after a match, exams, pitch closed…"></div>`:''}
+    <div class="cd-matches"><span class="eyebrow">Matches</span>${ms.length?ms.map(m=>`<button class="cal-ev mt big" data-go="fixture" data-arg="${m.id}"><b>${esc(m.kickoff||'')}</b> ${esc(vsLabel(m))}</button>`).join(''):'<span class="hint">No match on this day.</span>'}</div>
+    <div class="row-actions"><button class="btn primary" data-caladd="${ymd}">+ Match on this day</button><button class="btn" data-go="week" data-arg="${plKey(plYmd(plMonday(dt)))}">Open the week plan</button></div>`;
+}
+
+/* add-match dialog */
+function renderAddMatch(){
+  const mod=$('#fxAddModal'); const a=plUi.addMatch; mod.hidden=!a; if(!a) return;
+  $('#fxAddSheet').innerHTML=`<form id="fxAddForm" class="sheet-in"><div class="sheet-head"><div><h2 id="fxAddTitle">Add a match</h2><p>It appears in the calendar, gets a match page for the squad, and opens in the tagger.</p></div><button type="button" class="btn sm ghost" data-fxaddclose>Close</button></div>
+    <div class="form">
+      <div class="field full"><label for="faThem">Opponent</label><input id="faThem" required placeholder="e.g. KV Mechelen" autocomplete="off" list="faOpp"></div>
+      <datalist id="faOpp">${[...new Set(Object.values(store).map(m=>m.them).filter(x=>x&&x!=='Opponent'))].map(o=>`<option value="${esc(o)}"></option>`).join('')}</datalist>
+      <div class="field"><label for="faDate">Date</label><input id="faDate" type="date" required value="${esc(a.date)}"></div>
+      <div class="field"><label for="faKick">Kick-off</label><input id="faKick" type="time" value="15:00"></div>
+      <div class="field"><label for="faHome">Venue</label><select id="faHome"><option value="1">Home</option><option value="0">Away</option></select></div>
+      <div class="field"><label for="faShort">Short name (scoreboard)</label><input id="faShort" maxlength="6" placeholder="MEC"></div>
+      <div class="field"><label for="faComp">Competition</label><input id="faComp" placeholder="e.g. Elite U18, cup"></div>
+      <div class="field"><label for="faPlace">Location</label><input id="faPlace" placeholder="Pitch / address"></div>
+    </div>
+    <div class="row-actions"><button class="btn primary" type="submit">Add match</button><button type="button" class="btn ghost" data-fxaddclose>Cancel</button></div></form>`;
+  setTimeout(()=>{ const f=$('#faThem'); if(f) f.focus(); },30);
+}
+function shortFor(name){ return String(name||'').trim().replace(/^(kaa|krc|kvc|kv|fc|sv|rsc|club|k\.|rwdm|oh)\s+/i,'').replace(/[^A-Za-z]/g,'').slice(0,3).toUpperCase()||'OPP'; }
+function plCreateFixture(o){
+  const m=blankMatch(); m.players=m.players.filter(()=>false);
+  Object.assign(m,{them:o.them,themShort:(o.short||shortFor(o.them)).toUpperCase().slice(0,6),home:!!o.home,date:o.date,comp:o.comp||'',kickoff:o.kickoff||'',place:o.place||'',us:teamName(),usShort:teamShort()});
+  const prev=Object.values(store).filter(x=>x.players&&x.players.some(p=>p.name)).sort(byDateDesc)[0];
+  if(prev){ m.formation=prev.formation; m.halfLen=prev.halfLen; }
+  m.selection=fxSelDefaults(m); m.updatedAt=Date.now(); m.planned=true;
+  store[m.id]=m; saveMatchObj(m); return m;
+}
+function saveMatchObj(m){ if(m===M){ save(); return; } m.updatedAt=Date.now(); store[m.id]=m; dirty.add(m.id); lsSave(); clearTimeout(saveTimer); saveTimer=setTimeout(flush,900); }
+
+/* =================== WEEK PLANNER VIEW =================== */
+function renderWeek(){
+  const el=$('#view-week'); const key=viewArg&&plMonOfKey(viewArg)?viewArg:plCurKey(); plUi.week=key;
+  const st=plWeek(key); if(plSyncWeek(st)&&st.updatedAt) plTouch(key);
+  const mon=st.meta.weekStart, ms=plWeekMatches(st), saved=!!st.updatedAt;
+  const opts=[]; const base=plMonday(plToday()); const set=new Set(); for(let i=-12;i<=26;i++) set.add(plYmd(plAdd(base,i*7))); set.add(mon); Object.keys(plWeeks).forEach(k=>{ const m=plMonOfKey(k); if(m) set.add(m); });
+  [...set].sort().forEach(v=>opts.push(`<option value="${plKey(v)}"${v===mon?' selected':''}>${plWeeks[plKey(v)]&&plWeeks[plKey(v)].updatedAt?'● ':''}${esc(plWeekLabel(v))}${v===plYmd(base)?' (this week)':''}</option>`));
+  if(plUi.wtab==='session'&&plUi.sessionDay==null) plUi.wtab='plan';
+  el.innerHTML=`<div class="wrap page">
+    <header class="page-head"><div><span class="eyebrow">Week planner${saved?'':' · not saved yet'}</span><h1>${esc(plWeekLabel(mon).split(' · ')[0])}</h1>
+      <p>${esc(plWeekLabel(mon).split(' · ')[1])}${ms.length?' · '+ms.map(m=>`<button class="tlink" data-go="fixture" data-arg="${m.id}">${esc(PL_DOW[(plParse(isoDate(m.date)).getUTCDay()+6)%7]+' '+(m.kickoff||'')+' vs '+m.them+' ('+(m.home?'H':'A')+')')}</button>`).join(' · '):''}</p></div>
+      <div class="page-actions"><div class="seg" role="group" aria-label="Week"><button data-wknav="-1" aria-label="Previous week">‹</button><button data-wknav="0">This week</button><button data-wknav="1" aria-label="Next week">›</button></div>
+        <select id="wkSel" aria-label="Choose week">${opts.join('')}</select><button class="btn" data-go="calendar" data-calto="${mon.slice(0,7)}">Month calendar</button></div></header>
+    ${saved?'':`<p class="notice">${plLatestWeek(key)?'This week starts as a copy of your last plan (same forms and staff, notes cleared). It is saved as soon as you change something.':'This week starts from an empty template. It is saved as soon as you change something.'} Training days, times and locations come from the month calendar.</p>`}
+    <div class="wk-layout">
+      <section class="wk-editor">
+        <div class="wk-tabs" role="tablist">${[['plan','Week plan'],['details','Training details']].map(([k,l])=>`<button role="tab" aria-selected="${plUi.wtab===k}" data-wktab="${k}">${l}</button>`).join('')}${plUi.sessionDay!=null&&st.days[plUi.sessionDay]?`<button role="tab" aria-selected="${plUi.wtab==='session'}" data-wktab="session">${esc(st.days[plUi.sessionDay].name)} · session</button><button class="wk-tabx" data-wkact="closeSession" aria-label="Close session tab">×</button>`:''}</div>
+        <div id="wkEditor">${plUi.wtab==='details'?wkDetails(st):plUi.wtab==='session'?wkSession(st):wkPlan(st)}</div>
+      </section>
+      <aside class="wk-preview card">
+        <div class="card-head"><h2 id="wkSlideTitle">Week overview</h2><span class="hint" id="wkSlideHint"></span></div>
+        <div class="pl-slidewrap" id="wkMainWrap"><div class="pl-slide" id="wkMain"></div></div>
+        <div class="wk-thumbs" id="wkThumbs"></div>
+        <div class="wk-exrow"><div class="seg" role="group" aria-label="Slide style"><button data-wktheme="dark" aria-pressed="${(st.options.theme||'dark')!=='light'}">Dark</button><button data-wktheme="light" aria-pressed="${st.options.theme==='light'}">Light (print)</button></div>
+          <label class="wk-check"><input type="checkbox" id="wkDetail" ${st.options.detail?'checked':''}> Detail slide per training</label></div>
+        <div class="wk-exrow"><button class="btn primary" data-wkex="pdf">Download PDF</button><button class="btn" data-wkex="pptx">Download PowerPoint</button></div>
+      </aside>
+    </div></div>`;
+  wkPreview();
+}
+function wkStaffPick(st,path,b){
+  const present=st.staff.filter(s=>s.present), absent=st.staff.filter(s=>!s.present&&(b.staff||[]).includes(s.id));
+  return `<div class="wk-staffpick"><span class="lbl">Staff</span>${present.length?'':'<span class="hint">Mark staff present above first</span>'}${present.map(s=>`<button class="wk-chip mini" aria-pressed="${(b.staff||[]).includes(s.id)}" data-wkact="pick" data-path="${path}" data-sid="${s.id}"><i></i>${esc(s.name)}</button>`).join('')}${absent.map(s=>`<button class="wk-chip mini absent" title="Absent this week. Click to unassign." data-wkact="pick" data-path="${path}" data-sid="${s.id}">${esc(s.name)} · absent</button>`).join('')}</div>`;
+}
+function wkBlock(st,path,b,kind,tools){
+  const f=(k,label,extra='')=>`<div class="field"><label>${label}</label><input data-wkbind="${path}.${k}" value="${esc(b[k])}" ${extra}></div>`;
+  return `<div class="wk-block ${kind}">${tools?`<div class="wk-tools">${tools}</div>`:''}<div class="wk-b3">${f('title','Name')}${f('type','Type / focus')}${f('min','Min','type="number" min="0" step="5" inputmode="numeric"')}</div>${wkStaffPick(st,path,b)}</div>`;
+}
+const wkMinutes=d=>timeline(d).reduce((a,v)=>a+(Number(v.b.min)||0),0);
+function wkPlan(st){
+  const ms=plWeekMatches(st);
+  let h=`<div class="card"><div class="card-head"><h2>Slides</h2></div><div class="form">
+      <div class="field"><label>Slide title</label><input data-wkbind="meta.title" value="${esc(st.meta.title)}"></div>
+      <div class="field"><label>Detail slide label</label><input data-wkbind="meta.detailLabel" value="${esc(st.meta.detailLabel||'Training')}"></div>
+      <div class="field full"><label>Subtitle (top right of the week slide)</label><input data-wkbind="meta.subtitle" value="${esc(st.meta.subtitle)}" placeholder="${esc(ms.length?'Match: '+ms.map(m=>PL_DOW[(plParse(isoDate(m.date)).getUTCDay()+6)%7]+' vs '+m.them+' '+(m.kickoff||'')).join(', '):'e.g. match on Sunday')}"></div></div>
+      ${ms.length&&!st.meta.subtitle?`<button class="btn sm" data-wkact="subFromMatch">Use the match as subtitle</button>`:''}</div>`;
+  h+=`<div class="card"><div class="card-head"><h2>Staff present this week</h2></div><p class="hint">Click a name to mark someone present or absent. Absent staff are left off the slides.</p>
+    <div class="wk-roster">${st.staff.map(s=>`<span class="wk-staff"><button class="wk-chip" aria-pressed="${s.present}" data-wkact="present" data-sid="${s.id}"><i></i>${esc(s.name)}</button><button class="wk-x" title="Remove ${esc(s.name)}" aria-label="Remove ${esc(s.name)}" data-wkact="rmStaff" data-sid="${s.id}">×</button></span>`).join('')}</div>
+    <form class="wk-addstaff" id="wkAddStaff"><input id="wkNewStaff" placeholder="Add staff member" autocomplete="off" aria-label="New staff member"><button class="btn sm" type="submit">Add</button></form></div>`;
+  st.days.forEach((d,i)=>{
+    const open=plUi.open.has(i), planned=wkMinutes(d), len=sessionLength(d.time), date=plAdd(plParse(st.meta.weekStart),i);
+    const dm=plMatchesOn(plYmd(date));
+    const budget=d.active?`<span class="wk-budget${len&&planned>len?' over':''}" title="Gym + warm-up + kern minutes vs session length">${planned}’${len?' / '+len+'’':''}</span>`:`<span class="wk-budget">${d.hidden?'Not on slide':esc(st.meta.noTrainingLabel||'No training')}</span>`;
+    h+=`<div class="wk-day${d.active?'':' off'}" data-expanded="${open}">
+      <div class="wk-dayhead" data-wkact="toggleDay" data-i="${i}"><button class="pl-switch" role="switch" aria-checked="${d.active}" aria-label="${esc(d.name)} has training" data-wkact="activeDay" data-i="${i}"></button>
+        <span class="nm">${esc(d.name)} <small>${date.getUTCDate()}/${date.getUTCMonth()+1}</small></span><span class="sub">${esc(d.active?[d.time,d.place].filter(Boolean).join(' · '):(d.reason||''))}${dm.length?` <em>· Match ${esc(dm.map(m=>(m.kickoff||'')+' vs '+m.them).join(', '))}</em>`:''}</span>${budget}<span class="caret">›</span></div>`;
+    if(open&&!d.active) h+=`<div class="wk-daybody">${wkNoTraining(st,i)}</div>`;
+    else if(open){ const p='days.'+i;
+      h+=`<div class="wk-daybody"><div class="wk-ctx"><span class="hint">Times and locations come from the month calendar.</span><button class="btn sm" data-wkact="openSession" data-i="${i}">Edit time &amp; location</button></div>
+        <div class="wk-lane"><div class="wk-lanehead"><span class="wk-tag gym">${esc(st.meta.gymLabel||'Gym')}</span><span class="hint">Counts toward session time · no detail box</span><button class="pl-switch" role="switch" aria-checked="${!!d.gym.on}" aria-label="Gym on ${esc(d.name)}" data-wkact="toggleOn" data-path="${p}.gym"></button></div>${d.gym.on?wkBlock(st,p+'.gym',d.gym,'gym'):''}</div>
+        <div class="wk-lane"><div class="wk-lanehead"><span class="wk-tag warm">${esc(st.meta.warmLabel||'Warm-up')}</span><span class="hint"></span><button class="pl-switch" role="switch" aria-checked="${!!d.warmup.on}" aria-label="Warm-up on ${esc(d.name)}" data-wkact="toggleOn" data-path="${p}.warmup"></button></div>${d.warmup.on?wkBlock(st,p+'.warmup',d.warmup,'warm'):''}</div>
+        <div class="wk-lane"><div class="wk-lanehead"><span class="wk-tag kern">${esc(st.meta.kernLabel||'Kern')}</span><span class="hint">${d.kern.length} form${d.kern.length===1?'':'s'} · blocks resize to fit</span></div>
+          ${d.kern.map((b,j)=>wkBlock(st,`${p}.kern.${j}`,b,'kern',`<button class="wk-ib" aria-label="Move up" data-wkact="mv" data-i="${i}" data-j="${j}" data-d="-1" ${j===0?'disabled':''}>↑</button><button class="wk-ib" aria-label="Move down" data-wkact="mv" data-i="${i}" data-j="${j}" data-d="1" ${j===d.kern.length-1?'disabled':''}>↓</button><button class="wk-ib" aria-label="Duplicate" data-wkact="dupK" data-i="${i}" data-j="${j}">⧉</button><button class="wk-ib del" aria-label="Remove form" data-wkact="rmK" data-i="${i}" data-j="${j}">✕</button>`)).join('')}
+          <div><button class="btn sm" data-wkact="addK" data-i="${i}">+ Add form</button></div></div></div>`; }
+    h+='</div>';
+  });
+  return h;
+}
+function wkNoTraining(st,i){ const d=st.days[i];
+  return `<div class="field"><label>Reason (shown under “${esc(st.meta.noTrainingLabel||'No training')}”)</label><input data-wkbind="days.${i}.reason" value="${esc(d.reason||'')}" placeholder="Rest day after a match, exams, pitch closed…"></div>
+    <div class="wk-inline"><button class="pl-switch" role="switch" aria-checked="${!d.hidden}" aria-label="Show ${esc(d.name)} on the week slide" data-wkact="toggleHidden" data-i="${i}"></button>${d.hidden?'Not shown on the week slide':'Shown on the week slide as “'+esc(st.meta.noTrainingLabel||'No training')+'”'}</div>
+    <p class="hint">Your forms for this day are kept. Switch training back on to bring them back.</p>`; }
+function wkDetails(st){
+  const days=st.days.map((d,i)=>({d,i})).filter(x=>x.d.active&&vormen(x.d).length);
+  if(!days.length) return '<div class="card"><p class="hint">Add a warm-up or kern form to a training day in the Week plan tab. Each form then gets its own box here.</p></div>';
+  return '<p class="hint">Each form (gym excluded) gets its own box on the training slide. Type the organisation, rules or coaching points; line breaks are kept.</p>'+days.map(({d,i})=>`<div class="card wk-detail"><h3>${esc(d.name)} <small>${esc([d.time,d.place].filter(Boolean).join(' · '))}</small></h3>
+    ${vormen(d).map((v,n)=>{ const path=v.kind==='warm'?`days.${i}.warmup`:`days.${i}.kern.${d.kern.indexOf(v.b)}`, sl=staffLabel(v.b,st.staff);
+      return `<div class="wk-vorm ${v.kind}"><div class="wk-vh"><span class="n">${n+1}</span><b>${esc(v.b.title||'Untitled')}</b><span>${esc(line2(v.b))}</span>${sl?`<em>${esc(sl)}</em>`:''}</div><textarea data-wkbind="${path}.notes" data-day="${i}" placeholder="Organisation, rules, coaching points…">${esc(v.b.notes||'')}</textarea></div>`; }).join('')}</div>`).join('');
+}
+function wkSession(st){
+  const i=plUi.sessionDay, d=st.days[i], tm=plSplit(d.time), date=plAdd(plParse(st.meta.weekStart),i);
+  return `<div class="card"><div class="card-head"><h2>Training session · ${date.getUTCDate()}/${date.getUTCMonth()+1}</h2></div>
+    <div class="wk-daypick">${st.days.map((x,k)=>`<button class="${x.active?'':'off'}" aria-current="${k===i}" data-wkact="openSession" data-i="${k}">${esc(x.name)}</button>`).join('')}</div>
+    <div class="wk-inline"><button class="pl-switch" role="switch" aria-checked="${d.active}" aria-label="${esc(d.name)} has training" data-wkact="activeDay" data-i="${i}"></button>${d.active?'Training on this day':'No training on this day'}</div>
+    ${d.active?'':wkNoTraining(st,i)}
+    <div class="form"${d.active?'':' hidden'}><div class="field"><label>Start</label><input type="time" data-wksess="start" data-i="${i}" value="${tm.start}" step="300"></div><div class="field"><label>End</label><input type="time" data-wksess="end" data-i="${i}" value="${tm.end}" step="300"></div>
+      <div class="field full"><label>Location</label><input data-wkbind="days.${i}.place" value="${esc(d.place)}" placeholder="KTA, The Nest, Tempelhof…"></div></div>
+    <div class="field"><label>Day label</label><input data-wkbind="days.${i}.name" value="${esc(d.name)}"></div>
+    ${d.active?`<div class="wk-sum" id="wkSum">${wkSum(d)}</div>`:''}</div><p class="hint">Changes show in the month calendar and on the slides right away.</p>`;
+}
+function wkSum(d){ const len=sessionLength(d.time), planned=wkMinutes(d); return `<span>Session <b>${len!=null?len+'’':'–'}</b></span><span>Planned <b class="${len&&planned>len?'over':''}">${planned}’</b></span>${len!=null?`<span>Free <b class="${planned>len?'over':''}">${len-planned}’</b></span>`:''}`; }
+function wkPreview(){
+  const st=plWeeks[plUi.week]; if(!st||view!=='week') return;
+  const list=slideList(st,st.options.detail); if(plUi.slide>=list.length) plUi.slide=list.length-1; if(plUi.slide<0) plUi.slide=0;
+  const cur=list[plUi.slide], main=$('#wkMain'); if(!main) return;
+  plDraw(main,shapesFor(st,cur,true),true); main.parentElement.style.background='#'+C.bg;
+  $('#wkSlideTitle').textContent=cur.kind==='week'?'Week overview':cur.label+' training';
+  const absent=st.days.some(d=>d.active&&[d.gym,d.warmup,...d.kern].some(b=>b&&b.on!==false&&hasAbsent(b,st.staff)));
+  $('#wkSlideHint').textContent=(plUi.slide+1)+' of '+list.length+(absent?' · red outline = absent staff assigned':'');
+  const th=$('#wkThumbs'); th.innerHTML=list.map((s,k)=>`<button class="wk-thumb" aria-current="${k===plUi.slide}" data-wkslide="${k}"><span class="pl-slidewrap mini"><span class="pl-slide"></span></span><span class="cap">${esc(s.kind==='week'?'Week':s.label)}</span></button>`).join('');
+  th.querySelectorAll('.wk-thumb').forEach((t,k)=>{ const sl=t.querySelector('.pl-slide'); plDraw(sl,shapesFor(st,list[k],false)); t.querySelector('.pl-slidewrap').style.background='#'+C.bg; });
+  plFit();
+}
+function wkChanged(full){ plTouch(plUi.week); if(full){ const y=window.scrollY; renderWeek(); window.scrollTo(0,y); } else wkPreview(); }
+
+/* =================== MATCH PAGE (fixture) =================== */
+const SEL_MAX=20, SEL_TIMES=['gamemeal','arrive','teamtalk','readyup','warming','kickoff'];
+const SEL_TIME_LABEL={gamemeal:'Game meal',arrive:'Arrive',teamtalk:'Team talk',readyup:'Ready up',warming:'Warm-up',kickoff:'Kick-off'};
+const SEL_LOC_HOME='JAN BREYDELSTADION – TERREIN 5 - NATUURGRAS';
+function selTimes(kick){ const m=/^(\d{1,2}):(\d{2})$/.exec(String(kick||'').trim()); if(!m) return null; const base=+m[1]*60+ +m[2];
+  const f=off=>{ const t=((base-off)%1440+1440)%1440; return plPad(Math.floor(t/60))+':'+plPad(t%60); };
+  return {gamemeal:f(180),arrive:f(90),teamtalk:f(85),readyup:f(75),warming:f(35),kickoff:f(0)}; }
+function fxSelDefaults(m){ return {ids:[],comp:'',loc:'',times:selTimes(m.kickoff)||{},logo:null}; }
+function fxSel(m){ if(!m.selection||!Array.isArray(m.selection.ids)) m.selection=Object.assign(fxSelDefaults(m),m.selection||{},{ids:(m.selection&&m.selection.ids)||[]}); m.selection.times=m.selection.times||{}; return m.selection; }
+function fxSuggestTitle(m){ const t=teamName(), o=String(m.them||'').trim(); if(!o||o==='Opponent') return 'COMPETITION X'; return (m.home?t+' – '+o:o+' – '+t).toUpperCase(); }
+const fxTitle=m=>(fxSel(m).comp||'').trim()||fxSuggestTitle(m);
+const fxLoc=m=>(fxSel(m).loc||'').trim()||(m.home?SEL_LOC_HOME:(m.place||'').toUpperCase());
+function fxPlayers(m){ return fxSel(m).ids.map(SQ).filter(Boolean).map(s=>({id:s.id,num:+s.num||0,name:s.name})).sort((a,b)=>a.num-b.num||a.name.localeCompare(b.name)); }
+/* the selection becomes the tagger lineup: kept players keep their spot, new ones join the bench */
+function fxApplyLineup(m,quiet){
+  const ids=fxSel(m).ids, keep=[];
+  m.players.forEach(p=>{ const used=m.events.some(e=>e.pid===p.id||e.assist===p.id||e.in===p.id||e.out===p.id);
+    if(p.sq&&ids.includes(p.sq)) keep.push(p); else if(used) keep.push(p); else if(!p.sq&&String(p.name||'').trim()&&!ids.length) keep.push(p); });
+  ids.forEach(sid=>{ if(!keep.some(p=>p.sq===sid)){ const s=SQ(sid); if(s) keep.push({id:newId('p'),num:s.num||'',name:s.name,slot:null,sq:s.id}); } });
+  m.players=keep; saveMatchObj(m);
+  if(!quiet) toast('The tagger lineup now holds your '+ids.length+' selected players. Pick the starting XI under Lineup in the tagger.');
+}
+function renderFixture(){
+  const el=$('#view-fixture'), m=store[viewArg]; if(!m){ go('calendar'); return; }
+  const sel=fxSel(m), list=fxPlayers(m), q=fold(plUi.fxQ||'').trim(), d=isoDate(m.date);
+  const xi=m.players.filter(p=>p.slot!=null&&p.sq&&sel.ids.includes(p.sq)).length;
+  const roster=squad().slice().sort((a,b)=>(+a.num||999)-(+b.num||999)||a.name.localeCompare(b.name))
+    .filter(s=>!q||fold(s.name).includes(q)||String(s.num||'')===q.replace('#','')||String(s.num||'').startsWith(q.replace('#','')));
+  const vid=m.videoPath&&typeof videoIndex!=='undefined'?videoIndex.find(v=>v.id===m.videoPath):null;
+  const pad=n=>String(n);
+  el.innerHTML=`<div class="wrap page">
+    <header class="page-head"><div><button class="back" style="display:block;margin-bottom:6px" data-go="calendar" data-calto="${(d||'').slice(0,7)}">← Calendar</button><span class="eyebrow">${esc([d?fmtDate(d,{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'No date',m.kickoff?'Kick-off '+m.kickoff:'',m.comp].filter(Boolean).join(' · '))}</span>
+      <h1>${esc(vsLabel(m))}</h1><p>${esc([m.home?'Home':'Away',m.place,isPlayed(m)?'Played · '+finalScore(m):''].filter(Boolean).join(' · '))}</p></div>
+      <div class="page-actions"><button class="btn" data-fxedit aria-expanded="${plUi.fxEdit}">Edit details</button>${isPlayed(m)?`<button class="btn" data-go="report" data-arg="${m.id}">Match report</button>`:''}<button class="btn primary" data-fxtag="${m.id}">Open in tagger</button></div></header>
+    <div class="fx-status">
+      <div class="fx-stat${sel.ids.length?' ok':''}"><b>${sel.ids.length}</b><span>selected (max ${SEL_MAX})</span></div>
+      <div class="fx-stat${xi===11?' ok':''}"><b>${xi}/11</b><span>starting XI picked</span></div>
+      <div class="fx-stat${m.videoName?' ok':''}"><b>${m.videoName?'Linked':'No video'}</b><span>${esc(m.videoName||'add it below or in the tagger')}</span></div>
+      <div class="fx-stat${m.events.length?' ok':''}"><b>${m.events.filter(e=>!['swap','formation'].includes(e.type)).length}</b><span>tags</span></div>
+    </div>
+    ${plUi.fxEdit?`<section class="card"><div class="card-head"><h2>Match details</h2><button class="btn sm ghost" data-fxedit>Done</button></div><div class="form fx-form">
+      <div class="field"><label>Opponent</label><input data-fxf="them" value="${esc(m.them)}"></div><div class="field"><label>Short name</label><input data-fxf="themShort" maxlength="6" value="${esc(m.themShort)}"></div>
+      <div class="field"><label>Date</label><input type="date" data-fxf="date" value="${esc(d)}"></div><div class="field"><label>Kick-off</label><input type="time" data-fxf="kickoff" value="${esc(m.kickoff||'')}"></div>
+      <div class="field"><label>Venue</label><select data-fxf="home"><option value="1"${m.home?' selected':''}>Home</option><option value="0"${m.home?'':' selected'}>Away</option></select></div>
+      <div class="field"><label>Competition</label><input data-fxf="comp" value="${esc(m.comp)}"></div><div class="field"><label>Location</label><input data-fxf="place" value="${esc(m.place||'')}"></div>
+      <div class="field"><label>Half length (min)</label><input type="number" min="10" max="60" data-fxf="halfLen" value="${m.halfLen}"></div></div>
+      <div class="row-actions">${ui.fxDel===m.id?`<span class="hint">Delete this match, its squad and all its tags?</span><button class="btn danger" data-fxdelyes="${m.id}">Delete for good</button><button class="btn ghost" data-fxdelno>Keep</button>`:`<button class="btn ghost danger" data-fxdel="${m.id}">Delete match</button>`}</div></section>`:''}
+    <div class="fx-cols">
+      <section class="card"><div class="card-head"><h2>Squad</h2><span class="count-pill">${sel.ids.length} / ${SEL_MAX}</span></div>
+        <div class="fx-tools"><input class="search" id="fxSearch" type="search" placeholder="Search name or number" value="${esc(plUi.fxQ||'')}" aria-label="Search players"><button class="btn sm ghost" data-fxselclear ${sel.ids.length?'':'disabled'}>Clear</button><button class="btn sm" data-fxselprev>Copy previous squad</button></div>
+        ${roster.length?`<div class="fx-roster">${roster.map(s=>{ const on=sel.ids.includes(s.id); return `<button class="fx-pl${on?' on':''}" data-fxsel="${s.id}" aria-pressed="${on}"><span class="num">${esc(s.num||'–')}</span><span class="nm">${esc(s.name)}</span><span class="tick">${on?'✓':''}</span></button>`; }).join('')}</div>`
+          :`<p class="hint">${squad().length?'No player matches your search.':'No players yet. Add them on the Players page, or name them in a match lineup.'}</p>`}
+        <p class="hint">Click players to select them for this match (the template has ${SEL_MAX} places). ${m.events.length?'This match already has tags, so the tagger lineup only changes when you click below.':'The selection is the lineup in the tagger: pick the starting XI there.'}</p>
+        <div class="row-actions">${m.events.length?`<button class="btn sm" data-fxlineup="${m.id}">Update the tagger lineup from this squad</button>`:''}<button class="btn sm" data-fxxi="${m.id}">Pick the starting XI in the tagger →</button></div>
+      </section>
+      <section class="card"><div class="card-head"><h2>Selection slides</h2><button class="btn primary sm" data-fxpptx="${m.id}" ${list.length?'':'disabled'}>Download .pptx</button></div>
+        <div class="form fx-form">
+          <div class="field full"><label>Title / competition</label><input data-fxs="comp" value="${esc(sel.comp||'')}" placeholder="${esc(fxSuggestTitle(m))}"></div>
+          <div class="field full"><label>Location</label><input data-fxs="loc" value="${esc(sel.loc||'')}" placeholder="${esc(m.home?SEL_LOC_HOME:'Opponent ground')}"></div>
+          ${SEL_TIMES.map(k=>`<div class="field"><label>${SEL_TIME_LABEL[k]}</label><input data-fxt="${k}" value="${esc(sel.times[k]||'')}" placeholder="hh:mm" inputmode="numeric"></div>`).join('')}</div>
+        <div class="row-actions"><button class="btn sm" data-fxtimes>Times from kick-off</button><label class="btn sm"><input type="file" id="fxLogo" accept="image/*" hidden>Opponent logo…</label>${sel.logo?`<img class="fx-logo" src="${esc(sel.logo)}" alt="Opponent logo"><button class="btn sm ghost" data-fxlogoclear>Remove logo</button>`:'<span class="hint">No logo yet: the slide keeps the template’s placeholder logo.</span>'}</div>
+        <div class="fx-slides">
+          <div class="fx-slide"><div class="head"><b>${esc(fxTitle(m))}</b><span>YLA</span></div><div class="vs"><div class="logos"><img src="vendor/yla-logo.jpg" alt=""><span>VS</span><img src="${esc(sel.logo||'vendor/away-logo.png')}" alt=""></div><div class="loc">${esc(fxLoc(m))}</div></div>
+            <div class="times">${SEL_TIMES.map(k=>`<div><span>${SEL_TIME_LABEL[k].toUpperCase()}</span><b>${esc(sel.times[k]||'')}</b></div>`).join('')}</div></div>
+          <div class="fx-slide"><div class="head"><b>${esc(fxTitle(m))}</b><span>YLA</span></div>${list.length?`<div class="cols">${[list.slice(0,Math.ceil(list.length/2)),list.slice(Math.ceil(list.length/2))].map(c=>`<div>${c.map(p=>`<div class="r"><span>${esc(p.num||'')}</span><span>${esc(p.name.toUpperCase())}</span></div>`).join('')}</div>`).join('')}</div>`:'<div class="empty">No players selected yet</div>'}</div>
+        </div>
+        <p class="hint">The previews are a sketch. The .pptx uses the original YLA template: fonts, logos and layout stay exactly as before.</p>
+      </section>
+      <section class="card"><div class="card-head"><h2>Video</h2>${m.videoName?`<span class="hint">${esc(m.videoName)}</span>`:''}</div>
+        ${fxVideoHtml(m,vid)}</section>
+    </div></div>`;
+}
+function fxVideoHtml(m,vid){
+  const online=col&&FSX.kind==='cloud', folder=col&&FSX.kind!=='cloud';
+  const pick=col&&videoIndex.length?`<div class="fx-tools"><select id="fxVidPick" aria-label="Video in your storage"><option value="">Choose a video…</option>${videoIndex.map(v=>`<option value="${esc(v.id)}"${m.videoPath===v.id||(!m.videoPath&&m.videoName===v.name)?' selected':''}>${esc(v.name)}${v.folder?' · '+esc(v.folder):''}</option>`).join('')}</select><button class="btn sm" data-fxvidlink="${m.id}">Link</button></div>`:'';
+  return `${m.videoName?`<p class="hint">${vid||!col?'This match uses <b>'+esc(m.videoName)+'</b>.':'<b>'+esc(m.videoName)+'</b> is not in '+esc(online?'your online storage':'the Videos folder')+' yet.'}</p>`:'<p class="hint">No video yet. Tag live from the tagger during the match, or link the recording afterwards.</p>'}
+    ${pick}
+    ${online?`<div class="row-actions"><label class="btn sm"><input type="file" id="fxVidUp" accept="video/*" hidden>Upload a video for this match</label><span class="hint">You can keep working while it uploads.</span></div>`
+     :folder?`<p class="hint">Put the video in <b>${esc(videoFolder())}</b>, then pick it above (click Check again in the folder dialog if it is new).</p>`
+     :`<p class="hint">Open the tagger and choose the file. Videos stay on this computer.</p>`}
+    <div class="row-actions"><button class="btn sm" data-fxtag="${m.id}">Open in tagger</button>${!m.videoName&&!isPlayed(m)?`<button class="btn sm" data-fxlive="${m.id}">Tag live (no video)</button>`:''}</div>`;
+}
+/* selection .pptx from the YLA template */
+let fxTpl=null;
+async function fxTemplate(){ if(!fxTpl) fxTpl=fetch('vendor/selectie-sjabloon.pptx').then(r=>{ if(!r.ok) throw new Error('template not found ('+r.status+')'); return r.arrayBuffer(); }).then(b=>new Uint8Array(b)); fxTpl.catch(()=>{ fxTpl=null; }); return fxTpl; }
+const xmlEsc=t=>String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function fxSlide2(list){
+  const PITCH=480681, ROW=369332, CENTER=3719330, XN=[947483,6858002], XM=[1541943,7452462];
+  const fill=(tpl,id,name,x,y,t)=>tpl.replace('__ID__',id).replace('__NAME__',name).replace('__X__',x).replace('__Y__',y).replace('__T__',xmlEsc(t));
+  let rows='', id=1000; const left=Math.ceil(list.length/2), cols=[list.slice(0,left),list.slice(left)], per=Math.max(cols[0].length,cols[1].length);
+  const startY=Math.round(CENTER-((per-1)*PITCH+ROW)/2);
+  cols.forEach((c,ci)=>c.forEach((p,ri)=>{ const y=startY+ri*PITCH; rows+=fill(PARTS.numTpl,id,'Nummer '+id,XN[ci],y,p.num||''); id++; rows+=fill(PARTS.nameTpl,id,'Naam '+id,XM[ci],y,p.name.toUpperCase()); id++; }));
+  return PARTS.skeleton2.replace('<!--ROWS-->',rows);
+}
+function fxSlide1(m){
+  const setByName=(xml,shape,text)=>{ const i=xml.indexOf('name="'+shape+'"'); if(i<0) return xml; const e=xml.indexOf('</p:sp>',i); return xml.slice(0,i)+xml.slice(i,e).replace(/<a:t>[^<]*<\/a:t>/,'<a:t>'+xmlEsc(text)+'</a:t>')+xml.slice(e); };
+  const lit=(xml,from,to)=>xml.split('<a:t>'+from+'</a:t>').join('<a:t>'+xmlEsc(to)+'</a:t>');
+  let x=lit(PARTS.slide1,'COMPETITION X',fxTitle(m)); x=lit(x,SEL_LOC_HOME,fxLoc(m));
+  const map={'Tekstvak 24':'gamemeal','Tekstvak 32':'arrive','Tekstvak 23':'teamtalk','Tekstvak 22':'readyup','Tekstvak 21':'warming','Tekstvak 20':'kickoff'};
+  Object.keys(map).forEach(sh=>{ x=setByName(x,sh,fxSel(m).times[map[sh]]||''); });
+  return x;
+}
+async function fxPptx(m){
+  const list=fxPlayers(m); if(!list.length){ toast('Select at least one player first.'); return; }
+  try{
+    toast('Building the selection slides…');
+    if(typeof PARTS==='undefined'||typeof fflate==='undefined') await loadScript('vendor/selgen.js');
+    const z=fflate.unzipSync(await fxTemplate()), enc=new TextEncoder();
+    z['ppt/slides/slide1.xml']=enc.encode(fxSlide1(m)); z['ppt/slides/slide2.xml']=enc.encode(fxSlide2(list).split('<a:t>COMPETITION X</a:t>').join('<a:t>'+xmlEsc(fxTitle(m))+'</a:t>'));
+    if(fxSel(m).logo){ const b=atob(fxSel(m).logo.split(',')[1]), u=new Uint8Array(b.length); for(let i=0;i<b.length;i++) u[i]=b.charCodeAt(i); z['ppt/media/image28.png']=u; }
+    delete z['[trash]/0000.dat'];
+    const name='SELECTION '+fxTitle(m).normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[‐-―]/g,'-').replace(/[^\x20-\x7E]/g,'').replace(/[\\/:*?"<>|]/g,'-').trim();
+    await offerFile(name+'.pptx',new Blob([fflate.zipSync(z,{level:6})],{type:'application/vnd.openxmlformats-officedocument.presentationml.presentation'}));
+  }catch(e){ console.error(e); toast('The selection slides could not be built: '+((e&&e.message)||e)); }
+}
+function fxLogo(m,file){
+  const img=new Image(), fr=new FileReader();
+  fr.onload=()=>{ img.src=fr.result; };
+  img.onload=()=>{ const W=360, H=Math.round(W*1120504/1431237), c=document.createElement('canvas'); c.width=W; c.height=H; const g=c.getContext('2d'), sc=Math.min(W/img.width,H/img.height), w=img.width*sc, h=img.height*sc;
+    g.drawImage(img,(W-w)/2,(H-h)/2,w,h); fxSel(m).logo=c.toDataURL('image/png'); saveMatchObj(m); renderFixture(); };
+  fr.readAsDataURL(file);
+}
+
+/* =================== import from the old planners =================== */
+function plNameKey(n){ return fold(n).replace(/[^a-z0-9 ]/g,' ').split(/\s+/).filter(Boolean).sort().join(' '); }
+function plFindSquad(name,nr){
+  const k=plNameKey(name), sq=squad();
+  let s=sq.find(x=>plNameKey(x.name)===k); if(s) return s;
+  const toks=new Set(k.split(' '));
+  s=sq.find(x=>String(x.num||'')===String(nr||'#')&&plNameKey(x.name).split(' ').some(t=>toks.has(t))); if(s) return s;
+  const part=sq.filter(x=>{ const xt=plNameKey(x.name).split(' '); return xt.length>1&&xt.every(t=>toks.has(t)); }); return part.length===1?part[0]:null;
+}
+function plImport(d){
+  if(!d||!d.matchTaggerPlannerImport) throw new Error('not a planner import file');
+  let days=0, weeks=0, created=0, updated=0, added=0, selected=0;
+  if(d.calendar){ Object.entries(d.calendar.days||{}).forEach(([k,v])=>{ if(!plCal.days[k]){ plCal.days[k]=v; days++; } }); if(!plCal.pattern&&d.calendar.pattern) plCal.pattern=d.calendar.pattern; if(d.calendar.label&&(!plCal.label||plCal.label==='Calendar')) plCal.label=d.calendar.label; plTouch('cal'); }
+  Object.entries(d.weeks||{}).forEach(([k,v])=>{ if(!plWeeks[k]||!plWeeks[k].updatedAt){ plWeeks[k]=plMigrate(v); plWeeks[k].updatedAt=Date.now(); plTouch(k); weeks++; } });
+  const tok=s=>new Set(fold(s).replace(/[^a-z0-9 ]/g,' ').split(/\s+/).filter(t=>t.length>2&&!['club','fc','kv','kaa','krc','kvc','rsc','sv','u18','wu18','women','femina'].includes(t)));
+  (d.fixtures||[]).forEach(f=>{
+    const ft=tok(f.opponent);
+    let m=Object.values(store).find(x=>isoDate(x.date)===f.date&&[...tok(x.them)].some(t=>ft.has(t)));
+    if(!m&&f.date) m=Object.values(store).find(x=>Math.abs((plParse(isoDate(x.date))||0)-(plParse(f.date)||0))<=2*864e5&&[...tok(x.them)].some(t=>ft.has(t)));
+    if(!m){ if(!f.date) return; m=plCreateFixture({them:f.opponent,home:f.home,date:f.date,comp:f.comp||'',kickoff:f.kickoff||'',place:f.place||''}); created++; }
+    else { if(!m.kickoff&&f.kickoff) m.kickoff=f.kickoff; if(!m.place&&f.place) m.place=f.place; if(!m.comp&&f.comp) m.comp=f.comp; updated++; }
+    const sel=fxSel(m);
+    if(f.selection){ const s=f.selection;
+      if(!sel.comp&&s.comp) sel.comp=s.comp; if(!sel.loc&&s.loc) sel.loc=s.loc; if(s.times&&Object.values(s.times).some(Boolean)) sel.times=Object.assign({},s.times); if(!sel.logo&&s.logo) sel.logo=s.logo;
+      if(!sel.ids.length&&(s.players||[]).length){ s.players.forEach(p=>{ let q=plFindSquad(p.name,p.nr); if(!q){ q={id:'s'+newId(),name:p.name,num:p.nr==null?'':String(p.nr),pos:''}; squad().push(q); added++; } if(!sel.ids.includes(q.id)) sel.ids.push(q.id); }); selected+=sel.ids.length; if(!m.events.length) fxApplyLineup(m,true); } }
+    saveMatchObj(m);
+  });
+  if(added) saveSettings();
+  plStoreLocal();
+  return {days,weeks,created,updated,added,selected};
+}
+
+/* =================== events =================== */
+document.addEventListener('click',e=>{
+  const g=s=>e.target.closest(s); let b;
+  if(view==='calendar'||view==='week'||view==='fixture'||plUi.daySel||plUi.addMatch){
+    if(b=g('[data-calto]')){ plUi.month=b.dataset.calto; }
+    if(b=g('[data-calnav]')){ const n=+b.dataset.calnav; if(!n) plUi.month=plDefaultMonth(); else { const [y,m]=plUi.month.split('-').map(Number), d=new Date(Date.UTC(y,m-1+n,1)); plUi.month=d.getUTCFullYear()+'-'+plPad(d.getUTCMonth()+1); } renderCalendar(); return; }
+    if(b=g('[data-calexport]')){ plUi.exportOpen=!plUi.exportOpen; renderCalendar(); return; }
+    if(b=g('[data-caltheme]')){ plCal.theme=b.dataset.caltheme; plTouch('cal'); renderCalendar(); return; }
+    if(b=g('[data-calex]')){ plCalExport(b.dataset.calex,plCal.theme||'dark'); return; }
+    if(b=g('[data-calics]')){ plIcs(b.dataset.calics); return; }
+    if(b=g('[data-caladd]')){ plUi.daySel=null; renderDayModal(); plUi.addMatch={date:b.dataset.caladd}; renderAddMatch(); return; }
+    if(b=g('[data-fxaddclose]')||(e.target.id==='fxAddModal'&&e.target)){ plUi.addMatch=null; renderAddMatch(); return; }
+    if(b=g('[data-calclose]')||(e.target.id==='calDayModal'&&e.target)){ plUi.daySel=null; renderDayModal(); if(view==='calendar') renderCalendar(); return; }
+    if(b=g('[data-caltype]')){ plSetDay(plUi.daySel,b.dataset.caltype); renderDayModal(); if(view==='calendar') renderCalendar(); else if(view==='week') renderWeek(); return; }
+    if(b=g('[data-calpat]')){ const p=plPattern()[+b.dataset.calpat]; p.on=!p.on; plTouch('cal'); renderCalendar(); return; }
+    if(b=g('[data-calfill]')){ const all=b.dataset.calfill==='all';
+      if(all&&b.dataset.armed!=='1'){ b.dataset.armed='1'; b.textContent='Overwrite every weekday? Click again'; b.classList.add('danger'); setTimeout(()=>{ if(b.isConnected) renderCalendar(); },3500); return; }
+      const [y,m]=plUi.month.split('-').map(Number), last=new Date(Date.UTC(y,m,0)).getUTCDate(), pat=plPattern(); let n=0;
+      for(let dd=1;dd<=last;dd++){ const dt=new Date(Date.UTC(y,m-1,dd)), k=(dt.getUTCDay()+6)%7, key=plYmd(dt); if(k>5) continue; if(!all&&plCal.days[key]) continue;
+        if(pat[k].on){ plCal.days[key]={type:'training',start:pat[k].start,end:pat[k].end,place:pat[k].place}; n++; } else if(all){ delete plCal.days[key]; n++; } }
+      plTouch('cal'); Object.keys(plWeeks).forEach(k=>{ if(plSyncWeek(plWeeks[k])) plTouch(k); }); renderCalendar(); toast('Filled '+n+' days of '+PL_MON[m-1]+' from your standard week.'); return; }
+    if(b=g('[data-calday]')){ if(g('[data-go]')) return; plUi.daySel=b.dataset.calday; renderDayModal(); if(view==='calendar') renderCalendar(); return; }
+    /* week */
+    if(b=g('[data-wknav]')){ const n=+b.dataset.wknav, cur=plMonOfKey(plUi.week); go('week',plKey(n?plYmd(plAdd(plParse(cur),7*n)):plYmd(plMonday(plToday())))); return; }
+    if(b=g('[data-wktab]')){ plUi.wtab=b.dataset.wktab; renderWeek(); return; }
+    if(b=g('[data-wkslide]')){ plUi.slide=+b.dataset.wkslide; wkPreview(); return; }
+    if(b=g('[data-wktheme]')){ plWeeks[plUi.week].options.theme=b.dataset.wktheme; wkChanged(true); return; }
+    if(b=g('[data-wkex]')){ const st=plWeeks[plUi.week]; plExport(b.dataset.wkex,st,null,(st.meta.title||'Week plan')+' '+(st.meta.subtitle||'').split(/\s[–-]\s/)[0]); if(!st.updatedAt) plTouch(plUi.week); return; }
+    if(b=g('[data-wkopen]')){ const i=+b.dataset.wkopen; plUi.sessionDay=i; plUi.wtab='session'; renderWeek(); return; }
+    if(b=g('[data-wkact]')){ wkAct(b,e); return; }
+    /* match page */
+    if(b=g('[data-fxedit]')){ plUi.fxEdit=!plUi.fxEdit; renderFixture(); return; }
+    if(b=g('[data-fxtag]')){ const id=b.dataset.fxtag; go('match',id); return; }
+    if(b=g('[data-fxlive]')){ const m=store[b.dataset.fxlive]; if(!m) return; m.timebase='live'; m.live={origin:Date.now()}; saveMatchObj(m); go('match',m.id); toast('Live tagging is on. Press "Start 1st half" at kick-off. Add the video later and sync it.'); return; }
+    if(b=g('[data-fxxi]')){ const id=b.dataset.fxxi; go('match',id); ui.editLineup=true; ui.layoutEdit=false; renderTagging(); renderLineupEditor(); return; }
+    if(b=g('[data-fxsel]')){ const m=store[viewArg], sel=fxSel(m), id=b.dataset.fxsel, i=sel.ids.indexOf(id);
+      if(i>=0) sel.ids.splice(i,1); else { if(sel.ids.length>=SEL_MAX){ toast('The template has '+SEL_MAX+' places. Remove someone first.'); return; } sel.ids.push(id); }
+      if(!m.events.length) fxApplyLineup(m,true); else saveMatchObj(m); renderFixture(); const s=$('#fxSearch'); if(s&&plUi.fxQ) s.focus(); return; }
+    if(b=g('[data-fxselclear]')){ const m=store[viewArg]; fxSel(m).ids=[]; if(!m.events.length) fxApplyLineup(m,true); else saveMatchObj(m); renderFixture(); return; }
+    if(b=g('[data-fxselprev]')){ const m=store[viewArg], prev=Object.values(store).filter(x=>x!==m&&fxSel(x).ids.length&&isoDate(x.date)<=isoDate(m.date)).sort(byDateDesc)[0]
+        ||Object.values(store).filter(x=>x!==m&&x.players.some(p=>p.sq)&&isoDate(x.date)<=isoDate(m.date)).sort(byDateDesc)[0];
+      if(!prev){ toast('There is no earlier match with a squad yet.'); return; }
+      fxSel(m).ids=(fxSel(prev).ids.length?fxSel(prev).ids:prev.players.filter(p=>p.sq).map(p=>p.sq)).filter(id=>SQ(id)).slice(0,SEL_MAX);
+      if(!m.events.length) fxApplyLineup(m,true); else saveMatchObj(m); renderFixture(); toast('Copied the squad of '+vsLabel(prev)+' ('+fmtDate(isoDate(prev.date))+').'); return; }
+    if(b=g('[data-fxlineup]')){ fxApplyLineup(store[b.dataset.fxlineup]); renderFixture(); return; }
+    if(b=g('[data-fxtimes]')){ const m=store[viewArg], t=selTimes(m.kickoff); if(!t){ toast('Set the kick-off time first (Edit details).'); return; } fxSel(m).times=t; saveMatchObj(m); renderFixture(); return; }
+    if(b=g('[data-fxlogoclear]')){ const m=store[viewArg]; fxSel(m).logo=null; saveMatchObj(m); renderFixture(); return; }
+    if(b=g('[data-fxpptx]')){ fxPptx(store[b.dataset.fxpptx]); return; }
+    if(b=g('[data-fxvidlink]')){ const m=store[b.dataset.fxvidlink], v=videoIndex.find(x=>x.id===$('#fxVidPick').value); if(!v){ toast('Choose a video first.'); return; } m.videoPath=v.id; m.videoName=v.name; if(sessionFiles[m.id]&&sessionFiles[m.id]!==v) delete sessionFiles[m.id]; sessionFiles[m.id]=v; saveMatchObj(m); renderFixture(); toast('Linked '+v.name+'.'); return; }
+    if(b=g('[data-fxdel]')){ ui.fxDel=b.dataset.fxdel; renderFixture(); return; }
+    if(b=g('[data-fxdelno]')){ ui.fxDel=null; renderFixture(); return; }
+    if(b=g('[data-fxdelyes]')){ const id=b.dataset.fxdelyes; ui.fxDel=null; delete store[id]; delete sessionFiles[id]; dbDelete(id); dirty.delete(id); if(M.id===id){ const rest=Object.values(store).sort(byDateDesc); M=rest[0]||blankMatch(); if(videoFile) unloadVideo(); } lsSave(); toast('Match deleted.'); go('calendar'); return; }
+  }
+});
+function wkAct(t,e){
+  const st=plWeeks[plUi.week]; if(!st) return; const a=t.dataset.wkact, i=+t.dataset.i, j=+t.dataset.j;
+  switch(a){
+    case 'toggleDay': if(e.target.closest('.pl-switch')) return; if(plUi.open.has(i)) plUi.open.delete(i); else plUi.open.add(i); renderWeek(); return;
+    case 'activeDay': e.stopPropagation(); st.days[i].active=!st.days[i].active; if(!st.days[i].active){ st.days[i].hidden=false; plUi.open.add(i); } plPushDay(st,i); wkChanged(true); return;
+    case 'toggleHidden': st.days[i].hidden=!st.days[i].hidden; plPushDay(st,i); wkChanged(true); return;
+    case 'toggleOn': { const b=plGet(st,t.dataset.path); b.on=!b.on; wkChanged(true); return; }
+    case 'pick': { const b=plGet(st,t.dataset.path), sid=t.dataset.sid; b.staff=b.staff||[]; b.staff=b.staff.includes(sid)?b.staff.filter(x=>x!==sid):[...b.staff,sid]; wkChanged(true); return; }
+    case 'present': { const s=st.staff.find(x=>x.id===t.dataset.sid); s.present=!s.present; wkChanged(true); return; }
+    case 'rmStaff': if(t.dataset.armed!=='1'){ t.dataset.armed='1'; t.textContent='remove?'; setTimeout(()=>{ if(t.isConnected){ t.dataset.armed=''; t.textContent='×'; } },2500); return; }
+      st.staff=st.staff.filter(x=>x.id!==t.dataset.sid); st.days.forEach(d=>[d.gym,d.warmup,...d.kern].forEach(b=>{ if(b&&b.staff) b.staff=b.staff.filter(x=>x!==t.dataset.sid); })); wkChanged(true); return;
+    case 'addK': st.days[i].kern.push(plBlk('','',20,[])); wkChanged(true); setTimeout(()=>{ const el=document.querySelector(`[data-wkbind="days.${i}.kern.${st.days[i].kern.length-1}.title"]`); if(el) el.focus(); },0); return;
+    case 'rmK': st.days[i].kern.splice(j,1); wkChanged(true); return;
+    case 'dupK': { const c=JSON.parse(JSON.stringify(st.days[i].kern[j])); c.id=plUid(); st.days[i].kern.splice(j+1,0,c); wkChanged(true); return; }
+    case 'mv': { const k=st.days[i].kern, d=+t.dataset.d; [k[j],k[j+d]]=[k[j+d],k[j]]; wkChanged(true); return; }
+    case 'openSession': e.stopPropagation(); plUi.sessionDay=i; plUi.wtab='session'; renderWeek(); return;
+    case 'closeSession': plUi.sessionDay=null; plUi.wtab='plan'; renderWeek(); return;
+    case 'subFromMatch': { const ms=plWeekMatches(st); st.meta.subtitle='Week '+plPad(plParse(st.meta.weekStart).getUTCDate())+'/'+plPad(plParse(st.meta.weekStart).getUTCMonth()+1)+' – '+ms.map(m=>PL_DOW[(plParse(isoDate(m.date)).getUTCDay()+6)%7].toLowerCase()+': '+m.them+' '+(m.home?'H':'A')+(m.kickoff?' '+m.kickoff:'')).join(', '); wkChanged(true); return; }
+  }
+}
+document.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.id==='calMonth'){ if(t.value){ plUi.month=t.value; renderCalendar(); } return; }
+  if(t.id==='calLabel'){ plCal.label=t.value; plTouch('cal'); return; }
+  if(t.dataset.patf){ plPattern()[+t.dataset.k][t.dataset.patf]=t.value; plTouch('cal'); return; }
+  if(t.dataset.cdf){ const en=plCal.days[plUi.daySel]; if(!en) return; en[t.dataset.cdf]=t.value; plCalChanged(plUi.daySel); clearTimeout(plUi.cdT); plUi.cdT=setTimeout(()=>{ if(view==='calendar') renderCalendar(); },500); return; }
+  if(t.dataset.wkbind){ const st=plWeeks[plUi.week]; if(!st) return; const p=t.dataset.wkbind; let v=t.value; if(p.endsWith('.min')) v=v===''?'':Number(v); plSet(st,p,v);
+    const mm=p.match(/^days\.(\d+)\.(time|place|reason)$/); if(mm) plPushDay(st,+mm[1]);
+    if(/^days\.\d+\.(name|.*min)$/.test(p)||/^meta\./.test(p)){ const i=+p.split('.')[1]; const head=document.querySelectorAll('#wkEditor .wk-day')[i]; if(head&&plUi.wtab==='plan'&&!isNaN(i)){ const d=st.days[i], bEl=head.querySelector('.wk-budget'), planned=wkMinutes(d), len=sessionLength(d.time); if(d.active&&bEl){ bEl.textContent=planned+'’'+(len?' / '+len+'’':''); bEl.classList.toggle('over',!!(len&&planned>len)); } } }
+    if(t.dataset.day!=null&&plUi.wtab==='details'){ const list=slideList(st,st.options.detail), k=list.findIndex(s=>s.kind==='day'&&s.i===+t.dataset.day); if(k>=0) plUi.slide=k; }
+    wkChanged(false); return; }
+  if(t.dataset.wksess){ const st=plWeeks[plUi.week], i=+t.dataset.i, a=document.querySelector('[data-wksess="start"]').value, b=document.querySelector('[data-wksess="end"]').value;
+    st.days[i].time=(a&&b)?a+' – '+b:(a||b); plPushDay(st,i); const s=$('#wkSum'); if(s) s.innerHTML=wkSum(st.days[i]); wkChanged(false); return; }
+  if(t.id==='fxSearch'){ plUi.fxQ=t.value; const pos=t.selectionStart; renderFixture(); const n=$('#fxSearch'); if(n){ n.focus(); try{ n.setSelectionRange(pos,pos); }catch(err){} } return; }
+  if(t.dataset.fxs){ const m=store[viewArg]; fxSel(m)[t.dataset.fxs]=t.value; saveMatchObj(m); clearTimeout(plUi.fxT); plUi.fxT=setTimeout(()=>{ const a=document.activeElement, k=a&&a.dataset.fxs; renderFixture(); if(k){ const n=document.querySelector('[data-fxs="'+k+'"]'); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } } },400); return; }
+  if(t.dataset.fxt){ const m=store[viewArg]; fxSel(m).times[t.dataset.fxt]=t.value; saveMatchObj(m); return; }
+});
+document.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.id==='wkSel'){ go('week',t.value); return; }
+  if(t.id==='wkDetail'){ plWeeks[plUi.week].options.detail=t.checked; wkChanged(false); return; }
+  if(t.dataset.fxf){ const m=store[viewArg]; if(!m) return; const k=t.dataset.fxf; let v=t.value;
+    if(k==='home') v=v==='1'; if(k==='halfLen') v=Math.max(5,+v||45); if(k==='themShort') v=v.toUpperCase();
+    if(k==='kickoff'&&(!fxSel(m).times.kickoff||fxSel(m).times.kickoff===m.kickoff)){ const tt=selTimes(v); if(tt) fxSel(m).times=tt; }
+    m[k]=v; if(k==='them'&&(!m.themShort||m.themShort==='OPP')) m.themShort=shortFor(v); saveMatchObj(m); renderFixture(); return; }
+  if(t.id==='fxLogo'){ const f=t.files[0]; t.value=''; if(f) fxLogo(store[viewArg],f); return; }
+  if(t.id==='fxVidUp'){ const f=t.files[0]; t.value=''; if(f&&typeof queueUpload==='function'){ queueUpload(f,viewArg); setTimeout(renderFixture,300); } return; }
+  if(t.id==='plImportFile'){ const f=t.files[0]; t.value=''; if(!f) return; const r=new FileReader();
+    r.onload=()=>{ try{ const s=plImport(JSON.parse(r.result)); renderView(); toast('Imported '+s.days+' calendar days, '+s.weeks+' week plans and '+(s.created+s.updated)+' matches'+(s.selected?' with their squads':'')+'.'+(s.added?' '+s.added+' players were added to your squad.':'')); }catch(err){ console.error(err); toast('That file is not a planner import file.'); } };
+    r.readAsText(f); return; }
+});
+document.addEventListener('submit',e=>{
+  if(e.target.id==='wkAddStaff'){ e.preventDefault(); e.stopPropagation(); const st=plWeeks[plUi.week], n=$('#wkNewStaff').value.trim(); if(!n) return; st.staff.push({id:plUid(),name:n,present:true}); wkChanged(true); setTimeout(()=>{ const x=$('#wkNewStaff'); if(x) x.focus(); },0); }
+  if(e.target.id==='fxAddForm'){ e.preventDefault(); e.stopPropagation(); const v=id=>($('#'+id).value||'').trim();
+    if(!v('faThem')){ $('#faThem').focus(); return; }
+    const m=plCreateFixture({them:v('faThem'),short:v('faShort'),date:v('faDate'),kickoff:v('faKick'),home:v('faHome')==='1',comp:v('faComp'),place:v('faPlace')});
+    plUi.addMatch=null; renderAddMatch(); toast('Match added. Pick the squad below.'); go('fixture',m.id); }
+},true);
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&(plUi.daySel||plUi.addMatch)){ plUi.daySel=null; plUi.addMatch=null; renderDayModal(); renderAddMatch(); if(view==='calendar') renderCalendar(); e.stopImmediatePropagation(); return; }
+  if((e.key==='Enter'||e.key===' ')&&e.target.dataset&&e.target.dataset.calday&&e.target.classList.contains('cal-day')){ e.preventDefault(); e.target.click(); e.stopImmediatePropagation(); }
+},true);
+plLoad();
+
 /* ---------- Folder settings & start screen ---------- */
 async function pickFolder(){
   try{ const r=await FSX.pick(); $('#gate').hidden=true; ui.odOpen=false; renderOdModal(); try{ localStorage.removeItem('matchTagger.localMode'); }catch(e){}
@@ -3626,6 +4499,7 @@ document.addEventListener('click',e=>{
   if(b=g('#btnClips')) return startClips();
   if(b=g('#btnEditLineup')){ ui.editLineup=true; ui.layoutEdit=false; ui.tray=null; renderTagging(); renderLineupEditor(); return; }
   if(b=g('#btnDoneLineup')){ ui.editLineup=false; ui.lastSig=''; renderTagging(); return; }
+  if(b=g('[data-tobench]')){ const p=P(b.dataset.tobench); if(p){ p.slot=null; save(); renderLineupEditor(); } return; }
   if(b=g('#btnAddBench')){ const nums=M.players.map(p=>+p.num||0); M.players.push({id:newId('p'),num:Math.max(11,...nums)+1,name:'',slot:null}); save(); renderLineup(); return; }
   if(b=g('[data-rmp]')){ const id=b.dataset.rmp; if(M.events.some(e=>[e.pid,e.assist,e.in,e.out,e.a,e.b].includes(id))){ toast('This player has tagged events. Delete those first.'); return; } M.players=M.players.filter(p=>p.id!==id); save(); renderLineup(); return; }
   if(b=g('[data-open]')){ go('match',b.dataset.open); return; }
@@ -3713,6 +4587,7 @@ document.addEventListener('change',e=>{
   if(t.id==='fType'){ ui.fType=t.value; renderEvents(); }
   if(t.id==='fPlayer'){ ui.fPlayer=t.value; renderEvents(); }
   if(t.id==='formation'){ M.formation=t.value; save(); renderLineupEditor(); renderDock(); }
+  if(t.dataset.fillslot!=null){ const p=P(t.value); if(p){ p.slot=+t.dataset.fillslot; save(); renderLineupEditor(); } return; }
   if(t.dataset.swap){ const p=P(t.dataset.swap), slot=+t.value; if(t.value===''||!p) return; const cur=M.players.find(x=>x.slot===slot); if(cur) cur.slot=null; p.slot=slot; save(); renderLineupEditor(); }
 });
 document.addEventListener('keydown',e=>{

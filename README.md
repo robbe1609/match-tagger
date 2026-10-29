@@ -93,6 +93,22 @@ At the top right you now see **Saved online**.
 
 ---
 
+## Calendar, week planner and match pages
+
+The site opens on the **Calendar**. From there you plan everything:
+
+- **Month calendar:** every training, day without training and match. Click a day to set training times and location, or to mark it "No training" with a reason. **Standard week** fills a whole month in one go.
+- **Export the month:** **Export** gives a PDF or PowerPoint slide (dark, or light for printing) and a calendar file (.ics) for Google, Outlook or Apple Calendar.
+- **Week planner:** click a week number (or **Week** at the top). Plan staff, gym, warm-up and kern forms per day, add coaching notes, and download the week as PDF or PowerPoint, with a detail slide per training. Times and locations come from the month calendar and changes go both ways.
+- **Matches:** **+ Match** (or click a day) adds a match. Each match has its own page:
+  - **Squad:** pick up to 20 players from your squad. The selection becomes the lineup in the tagger, where you choose the starting XI.
+  - **Selection slides:** download the selection .pptx in the original YLA template, with times worked out from the kick-off and an optional opponent logo.
+  - **Video:** link a video from your storage or upload one, then **Open in tagger** (or **Tag live** during the match).
+
+### Bringing over the old Week Planner and Wedstrijdplanner
+
+Your old planners' data comes as a file, `planner-import.json`. On the Calendar page, scroll down and click **Import planner data**, then choose that file. It adds your month calendar, your saved week plans and all fixtures with their squads. Matches that are already in the app (same date and opponent) are updated instead of duplicated, and players are matched to your squad by name.
+
 ## Daily use
 
 - **New match:** create it, then pick the video from your online storage, or click **Upload from this computer**. The video plays right away and uploads in the background, so you can start tagging immediately.
