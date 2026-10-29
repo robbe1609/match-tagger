@@ -1260,6 +1260,8 @@ body.tb-dragging,body.tb-dragging *{cursor:grabbing!important;user-select:none!i
 .pch-top{height:40px}
 .pch-top .pch-avglbl{top:0}
 .pch-val.low{color:var(--warn)}
+.pch-pct{position:absolute;z-index:3;background:var(--accent);padding:2px 3px;border-radius:3px;left:calc(var(--w) - 3px);top:50%;transform:translate(-100%,-50%);font-size:11px;font-weight:700;line-height:1;color:#FFFFFF;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pch-pct.out{left:calc(var(--w) + 4px);transform:translateY(-50%);color:var(--ink);background:var(--surface)}
 .pch-legend .lg-half{width:0;height:16px;border-left:2px dashed var(--warn)}
 @media (max-width:640px){
   .pch-chart{--namew:minmax(96px,130px)}
@@ -3159,14 +3161,15 @@ function pchHtml(list,agg,season,cust){
   rows.sort((x,y)=>pch.sort==='num'?((+x.s.num||999)-(+y.s.num||999)||x.s.name.localeCompare(y.s.name)):((y.v==null?-1:y.v)-(x.v==null?-1:x.v)||(+x.s.num||999)-(+y.s.num||999)));
   const vals=rows.filter(r=>r.v!=null).map(r=>r.v), avg=vals.length?vals.reduce((x,y)=>x+y,0)/vals.length:null;
   const av=pch.metric==='min'?availMinutes(season):null, half=av&&av.n?(pch.mode==='match'?av.total/av.n/2:av.total/2):null;
+  const base=half!=null&&half>0?half*2:null, share=v=>base&&v!=null?Math.round(v/base*100):null;
   const nice=pch.metric==='att'?{max:100,step:20}:pchNice(Math.max(0,...vals,half||0)), pct=v=>Math.max(0,Math.min(100,v/nice.max*100));
   const ticks=[]; for(let t=0;t<=nice.max+1e-9;t+=nice.step) ticks.push(t);
   const tick=t=>(+t.toFixed(dec?2:(nice.step<1?1:0))).toLocaleString('en-GB')+(pch.metric==='att'?'%':'');
   const nSel=list.length-list.filter(s=>hide.has(s.id)).length, others=list.filter(s=>isOther(s,sx));
   const modeTxt=pch.mode==='match'?' per match':pch.mode==='p90'?' per 90 minutes':'';
   const halfTxt=half!=null?(pch.mode==='match'?`50% of a match (${fmt(half)})`:`50% of available minutes (${fmt(half)} of ${fmt(av.total)}, ${av.n} match${av.n===1?'':'es'})`):'';
-  pch.last={label,modeTxt,season,rows,avg,half,halfTxt,nice,ticks,fmt,tick,below:half!=null?rows.filter(r=>r.v!=null&&r.v<half).length:0};
-  const tipOf=r=>{ const s=r.s, a=r.a; return `#${s.num||'–'} ${s.name} · ${label}${modeTxt}: ${fmt(r.v)} · ${a.apps} app${a.apps===1?'':'s'}, ${a.starts} start${a.starts===1?'':'s'}, ${a.min} min`; };
+  pch.last={label,modeTxt,season,rows,avg,half,halfTxt,share,nice,ticks,fmt,tick,below:half!=null?rows.filter(r=>r.v!=null&&r.v<half).length:0};
+  const tipOf=r=>{ const s=r.s, a=r.a; return `#${s.num||'–'} ${s.name} · ${label}${modeTxt}: ${fmt(r.v)}${share(r.v)!=null?' ('+share(r.v)+'% of available minutes)':''} · ${a.apps} app${a.apps===1?'':'s'}, ${a.starts} start${a.starts===1?'':'s'}, ${a.min} min`; };
   return `<section class="card pch">
     <div class="pch-bar">
       <label class="sel">Show <select id="pchMetric">${metrics.map(([k,l])=>`<option value="${esc(k)}"${k===pch.metric?' selected':''}>${esc(l)}</option>`).join('')}</select></label>
@@ -3183,10 +3186,10 @@ function pchHtml(list,agg,season,cust){
     <div class="pch-chart" style="--avg:${avg!=null?pct(avg):0}%;--half:${half!=null?pct(half):0}%;--grid:${nice.step/nice.max*100}%" role="img" aria-label="${esc(label+modeTxt+' per player, average '+fmt(avg))}">
       ${avg!=null?`<div class="pch-row pch-top" aria-hidden="true"><span></span><div class="pch-track"><span class="pch-avglbl${pct(avg)>78?' r':''}${half!=null&&Math.abs(pct(avg)-pct(half))<14&&avg<half?' r':''}">Average ${fmt(avg)}</span><i class="pch-avg"></i>${half!=null?`<span class="pch-halflbl${pct(half)>78||(Math.abs(pct(avg)-pct(half))<14&&half<avg)?' r':''}">50% ${fmt(half)}</span><i class="pch-half"></i>`:''}</div><span></span></div>`:''}
       ${rows.map(r=>`<div class="pch-row" title="${esc(tipOf(r))}"><button class="pch-name" data-go="player" data-arg="${r.s.id}"><b>${esc(r.s.num||'–')}</b><span>${esc(r.s.name)}</span></button>
-        <div class="pch-track"><span class="pch-fill${r.v!=null&&avg!=null&&r.v<avg?' below':''}" style="width:${r.v==null?0:pct(r.v)}%"></span>${avg!=null?'<i class="pch-avg"></i>':''}${half!=null?'<i class="pch-half"></i>':''}</div><span class="pch-val${r.v==null?' none':''}${half!=null&&r.v!=null&&r.v<half?' low':''}">${r.v==null?'–':esc(fmt(r.v).replace(/ min$/,''))+(/ min$/.test(fmt(r.v))?'<span class="u"> min</span>':'')}</span></div>`).join('')}
+        <div class="pch-track"><span class="pch-fill" style="width:${r.v==null?0:pct(r.v)}%"></span>${share(r.v)!=null?`<span class="pch-pct${pct(r.v)<9?' out':''}" style="--w:${pct(r.v)}%">${share(r.v)}%</span>`:''}${avg!=null?'<i class="pch-avg"></i>':''}${half!=null?'<i class="pch-half"></i>':''}</div><span class="pch-val${r.v==null?' none':''}${half!=null&&r.v!=null&&r.v<half?' low':''}">${r.v==null?'–':esc(fmt(r.v).replace(/ min$/,''))+(/ min$/.test(fmt(r.v))?'<span class="u"> min</span>':'')}</span></div>`).join('')}
       <div class="pch-row pch-axis" aria-hidden="true"><span></span><div class="pch-ticks">${ticks.map(t=>`<span style="left:${pct(t)}%">${tick(t)}</span>`).join('')}</div><span></span></div>
     </div>
-    <div class="pch-legend"><span><i class="lg-bar"></i>${esc(label)}${esc(modeTxt)}</span>${avg!=null?`<span><i class="lg-avg"></i>Average of the players shown</span>`:''}${half!=null?`<span><i class="lg-half"></i>${esc(halfTxt)}</span>`:''}<span class="hint">Click a name to open the player.</span></div>`}
+    <div class="pch-legend"><span><i class="lg-bar"></i>${esc(label)}${esc(modeTxt)}</span>${avg!=null?`<span><i class="lg-avg"></i>Average of the players shown</span>`:''}${half!=null?`<span><i class="lg-half"></i>${esc(halfTxt)}</span><span>% in the bar = share of ${pch.mode==='match'?'a full match':'all available minutes'}</span>`:''}<span class="hint">Click a name to open the player.</span></div>`}
   </section>`;
 }
 document.addEventListener('click',e=>{
@@ -3222,10 +3225,11 @@ async function pchPdf(){
       doc.setLineWidth(.2); doc.setDrawColor(...line); doc.setFontSize(8); doc.setTextColor(...mut);
       c.ticks.forEach((t,i)=>{ const x=X(t); doc.line(x,top-1,x,bottom+1); doc.text(c.tick(t),x,bottom+5,{align:i?'center':'left'}); });
       doc.setDrawColor(...mut); doc.line(x0,top-1,x0,bottom+1);
-      rows.forEach((r,i)=>{ const y=top+i*rowH, cy=y+rowH/2;
+      const pcts=[]; rows.forEach((r,i)=>{ const y=top+i*rowH, cy=y+rowH/2;
         doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(...mut); doc.text(String(r.s.num||'–'),mg+7,cy+1.2,{align:'right'});
         doc.setTextColor(...ink); doc.setFont('helvetica','normal'); let nm=r.s.name; while(doc.getTextWidth(nm)>nameW-13&&nm.length>3) nm=nm.slice(0,-2)+'…'; doc.text(nm,mg+9,cy+1.2);
         if(r.v!=null&&r.v>0){ const w=X(r.v)-x0; doc.setFillColor(...acc); doc.roundedRect(x0,cy-2.3,Math.max(w,.6),4.6,Math.min(1,w/2),Math.min(1,w/2),'F'); if(w>2) doc.rect(x0,cy-2.3,Math.min(1,w),4.6,'F'); }
+        const sh=c.share?c.share(r.v):null; if(sh!=null) pcts.push({t:sh+'%',w:r.v>0?X(r.v)-x0:0,cy});
         doc.setFont('helvetica','bold'); doc.setTextColor(...(c.half!=null&&r.v!=null&&r.v<c.half?warn:r.v==null?mut:ink)); doc.text(r.v==null?'–':c.fmt(r.v),pw-mg,cy+1.2,{align:'right'}); });
       // reference lines
       doc.setLineCap('round');
@@ -3234,11 +3238,15 @@ async function pchPdf(){
       if(c.half!=null){ const x=X(c.half); doc.setDrawColor(...warn); doc.setLineWidth(.5); doc.setLineDashPattern([2,1.4],0); doc.line(x,top-10,x,bottom+1); doc.setLineDashPattern([],0);
         doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...warn); const t='50% '+c.fmt(c.half), right=x+doc.getTextWidth(t)+2>x1; doc.text(t,right?x-1.5:x+1.5,top-8,{align:right?'right':'left'}); }
       doc.setLineCap('butt');
+      // % labels on top of the lines
+      doc.setFont('helvetica','bold'); doc.setFontSize(7.5);
+      pcts.forEach(({t,w,cy})=>{ const tw=doc.getTextWidth(t), inside=w>tw+4, tx=inside?x0+w-1.2-tw:x0+w+1.4;
+        doc.setFillColor(...(inside?acc:[255,255,255])); doc.rect(tx-.7,cy-1.9,tw+1.4,3.8,'F'); doc.setTextColor(...(inside?[255,255,255]:ink)); doc.text(t,tx,cy+1); });
       // legend + footer
       let ly=bottom+12; doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...mut);
       doc.setFillColor(...acc); doc.rect(mg,ly-2.6,6,3.2,'F'); doc.text(title,mg+8,ly); let lx=mg+12+doc.getTextWidth(title);
       if(c.avg!=null){ doc.setDrawColor(...ink); doc.setLineWidth(.5); doc.setLineCap('round'); doc.setLineDashPattern([0.01,1.1],0); doc.line(lx,ly-3,lx,ly+.6); doc.setLineDashPattern([],0); doc.setLineCap('butt'); doc.text('Average of the players shown',lx+2.5,ly); lx+=8+doc.getTextWidth('Average of the players shown'); }
-      if(c.half!=null){ doc.setDrawColor(...warn); doc.setLineDashPattern([1.2,.9],0); doc.line(lx,ly-3,lx,ly+.6); doc.setLineDashPattern([],0); doc.text('50% line; values in orange are below it',lx+2.5,ly); }
+      if(c.half!=null){ doc.setDrawColor(...warn); doc.setLineDashPattern([1.2,.9],0); doc.line(lx,ly-3,lx,ly+.6); doc.setLineDashPattern([],0); doc.text('50% line; values in orange are below it',lx+2.5,ly); lx+=8+doc.getTextWidth('50% line; values in orange are below it'); doc.text('% in the bar = share of '+(c.modeTxt?'a full match':'all available minutes'),lx,ly); }
       doc.setFontSize(8); doc.setTextColor(140,150,160); doc.text('Match Tagger · Players chart'+(pages>1?' · page '+(pg+1)+' of '+pages:''),mg,ph-7);
     }
     await offerFile(fileSafe(title+' '+(c.season==='all'?'all seasons':c.season))+'.pdf',doc.output('blob'));

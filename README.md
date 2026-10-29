@@ -123,6 +123,7 @@ On **Players**, click **Chart** (next to Cards and Table).
 - **Total / Per match / Per 90 min:** per match divides by appearances; per 90 uses the minutes each player actually played.
 - **The dotted line** is the average of the players on the chart, so it moves when you hide or show players.
 - **The orange dashed line** (minutes only) is 50% of the available minutes: half of all minutes the team played in the matches of that season (with **Per match**, half a match). Players below it show their minutes in orange, and the header counts them.
+- **The % in each bar** (minutes only) is the share of all available minutes that player played (with **Per match**, the share of a full match).
 - **Export PDF** saves the chart as an A4 page with both lines and the legend. Long squads continue on a second page.
 - **Players · x of y:** pick who is on the chart. **All**, **None**, **Only players with minutes** and **Hide other team** are quick filters; click a name to add or remove her. Your choice is remembered in this browser.
 - The season picker at the top applies to the chart too.
