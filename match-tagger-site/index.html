@@ -1230,7 +1230,6 @@ body.tb-dragging,body.tb-dragging *{cursor:grabbing!important;user-select:none!i
 .pch-chart{display:flex;flex-direction:column;--namew:minmax(120px,230px)}
 .pch-row{display:grid;grid-template-columns:var(--namew) minmax(0,1fr) 78px;align-items:center;gap:0 12px;height:32px}
 .pch-row:not(.pch-top):not(.pch-axis):hover{background:var(--surface-2);border-radius:6px}
-.pch-top{height:24px}
 .pch-name{display:flex;align-items:center;gap:8px;background:none;border:0;padding:0 0 0 4px;font:inherit;font-size:14px;font-weight:600;color:var(--ink);text-align:left;min-width:0}
 .pch-name b{flex:0 0 26px;font-family:var(--f-display);font-size:15px;color:var(--muted);text-align:right}
 .pch-name span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1253,6 +1252,15 @@ body.tb-dragging,body.tb-dragging *{cursor:grabbing!important;user-select:none!i
 .pch-legend .lg-avg{width:0;height:16px;border-left:2px dotted var(--ink)}
 .pch-legend .hint{margin-left:auto}
 .pch-avgtxt{color:var(--ink)}
+.pch-halftxt{color:var(--warn)}
+.pch-bar .spacer{flex:1}
+.pch-half{position:absolute;top:0;bottom:0;left:var(--half);width:0;border-left:2px dashed var(--warn);margin-left:-1px;pointer-events:none}
+.pch-halflbl{position:absolute;left:var(--half);bottom:0;transform:translateX(6px);font-size:12px;font-weight:700;white-space:nowrap;color:var(--warn);line-height:1}
+.pch-halflbl.r{transform:translateX(calc(-100% - 6px))}
+.pch-top{height:40px}
+.pch-top .pch-avglbl{top:0}
+.pch-val.low{color:var(--warn)}
+.pch-legend .lg-half{width:0;height:16px;border-left:2px dashed var(--warn)}
 @media (max-width:640px){
   .pch-chart{--namew:minmax(96px,130px)}
   .pch-row{gap:0 8px}
@@ -3134,6 +3142,10 @@ function pchValue(s,a,season,metric,mode){
   if(mode==='p90') return a.min>0?raw*90/a.min:null;
   return raw; }
 function pchNice(max){ if(!(max>0)) return {max:1,step:1}; const raw=max/5, p=10**Math.floor(Math.log10(raw)), f=raw/p, step=(f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p; return {max:Math.ceil(max/step-1e-9)*step,step}; }
+/* minutes the team played: both halves of every match with its halves set */
+function matchLen(m){ const p=m.phases||{}, L=(m.halfLen||45)*60; if(p.h1s==null) return null;
+  const h1=(p.h1e!=null?p.h1e:(p.h2s!=null?p.h2s:p.h1s+L))-p.h1s, h2=p.h2s!=null?(p.h2e!=null?p.h2e:p.h2s+L)-p.h2s:0; return Math.max(0,Math.round((h1+h2)/60)); }
+function availMinutes(season){ const ls=matchesIn(season).filter(isPlayed).map(matchLen).filter(x=>x!=null); return {total:ls.reduce((a,b)=>a+b,0),n:ls.length}; }
 function pchHtml(list,agg,season,cust){
   const sx=season==='all'?nowSeason():season;
   if(!pch.inited){ pch.hide=squad().filter(s=>isOther(s,sx)).map(s=>s.id); pch.inited=true; pchSave(); }
@@ -3146,11 +3158,14 @@ function pchHtml(list,agg,season,cust){
   const rows=shown.map(s=>({s,a:agg[s.id],v:pchValue(s,agg[s.id],season,pch.metric,pch.mode)}));
   rows.sort((x,y)=>pch.sort==='num'?((+x.s.num||999)-(+y.s.num||999)||x.s.name.localeCompare(y.s.name)):((y.v==null?-1:y.v)-(x.v==null?-1:x.v)||(+x.s.num||999)-(+y.s.num||999)));
   const vals=rows.filter(r=>r.v!=null).map(r=>r.v), avg=vals.length?vals.reduce((x,y)=>x+y,0)/vals.length:null;
-  const nice=pch.metric==='att'?{max:100,step:20}:pchNice(Math.max(0,...vals)), pct=v=>Math.max(0,Math.min(100,v/nice.max*100));
+  const av=pch.metric==='min'?availMinutes(season):null, half=av&&av.n?(pch.mode==='match'?av.total/av.n/2:av.total/2):null;
+  const nice=pch.metric==='att'?{max:100,step:20}:pchNice(Math.max(0,...vals,half||0)), pct=v=>Math.max(0,Math.min(100,v/nice.max*100));
   const ticks=[]; for(let t=0;t<=nice.max+1e-9;t+=nice.step) ticks.push(t);
   const tick=t=>(+t.toFixed(dec?2:(nice.step<1?1:0))).toLocaleString('en-GB')+(pch.metric==='att'?'%':'');
   const nSel=list.length-list.filter(s=>hide.has(s.id)).length, others=list.filter(s=>isOther(s,sx));
   const modeTxt=pch.mode==='match'?' per match':pch.mode==='p90'?' per 90 minutes':'';
+  const halfTxt=half!=null?(pch.mode==='match'?`50% of a match (${fmt(half)})`:`50% of available minutes (${fmt(half)} of ${fmt(av.total)}, ${av.n} match${av.n===1?'':'es'})`):'';
+  pch.last={label,modeTxt,season,rows,avg,half,halfTxt,nice,ticks,fmt,tick,below:half!=null?rows.filter(r=>r.v!=null&&r.v<half).length:0};
   const tipOf=r=>{ const s=r.s, a=r.a; return `#${s.num||'–'} ${s.name} · ${label}${modeTxt}: ${fmt(r.v)} · ${a.apps} app${a.apps===1?'':'s'}, ${a.starts} start${a.starts===1?'':'s'}, ${a.min} min`; };
   return `<section class="card pch">
     <div class="pch-bar">
@@ -3158,19 +3173,20 @@ function pchHtml(list,agg,season,cust){
       ${modes.length>1?`<div class="seg" role="group" aria-label="Value">${modes.map(([k,l])=>`<button data-pchmode="${k}" aria-pressed="${pch.mode===k}">${l}</button>`).join('')}</div>`:''}
       <div class="seg" role="group" aria-label="Order"><button data-pchsort="value" aria-pressed="${pch.sort!=='num'}">Highest first</button><button data-pchsort="num" aria-pressed="${pch.sort==='num'}">By number</button></div>
       <button class="btn${pch.open?' primary':''}" data-pchpick aria-expanded="${pch.open}">Players · ${nSel} of ${list.length}</button>
+      <span class="spacer"></span><button class="btn primary" data-pchpdf ${rows.length?'':'disabled'}>Export PDF</button>
     </div>
     ${pch.open?`<div class="pch-pick">
       <div class="pch-acts"><button class="btn sm" data-pchall>All</button><button class="btn sm" data-pchnone>None</button><button class="btn sm" data-pchplayed>Only players with minutes</button>${others.length?`<button class="btn sm" data-pchmine>Hide other team</button>`:''}<span class="hint">Click a name to show or hide it.</span></div>
       <div class="pch-chips">${list.map(s=>`<button class="pch-chip" data-pchtoggle="${s.id}" aria-pressed="${!hide.has(s.id)}"><b>${esc(s.num||'–')}</b>${esc(s.name)}${isOther(s,sx)?'<small>other team</small>':''}</button>`).join('')}</div></div>`:''}
-    <div class="card-head"><h2>${esc(label)}${esc(modeTxt)}</h2><span class="hint">${esc(seasonText(season))}${avg!=null?` · average <b class="pch-avgtxt">${fmt(avg)}</b> over ${vals.length} player${vals.length===1?'':'s'}`:''}${pch.mode==='p90'?' · players with minutes only':pch.mode==='match'?' · players with appearances only':''}</span></div>
+    <div class="card-head"><h2>${esc(label)}${esc(modeTxt)}</h2><span class="hint">${esc(seasonText(season))}${avg!=null?` · average <b class="pch-avgtxt">${fmt(avg)}</b> over ${vals.length} player${vals.length===1?'':'s'}`:''}${half!=null?` · <b class="pch-halftxt">${pch.last.below}</b> below 50% of available minutes`:''}${pch.mode==='p90'?' · players with minutes only':pch.mode==='match'?' · players with appearances only':''}</span></div>
     ${!rows.length?`<div class="empty-state"><strong>No players selected</strong><p>Choose which players to show.</p><button class="btn" data-pchall>Show all players</button></div>`:`
-    <div class="pch-chart" style="--avg:${avg!=null?pct(avg):0}%;--grid:${nice.step/nice.max*100}%" role="img" aria-label="${esc(label+modeTxt+' per player, average '+fmt(avg))}">
-      ${avg!=null?`<div class="pch-row pch-top" aria-hidden="true"><span></span><div class="pch-track"><span class="pch-avglbl${pct(avg)>78?' r':''}">Average ${fmt(avg)}</span><i class="pch-avg"></i></div><span></span></div>`:''}
+    <div class="pch-chart" style="--avg:${avg!=null?pct(avg):0}%;--half:${half!=null?pct(half):0}%;--grid:${nice.step/nice.max*100}%" role="img" aria-label="${esc(label+modeTxt+' per player, average '+fmt(avg))}">
+      ${avg!=null?`<div class="pch-row pch-top" aria-hidden="true"><span></span><div class="pch-track"><span class="pch-avglbl${pct(avg)>78?' r':''}${half!=null&&Math.abs(pct(avg)-pct(half))<14&&avg<half?' r':''}">Average ${fmt(avg)}</span><i class="pch-avg"></i>${half!=null?`<span class="pch-halflbl${pct(half)>78||(Math.abs(pct(avg)-pct(half))<14&&half<avg)?' r':''}">50% ${fmt(half)}</span><i class="pch-half"></i>`:''}</div><span></span></div>`:''}
       ${rows.map(r=>`<div class="pch-row" title="${esc(tipOf(r))}"><button class="pch-name" data-go="player" data-arg="${r.s.id}"><b>${esc(r.s.num||'–')}</b><span>${esc(r.s.name)}</span></button>
-        <div class="pch-track"><span class="pch-fill${r.v!=null&&avg!=null&&r.v<avg?' below':''}" style="width:${r.v==null?0:pct(r.v)}%"></span>${avg!=null?'<i class="pch-avg"></i>':''}</div><span class="pch-val${r.v==null?' none':''}">${r.v==null?'–':esc(fmt(r.v).replace(/ min$/,''))+(/ min$/.test(fmt(r.v))?'<span class="u"> min</span>':'')}</span></div>`).join('')}
+        <div class="pch-track"><span class="pch-fill${r.v!=null&&avg!=null&&r.v<avg?' below':''}" style="width:${r.v==null?0:pct(r.v)}%"></span>${avg!=null?'<i class="pch-avg"></i>':''}${half!=null?'<i class="pch-half"></i>':''}</div><span class="pch-val${r.v==null?' none':''}${half!=null&&r.v!=null&&r.v<half?' low':''}">${r.v==null?'–':esc(fmt(r.v).replace(/ min$/,''))+(/ min$/.test(fmt(r.v))?'<span class="u"> min</span>':'')}</span></div>`).join('')}
       <div class="pch-row pch-axis" aria-hidden="true"><span></span><div class="pch-ticks">${ticks.map(t=>`<span style="left:${pct(t)}%">${tick(t)}</span>`).join('')}</div><span></span></div>
     </div>
-    <div class="pch-legend"><span><i class="lg-bar"></i>${esc(label)}${esc(modeTxt)}</span>${avg!=null?`<span><i class="lg-avg"></i>Average of the players shown</span>`:''}<span class="hint">Click a name to open the player.</span></div>`}
+    <div class="pch-legend"><span><i class="lg-bar"></i>${esc(label)}${esc(modeTxt)}</span>${avg!=null?`<span><i class="lg-avg"></i>Average of the players shown</span>`:''}${half!=null?`<span><i class="lg-half"></i>${esc(halfTxt)}</span>`:''}<span class="hint">Click a name to open the player.</span></div>`}
   </section>`;
 }
 document.addEventListener('click',e=>{
@@ -3184,6 +3200,52 @@ document.addEventListener('click',e=>{
   if(g('[data-pchplayed]')){ const agg=playerAgg(curSeason()); pch.hide=squad().filter(s=>!(agg[s.id]&&agg[s.id].min>0)).map(s=>s.id); pchSave(); renderPlayers(); return; }
   if(g('[data-pchmine]')){ const sx=curSeason()==='all'?nowSeason():curSeason(), h=new Set(pch.hide); squad().filter(s=>isOther(s,sx)).forEach(s=>h.add(s.id)); pch.hide=[...h]; pchSave(); renderPlayers(); return; }
 });
+async function pchPdf(){
+  const c=pch.last; if(!c||!c.rows.length) return; const btn=document.querySelector('[data-pchpdf]'), old=btn&&btn.textContent; if(btn){ btn.disabled=true; btn.textContent='Making PDF…'; }
+  try{
+    if(!(window.jspdf&&window.jspdf.jsPDF)) await loadScript('vendor/jspdf.umd.min.js');
+    const doc=new window.jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4'}), pw=210, ph=297, mg=14;
+    const ink=[11,15,20], mut=[86,97,109], line=[211,218,225], acc=[0,120,191], warn=[199,112,42];
+    const nameW=58, valW=22, x0=mg+nameW, x1=pw-mg-valW, bw=x1-x0, rowH=7.2, X=v=>x0+bw*Math.max(0,Math.min(1,v/c.nice.max));
+    const title=c.label+c.modeTxt, sub=teamName()+' · '+seasonText(c.season)+' · '+c.rows.length+' player'+(c.rows.length===1?'':'s')+' · '+new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+    const per=Math.floor((ph-mg-60-22)/rowH), pages=Math.ceil(c.rows.length/per);
+    for(let pg=0;pg<pages;pg++){
+      if(pg) doc.addPage();
+      doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.setTextColor(...ink); doc.text(title,mg,mg+7);
+      doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(...mut); doc.text(sub,mg,mg+13);
+      let sy=mg+19; doc.setFontSize(10); doc.setTextColor(...ink);
+      const stats=[c.avg!=null?'Average: '+c.fmt(c.avg):'', c.half!=null?c.halfTxt+' · '+c.below+' player'+(c.below===1?'':'s')+' below':''].filter(Boolean);
+      stats.forEach(t=>{ doc.text(t,mg,sy); sy+=5; });
+      doc.setDrawColor(...ink); doc.setLineWidth(.5); doc.setLineDashPattern([],0); doc.line(mg,sy,pw-mg,sy);
+      const rows=c.rows.slice(pg*per,(pg+1)*per), top=sy+12, bottom=top+rows.length*rowH;
+      // grid + ticks
+      doc.setLineWidth(.2); doc.setDrawColor(...line); doc.setFontSize(8); doc.setTextColor(...mut);
+      c.ticks.forEach((t,i)=>{ const x=X(t); doc.line(x,top-1,x,bottom+1); doc.text(c.tick(t),x,bottom+5,{align:i?'center':'left'}); });
+      doc.setDrawColor(...mut); doc.line(x0,top-1,x0,bottom+1);
+      rows.forEach((r,i)=>{ const y=top+i*rowH, cy=y+rowH/2;
+        doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(...mut); doc.text(String(r.s.num||'–'),mg+7,cy+1.2,{align:'right'});
+        doc.setTextColor(...ink); doc.setFont('helvetica','normal'); let nm=r.s.name; while(doc.getTextWidth(nm)>nameW-13&&nm.length>3) nm=nm.slice(0,-2)+'…'; doc.text(nm,mg+9,cy+1.2);
+        if(r.v!=null&&r.v>0){ const w=X(r.v)-x0; doc.setFillColor(...acc); doc.roundedRect(x0,cy-2.3,Math.max(w,.6),4.6,Math.min(1,w/2),Math.min(1,w/2),'F'); if(w>2) doc.rect(x0,cy-2.3,Math.min(1,w),4.6,'F'); }
+        doc.setFont('helvetica','bold'); doc.setTextColor(...(c.half!=null&&r.v!=null&&r.v<c.half?warn:r.v==null?mut:ink)); doc.text(r.v==null?'–':c.fmt(r.v),pw-mg,cy+1.2,{align:'right'}); });
+      // reference lines
+      doc.setLineCap('round');
+      if(c.avg!=null){ const x=X(c.avg); doc.setDrawColor(...ink); doc.setLineWidth(.5); doc.setLineDashPattern([0.01,1.1],0); doc.line(x,top-6,x,bottom+1); doc.setLineDashPattern([],0);
+        doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...ink); const t='Average '+c.fmt(c.avg), right=x+doc.getTextWidth(t)+2>x1; doc.text(t,right?x-1.5:x+1.5,top-4,{align:right?'right':'left'}); }
+      if(c.half!=null){ const x=X(c.half); doc.setDrawColor(...warn); doc.setLineWidth(.5); doc.setLineDashPattern([2,1.4],0); doc.line(x,top-10,x,bottom+1); doc.setLineDashPattern([],0);
+        doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...warn); const t='50% '+c.fmt(c.half), right=x+doc.getTextWidth(t)+2>x1; doc.text(t,right?x-1.5:x+1.5,top-8,{align:right?'right':'left'}); }
+      doc.setLineCap('butt');
+      // legend + footer
+      let ly=bottom+12; doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...mut);
+      doc.setFillColor(...acc); doc.rect(mg,ly-2.6,6,3.2,'F'); doc.text(title,mg+8,ly); let lx=mg+12+doc.getTextWidth(title);
+      if(c.avg!=null){ doc.setDrawColor(...ink); doc.setLineWidth(.5); doc.setLineCap('round'); doc.setLineDashPattern([0.01,1.1],0); doc.line(lx,ly-3,lx,ly+.6); doc.setLineDashPattern([],0); doc.setLineCap('butt'); doc.text('Average of the players shown',lx+2.5,ly); lx+=8+doc.getTextWidth('Average of the players shown'); }
+      if(c.half!=null){ doc.setDrawColor(...warn); doc.setLineDashPattern([1.2,.9],0); doc.line(lx,ly-3,lx,ly+.6); doc.setLineDashPattern([],0); doc.text('50% line; values in orange are below it',lx+2.5,ly); }
+      doc.setFontSize(8); doc.setTextColor(140,150,160); doc.text('Match Tagger · Players chart'+(pages>1?' · page '+(pg+1)+' of '+pages:''),mg,ph-7);
+    }
+    await offerFile(fileSafe(title+' '+(c.season==='all'?'all seasons':c.season))+'.pdf',doc.output('blob'));
+  }catch(e){ console.error(e); toast('Could not make the PDF: '+e.message); }
+  finally{ if(btn&&btn.isConnected){ btn.disabled=false; btn.textContent=old; } }
+}
+document.addEventListener('click',e=>{ if(view==='players'&&e.target.closest('[data-pchpdf]')) pchPdf(); });
 document.addEventListener('change',e=>{ if(view==='players'&&e.target.id==='pchMetric'){ pch.metric=e.target.value; pchSave(); renderPlayers(); } });
 
 function addSquadPlayer(){
