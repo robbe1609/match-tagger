@@ -147,6 +147,14 @@ On a match page, under **Squad**, every squad player who is not selected gets a 
 - **Players chart · Minutes:** each bar is the length of all the team's minutes and shows minutes played (blue), available but not played (light blue) and not available (striped: red injured, orange streepjes, grey other). The orange tick is her own 50% mark, the % is her share of her available minutes, and **Lowest % first** puts the players who need minutes on top. **Per available match** divides by the matches she was available for. The PDF export shows the same.
 - **Player page · Playing time:** her % of available minutes, above or below 50%, and a column per match filled to the minutes she played, with NS / INJ / STR / OTH when she was not selected. Click a column to open that match.
 
+## Several players in one play
+
+A clip can belong to more than one player, so everyone involved in a press, a build-up or a goal finds it on her own page.
+
+- **While tagging:** click the first player, then **+ More players** in the pop-up and tick the others (or Shift-click them on the pitch). Then choose the tag. The extra players stay selected for further tags of the same moment.
+- **Afterwards:** in the **Events** list, click the people icon of an event and tick the players involved.
+- The first player stays the main player: goals, assists and the other stats count only for her. The others get the clip on their player page as "· involved", with its own filter, and it is included when you export their clips.
+
 ## Players chart
 
 On **Players**, click **Chart** (next to Cards and Table).

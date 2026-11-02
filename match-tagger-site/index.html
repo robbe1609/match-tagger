@@ -552,6 +552,19 @@ button.res:hover{transform:translateY(-1px)}
 .lg-sq.st-streepjes{background-image:repeating-linear-gradient(135deg,color-mix(in srgb,var(--warn) 50%,transparent) 0 2px,transparent 2px 5px)}
 .lg-sq.st-other{background-image:repeating-linear-gradient(135deg,color-mix(in srgb,var(--neutral) 45%,transparent) 0 2px,transparent 2px 5px)}
 @media (max-width:560px){.pt-sum{grid-template-columns:minmax(0,1fr)}.ns-row{grid-template-columns:26px minmax(0,1fr)}.ns-row select{grid-column:2}}
+.pop-inv{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.inv-pick .lib-pl[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--ink)}
+.inv-chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--accent);background:var(--accent-soft);border-radius:999px;padding:2px 4px 2px 3px;font-size:13px;font-weight:600}
+.inv-chip b,.inv-tog b{min-width:20px;height:20px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:11px;display:inline-flex;align-items:center;justify-content:center}
+.inv-chip button{border:0;background:none;font-size:15px;line-height:1;padding:0 4px;color:var(--muted);cursor:pointer}
+.inv-edit{display:flex;flex-direction:column;gap:8px}
+.inv-list{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
+.inv-tog{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:2px 10px 2px 3px;font:inherit;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer}
+.inv-tog b{background:var(--surface-2);color:var(--muted)}
+.inv-tog[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--ink)}.inv-tog[aria-pressed="true"] b{background:var(--accent);color:var(--accent-ink)}
+.inv-tog.main{border-style:dashed;color:var(--ink);cursor:default}
+.ev .acts button.on{color:var(--accent)}
+.ev .acts button svg{width:16px;height:16px}
 /* Players */
 .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
 .pcard{position:relative;overflow:hidden;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px 12px;display:flex;flex-direction:column;gap:4px;color:var(--ink);transition:border-color .15s,transform .15s}
@@ -2119,7 +2132,7 @@ function renderDock(){
   else if(!canTag()) ctx='Load the match video, or start live tagging.';
   else if(ui.numBuf) ctx=`Shirt number <span class="num">${esc(ui.numBuf)}</span>…`;
   else if(!tr) ctx=layout().items.length?'Click a player to tag her, or a tag and then the player.':'Build your panel to start tagging.';
-  else if(tr.mode==='player'){ ctx=`<strong>${esc(pLabel(P(tr.pid)))}</strong>${at} · choose tags`; acts=useNow; }
+  else if(tr.mode==='player'){ ctx=`<strong>${esc(pLabel(P(tr.pid)))}</strong>${(tr.more||[]).length?' + '+tr.more.map(id=>esc(firstName(P(id)))).join(', '):''}${at} · ${tr.multi?'click the other players involved, then a tag':'choose tags'}`; acts=useNow; }
   else if(tr.mode==='armed'){ ctx=`<strong>${esc(T(tr.tag).label)}</strong>${at} · click the player`; acts=btn('noplayer','No player')+useNow+btn('cancel','Cancel','ghost'); }
   else if(tr.mode==='scorer'){ ctx=`<strong>${esc(T('goal').label)}</strong>${at} · who scored? Click her`; acts=btn('og','Own goal by opponent')+btn('noscorer','Scorer unknown')+useNow+btn('cancel','Cancel','ghost'); }
   else if(tr.mode==='assist'){ ctx=`<strong>${esc(T('goal').label)}</strong> · who gave the assist?`; }
@@ -2144,9 +2157,10 @@ function tagClick(k){
   ui.tray=k==='goal'?{mode:'scorer',t:keepT}:{mode:'armed',tag:k,t:keepT};
   renderTagging();
 }
+const trayInv=pid=>{ const tr=ui.tray; return tr&&tr.mode==='player'&&tr.pid===pid&&tr.more&&tr.more.length?tr.more.slice():undefined; };
 function commitPlayerTag(k,pid,t){
-  if(k==='goal'){ const prev=ui.tray&&ui.tray.mode==='player'&&ui.tray.pid===pid?(ui.tray.added||[]):[]; ui.tray={mode:'assist',t,eventId:'',pid,added:prev.concat('goal')}; const e=addEvent({type:'goal',t,pid},true); ui.tray.eventId=e.id; toast(T('goal').label+' · '+pLabel(P(pid))+' · '+minuteLabel(t),()=>removeEvent(e.id,true)); renderTagging(); return; }
-  ui.tray=null; addEvent({type:k,t,pid});
+  if(k==='goal'){ const inv=trayInv(pid), more=ui.tray&&ui.tray.mode==='player'&&ui.tray.pid===pid?ui.tray.more:undefined; const prev=ui.tray&&ui.tray.mode==='player'&&ui.tray.pid===pid?(ui.tray.added||[]):[]; ui.tray={mode:'assist',t,eventId:'',pid,added:prev.concat('goal'),more}; const e=addEvent({type:'goal',t,pid,inv},true); ui.tray.eventId=e.id; toast(T('goal').label+' · '+pLabel(P(pid))+' · '+minuteLabel(t),()=>removeEvent(e.id,true)); renderTagging(); return; }
+  const inv=trayInv(pid); ui.tray=null; addEvent({type:k,t,pid,inv});
 }
 let numTimer=null;
 function numKey(dg){
@@ -2244,7 +2258,7 @@ function dropAction(a,aOn,b,bOn){
 /* ---------- Events ---------- */
 let lastRemoved=null;
 function addEvent(e,silent){
-  e.id=newId('e');
+  e.id=newId('e'); if(Array.isArray(e.inv)){ e.inv=e.inv.filter(x=>x&&x!==e.pid); if(!e.inv.length) delete e.inv; } else delete e.inv;
   const c=customOf(e.type); if(c){ M.tagDefs=M.tagDefs||{}; M.tagDefs[e.type]={label:c.label,color:c.color,kind:c.kind}; }
   M.events.push(e); M.events.sort((a,b)=>a.t-b.t); save();
   renderAfterEventChange();
@@ -2262,24 +2276,33 @@ function renderAfterEventChange(){ ui.lastSig=''; ui.lastScore=''; renderTimelin
 
 function filteredEvents(){
   return sortedEvents().filter(e=>(!ui.fType||e.type===ui.fType||(ui.fType==='shots'&&['goal','shot_on','shot_off'].includes(e.type)))
-    &&(!ui.fPlayer||[e.pid,e.assist,e.in,e.out,e.a,e.b].includes(ui.fPlayer))
+    &&(!ui.fPlayer||[e.pid,e.assist,e.in,e.out,e.a,e.b].includes(ui.fPlayer)||(e.inv||[]).includes(ui.fPlayer))
     &&(ui.fHalf==='all'||halfOf(e.t)===ui.fHalf));
 }
 function evWho(e){
   if(e.type==='swap') return pLabel(P(e.a))+' ⇄ '+pLabel(P(e.b));
   if(e.type==='formation') return 'Now playing '+e.formation;
   if(e.type==='sub') return pLabel(P(e.in))+' on · '+pLabel(P(e.out))+' off';
-  if(e.type==='goal'){ if(e.og) return 'Own goal by opponent'; return (e.pid?pLabel(P(e.pid)):'Scorer not set')+(e.assist?' · assist '+pLabel(P(e.assist)):''); }
-  if(e.pid) return pLabel(P(e.pid));
+  if(e.type==='goal'){ if(e.og) return 'Own goal by opponent'; const iv=(e.inv||[]).map(id=>P(id)).filter(Boolean); return (e.pid?pLabel(P(e.pid)):'Scorer not set')+(e.assist?' · assist '+pLabel(P(e.assist)):'')+(iv.length?' · also '+iv.map(firstName).join(', '):''); }
+  const inv=(e.inv||[]).map(id=>P(id)).filter(Boolean);
+  if(e.pid) return pLabel(P(e.pid))+(inv.length?' + '+inv.map(firstName).join(', '):'');
+  if(inv.length) return inv.map(pLabel).join(', ');
   return M.them&&/against/.test(e.type)?M.them:'Team';
 }
 const ICON={clock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg>',note:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></svg>',del:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13"/></svg>',play:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>'};
+/* players involved in an event: each gets the clip on her profile (stats stay with the main player) */
+function invEditor(e){ const lu=lineupAt(e.t), inv=new Set(e.inv||[]), main=e.pid||null;
+  const on=M.players.filter(p=>lu.onField.has(p.id)), rest=M.players.filter(p=>!lu.onField.has(p.id)&&(p.name||p.sq));
+  const chip=p=>p.id===main?`<span class="inv-tog main" title="Main player of this tag"><b>${esc(p.num||'?')}</b>${esc(firstName(p))}</span>`:`<button class="inv-tog" data-invtog="${p.id}" data-ev="${e.id}" aria-pressed="${inv.has(p.id)}"><b>${esc(p.num||'?')}</b>${esc(firstName(p))}</button>`;
+  return `<div class="note-edit inv-edit"><span class="hint" style="margin:0">Players involved: each gets this clip on her player page. Goals, assists and other stats stay with the main player.</span>
+    <div class="inv-list">${on.map(chip).join('')}</div>${rest.length?`<details><summary class="hint">Not on the pitch at ${esc(minuteLabel(e.t))}</summary><div class="inv-list">${rest.map(chip).join('')}</div></details>`:''}
+    <div class="row-actions"><button class="btn sm" data-invev="${e.id}">Done</button></div></div>`; }
 function renderEvents(){
   $('#evCount').textContent=M.events.length;
   const el=$('#tab-events'); if(ui.tab!=='events'){ return; }
   const used=[...new Set(M.events.map(e=>e.type))];
   const list=filteredEvents();
-  const playerOpts=M.players.filter(p=>M.events.some(e=>[e.pid,e.assist,e.in,e.out,e.a,e.b].includes(p.id))).sort((a,b)=>a.num-b.num);
+  const playerOpts=M.players.filter(p=>M.events.some(e=>[e.pid,e.assist,e.in,e.out,e.a,e.b].includes(p.id)||(e.inv||[]).includes(p.id))).sort((a,b)=>a.num-b.num);
   el.innerHTML=`<div style="display:flex;flex-direction:column;gap:10px">
     <div class="ev-tools">
       <select id="fType" aria-label="Filter by event"><option value="">All events</option><option value="shots"${ui.fType==='shots'?' selected':''}>All shots</option>${used.map(k=>`<option value="${esc(k)}"${ui.fType===k?' selected':''}>${esc(T(k).label)}</option>`).join('')}</select>
@@ -2295,8 +2318,9 @@ function renderEvents(){
     <div class="ev-list">${list.length?list.map(e=>`<div class="ev" style="--c:${T(e.type).css}">
         <span class="min">${esc(minuteLabel(e.t))}</span>
         <button class="body" data-seekev="${e.id}" title="Jump to ${vfmt(e.t)}"><span class="what"><span class="dot"></span>${esc(T(e.type).label)}</span><span class="who">${esc(evWho(e))}${customTiming(e)?`<span class="tbadge">−${preOf(e)}/+${postOf(e)} s</span>`:''}</span>${e.note?`<span class="note">${esc(e.note)}</span>`:''}</button>
-        <span class="acts"><button data-timeev="${e.id}" aria-label="Clip timing" title="Clip timing: ${preOf(e)} s before, ${postOf(e)} s after">${ICON.clock}</button><button data-noteev="${e.id}" aria-label="Edit note">${ICON.note}</button><button data-delev="${e.id}" aria-label="Delete event">${ICON.del}</button></span>
+        <span class="acts">${['sub','swap','formation'].includes(e.type)?'':`<button data-invev="${e.id}" aria-label="Players involved" title="Players involved${(e.inv||[]).length?': '+(e.inv||[]).length:''}" class="${(e.inv||[]).length?'on':''}">${IC.people}</button>`}<button data-timeev="${e.id}" aria-label="Clip timing" title="Clip timing: ${preOf(e)} s before, ${postOf(e)} s after">${ICON.clock}</button><button data-noteev="${e.id}" aria-label="Edit note">${ICON.note}</button><button data-delev="${e.id}" aria-label="Delete event">${ICON.del}</button></span>
         ${ui.timeEdit===e.id?`<div class="note-edit">${timingEditor(M.id,e)}<div class="row-actions"><button class="btn sm" data-tprev="${e.id}">${ICON.play.replace('<svg','<svg width="12" height="12"')} Preview clip</button><span class="hint" style="margin:0">Plays ${preOf(e)} s before to ${postOf(e)} s after the tag.</span></div></div>`:''}
+        ${ui.invEdit===e.id?invEditor(e):''}
         ${ui.noteEdit===e.id?`<div class="note-edit"><input id="noteInput" value="${esc(e.note||'')}" placeholder="Add a note and press Enter"></div>`:''}
       </div>`).join(''):`<div class="empty">${M.events.length?'No events match these filters.':'No events yet. Mark the kick-off, then click a player in the lineup or use the team buttons to tag.'}</div>`}</div>
   </div>`;
@@ -2326,7 +2350,7 @@ function renderLineup(){
   if(ui.editLineup){ renderLineupEditor(); return; }
   renderCanvas();
 }
-function onPlayerClick(pid,onField){
+function onPlayerClick(pid,onField,mod){
   if(ui.suppressClick) return;
   if(!needVideo()) return;
   const tr=ui.tray, lu=lineupAt(tr?tr.t:now());
@@ -2336,6 +2360,7 @@ function onPlayerClick(pid,onField){
     if(tr.mode==='subOut'&&onField){ if(lu.sentOff.has(pid)){ toast('A sent-off player cannot be substituted.'); return; } ui.tray=null; addEvent({type:'sub',t:tr.t,out:pid,in:tr.inPid}); return; }
     if(tr.mode==='subIn'&&!onField){ ui.tray=null; addEvent({type:'sub',t:tr.t,out:tr.outPid,in:pid}); return; }
     if(tr.mode==='swap'&&onField&&pid!==tr.pid){ ui.tray=null; addEvent({type:'swap',t:tr.t,a:tr.pid,b:pid}); return; }
+    if(tr.mode==='player'&&pid!==tr.pid&&(tr.multi||mod)){ const s=new Set(tr.more||[]); s.has(pid)?s.delete(pid):s.add(pid); tr.more=[...s]; renderTagging(); return; }
     if(tr.mode==='player'&&tr.pid===pid){ ui.tray=null; renderTagging(); return; }
     if(tr.mode==='note'&&onField){ tr.pid=pid; renderTagging(); return; }
   }
@@ -2346,12 +2371,12 @@ function onPlayerClick(pid,onField){
 function setAssist(pid){
   const tr=ui.tray; if(!tr) return; const e=M.events.find(x=>x.id===tr.eventId);
   if(e&&pid&&pid!==e.pid){ e.assist=pid; save(); toast('Assist · '+pLabel(P(pid))); }
-  ui.tray=e&&e.pid?{mode:'player',pid:e.pid,t:tr.t,added:tr.added||['goal']}:null; renderAfterEventChange();
+  ui.tray=e&&e.pid?{mode:'player',pid:e.pid,t:tr.t,added:tr.added||['goal'],more:tr.more}:null; renderAfterEventChange();
 }
 function popTag(k){
   const tr=ui.tray; if(!tr||tr.mode!=='player') return; if(!needVideo()) return;
   if(k==='goal'){ commitPlayerTag('goal',tr.pid,tr.t); return; }
-  tr.added=(tr.added||[]).concat(k); addEvent({type:k,t:tr.t,pid:tr.pid});
+  tr.added=(tr.added||[]).concat(k); addEvent({type:k,t:tr.t,pid:tr.pid,inv:tr.more&&tr.more.length?tr.more.slice():undefined});
 }
 function trayAction(a){
   const tr=ui.tray; if(!tr) return;
@@ -2649,7 +2674,7 @@ function openExport(){
 }
 function selModel(ctx){
   if(ctx==='ex') return {set:ex.sel, items:exCandidates().map(e=>({key:e.id,mid:M.id,ev:e,secs:preOf(e)+postOf(e),type:e.type,tlabel:T(e.type).label,group:({1:'1st half',2:'2nd half'})[halfOf(e.t)]||'Outside the halves',min:minuteLabel(e.t),label:T(e.type).label,css:T(e.type).css,who:e.type==='sub'||e.pid||e.og||e.assist?evWho(e):'',note:e.note||''}))};
-  return {set:pex.sel, items:pexCandidates().map(c=>withMatch(c.m,()=>({key:c.m.id+':'+c.e.id,mid:c.m.id,ev:c.e,secs:preOf(c.e)+postOf(c.e),type:clipKey(c),tlabel:c.role==='assist'?'Assists':T(c.e.type).label,group:fmtDate(c.m.date,{day:'numeric',month:'short'})+' '+vsLabel(c.m),min:minuteLabel(c.e.t),label:clipTitle(c),css:c.role==='assist'?'var(--goal)':T(c.e.type).css,who:c.role==='assist'&&c.e.pid?'Goal by '+pLabel(P(c.e.pid)):'',note:c.e.note||''})))};
+  return {set:pex.sel, items:pexCandidates().map(c=>withMatch(c.m,()=>({key:c.m.id+':'+c.e.id,mid:c.m.id,ev:c.e,secs:preOf(c.e)+postOf(c.e),type:clipKey(c),tlabel:c.role==='assist'?'Assists':T(c.e.type).label+(c.role==='involved'?' · involved':''),group:fmtDate(c.m.date,{day:'numeric',month:'short'})+' '+vsLabel(c.m),min:minuteLabel(c.e.t),label:clipTitle(c),css:c.role==='assist'?'var(--goal)':T(c.e.type).css,who:c.role==='assist'&&c.e.pid?'Goal by '+pLabel(P(c.e.pid)):'',note:c.e.note||''})))};
 }
 function renderSelect(ctx,el,title,sub){
   const {set,items}=selModel(ctx), prev=el.querySelector('.sel-list'), top=prev?prev.scrollTop:0;
@@ -3729,11 +3754,12 @@ function playerClips(sid,season){
   const out=[];
   matchesIn(season).filter(isPlayed).sort(byDateAsc).forEach(m=>{ const ids=m.players.filter(p=>p.sq===sid).map(p=>p.id); if(!ids.length) return;
     m.events.slice().sort((a,b)=>a.t-b.t).forEach(e=>{ if(e.type==='swap'||e.type==='formation'||e.type==='sub') return;
-      if(ids.includes(e.pid)) out.push({m,e,role:'own'}); else if(e.type==='goal'&&ids.includes(e.assist)) out.push({m,e,role:'assist'}); }); });
+      if(ids.includes(e.pid)) out.push({m,e,role:'own'}); else if(e.type==='goal'&&ids.includes(e.assist)) out.push({m,e,role:'assist'}); else if((e.inv||[]).some(x=>ids.includes(x))) out.push({m,e,role:'involved'}); }); });
   return out;
 }
-const clipKey=c=>c.role==='assist'?'assist':c.e.type;
-function clipTitle(c){ return c.role==='assist'?'Assist':withMatch(c.m,()=>T(c.e.type).label); }
+const clipKey=c=>c.role==='assist'?'assist':c.role==='involved'?'inv:'+c.e.type:c.e.type;
+const clipKeyLabel=k=>k==='assist'?'Assists':/^inv:/.test(k)?tagInfo(k.slice(4)).label+' · involved':tagInfo(k).label;
+function clipTitle(c){ return c.role==='assist'?'Assist':withMatch(c.m,()=>T(c.e.type).label)+(c.role==='involved'?' · involved':''); }
 function renderPlayer(){
   const el=$('#view-player'), s=SQ(viewArg); if(!s){ go('players'); return; }
   const season=curSeason(), agg=playerAgg(season), a=agg[s.id], L=a.line;
@@ -3745,7 +3771,7 @@ function renderPlayer(){
   pv.i=keep?pv.list.findIndex(c=>c.e.id===keep.e.id):-1;
   const per90=v=>a.min>=90?(v/a.min*90).toFixed(2):'–';
   const cust=customKeys([L]);
-  const profile=Object.keys(tagCounts).filter(k=>k!=='assist').map(k=>({l:tagInfo(k).label,v:tagCounts[k],c:tagInfo(k).css})).sort((x,y)=>y.v-x.v);
+  const profile=Object.keys(tagCounts).filter(k=>k!=='assist'&&!/^inv:/.test(k)).map(k=>({l:tagInfo(k).label,v:tagCounts[k],c:tagInfo(k).css})).sort((x,y)=>y.v-x.v);
   if(tagCounts.assist) profile.push({l:'Assists',v:tagCounts.assist,c:'var(--goal)'}); profile.sort((x,y)=>y.v-x.v);
   const needed=[...new Map(pv.list.map(c=>[c.m.id,c.m])).values()];
   const missing=needed.filter(m=>!sessionFiles[m.id]);
@@ -3761,7 +3787,7 @@ function renderPlayer(){
     <div class="kpis">${[['Appearances',a.apps,a.starts+' starts'],['Minutes',a.min,a.apps?Math.round(a.min/a.apps)+' per match':''],['Goals',L.g,per90(L.g)+' per 90'],['Assists',L.a,per90(L.a)+' per 90'],['Shots',L.sh,L.on+' on target'],['Key passes',L.kp,per90(L.kp)+' per 90'],['Ball recoveries',L.rec,per90(L.rec)+' per 90'],['Turnovers',L.to,per90(L.to)+' per 90']].map(([l,v,sub])=>`<div class="kpi"><span>${l}</span><b class="tnum">${v}</b><small>${esc(sub)}</small></div>`).join('')}</div>
     <section class="card"><div class="card-head"><h2>Clips</h2><span class="hint">${allClips.length} tagged moment${allClips.length===1?'':'s'}</span></div>
       ${allClips.length?`<div class="ev-tools">
-        <select id="pvTag" aria-label="Filter clips by tag"><option value="">All tags</option>${Object.keys(tagCounts).map(k=>`<option value="${esc(k)}"${pv.ftag===k?' selected':''}>${esc(k==='assist'?'Assists':tagInfo(k).label)} (${tagCounts[k]})</option>`).join('')}</select>
+        <select id="pvTag" aria-label="Filter clips by tag"><option value="">All tags</option>${Object.keys(tagCounts).map(k=>`<option value="${esc(k)}"${pv.ftag===k?' selected':''}>${esc(clipKeyLabel(k))} (${tagCounts[k]})</option>`).join('')}</select>
         <select id="pvMatch" aria-label="Filter clips by match"><option value="">All matches</option>${[...new Map(allClips.map(c=>[c.m.id,c.m])).values()].map(m=>`<option value="${m.id}"${pv.fmatch===m.id?' selected':''}>${esc(fmtDate(m.date,{day:'numeric',month:'short'})+' '+vsLabel(m))}</option>`).join('')}</select>
         <label><input type="checkbox" id="pvAuto"${pv.auto?' checked':''}> Play clips back to back</label>
         <span style="flex:1"></span><button class="btn sm primary" id="btnPexOpen">Export clips…</button></div>
@@ -4094,7 +4120,7 @@ function panelTags(){ return layout().items.filter(i=>i.kind==='tag'&&(EV[i.ref]
 function pitchHtml(ctx,box){
   const {tr,pickOn,pickBench,scorerId,lu}=ctx, F=FORMATIONS[lu.formation]; let tokens='';
   lu.slotMap.forEach((pid,i)=>{ const p=P(pid); if(!p) return; const [x,y]=F.pos[i];
-    const off=lu.sentOff.has(pid), sel=tr&&(tr.pid===pid||tr.outPid===pid), pickable=pickOn&&!off&&pid!==scorerId&&!(tr.mode==='swap'&&pid===tr.pid);
+    const off=lu.sentOff.has(pid), sel=tr&&(tr.pid===pid||tr.outPid===pid||(tr.more||[]).includes(pid)), pickable=pickOn&&!off&&pid!==scorerId&&!(tr.mode==='swap'&&pid===tr.pid);
     const yc=lu.yellows[pid]||0, g=lu.goals[pid]||0;
     tokens+=`<button class="token${i===0?' gk':''}${sel?' sel':''}${pickable?' pickable':''}${(pickBench||(pickOn&&!pickable&&!sel))?' dim':''}${off?' off':''}" style="left:${x}%;top:${y}%" data-pl="${pid}" data-on="1" data-anchor="f-${pid}" aria-label="${esc(pLabel(p))}">
       <span class="shirt">${esc(p.num||'?')}<span class="badges">${g?`<b>${g>1?g:'⚽'}</b>`:''}${off?'<b class="rc"></b>':yc?'<b class="yc"></b>':''}</span></span><span class="nm">${esc(firstName(p)||F.roles[i])}</span></button>`; });
@@ -4113,7 +4139,7 @@ function cvItemHtml(it,ctx){
   }
   if(it.kind==='player'){
     const {tr,pickOn,pickBench,scorerId,lu}=ctx, pid=lu.slotMap[it.ref], p=P(pid), role=FORMATIONS[lu.formation].roles[it.ref]||'';
-    let cls=''; if(p&&!ed){ const off=lu.sentOff.has(pid), sel=tr&&(tr.pid===pid||tr.outPid===pid), pickable=pickOn&&!off&&pid!==scorerId&&!(tr.mode==='swap'&&pid===tr.pid);
+    let cls=''; if(p&&!ed){ const off=lu.sentOff.has(pid), sel=tr&&(tr.pid===pid||tr.outPid===pid||(tr.more||[]).includes(pid)), pickable=pickOn&&!off&&pid!==scorerId&&!(tr.mode==='swap'&&pid===tr.pid);
       cls=(sel?' sel':'')+(pickable?' pickable':'')+((pickBench||(pickOn&&!pickable&&!sel))?' dim':'')+(off?' off':''); }
     if(it.w<4) cls+=' narrow';
     return `<button class="cv-it cv-pl${cls}${pick}" data-it="${it.id}"${!ed&&p?` data-pl="${pid}" data-on="1" data-anchor="${it.id}"`:''}${!p&&!ed?' disabled':''} style="${pos}" title="${esc(p?pLabel(p)+' · '+role:'Nobody in this position')}"><span class="n">${esc(p?p.num||'?':'–')}</span><span class="nm">${esc(p?firstName(p):'Empty')}</span><small>${esc(role)}</small>${tools}</button>`;
@@ -4135,8 +4161,10 @@ function popHtml(ctx){
     const all=PLAYER_TAGS.concat(settings.custom.filter(c=>c.kind!=='team').map(c=>c.id));
     const placed=panelTags().filter(k=>T(k).kind==='player'), main=placed.length?placed:all, more=all.filter(k=>!main.includes(k));
     const tb=k=>`<button class="tag${added.includes(k)?' done':''}" data-ptag="${esc(k)}" style="--c:${T(k).css}"><span class="dot"></span>${esc(T(k).label)}</button>`;
-    head=`<strong>#${esc(p.num)} ${esc(p.name||roleOf(p))}</strong>${at}`;
-    body=`<div class="pop-tags">${main.map(tb).join('')}</div>${more.length?(ui.popMore?`<span class="section-label">More tags</span><div class="pop-tags">${more.map(tb).join('')}</div>`:`<button class="linkbtn" data-popmore>+ More tags</button>`):''}`;
+    head=`<strong>#${esc(p.num)} ${esc(p.name||roleOf(p))}</strong>${(tr.more||[]).length?` <span class="muted">+ ${tr.more.length} involved</span>`:''}${at}`;
+    const inv=`<div class="pop-inv">${(tr.more||[]).map(id=>{ const q=P(id); return q?`<span class="inv-chip"><b>${esc(q.num||'?')}</b>${esc(firstName(q))}<button data-trless="${id}" aria-label="Remove ${esc(pLabel(q))}">×</button></span>`:''; }).join('')}<button class="btn sm${tr.multi?' primary':''}" data-trmulti aria-pressed="${!!tr.multi}">${tr.multi?'Done adding':'+ More players'}</button>${tr.multi?'':(tr.more||[]).length?'':'<span class="hint">or Shift-click them on the pitch</span>'}</div>
+      ${tr.multi?`<div class="pop-list inv-pick">${onField.filter(id=>id!==tr.pid).map(id=>{ const q=P(id); return `<button class="lib-pl" data-trtog="${id}" aria-pressed="${(tr.more||[]).includes(id)}"><span class="n">${esc(q.num||'?')}</span>${esc(firstName(q))}</button>`; }).join('')}</div>`:''}`;
+    body=inv+`<div class="pop-tags">${main.map(tb).join('')}</div>${more.length?(ui.popMore?`<span class="section-label">More tags</span><div class="pop-tags">${more.map(tb).join('')}</div>`:`<button class="linkbtn" data-popmore>+ More tags</button>`):''}`;
     acts=`<button class="btn sm" data-tray="subIn">Substitute off…</button><button class="btn sm" data-tray="swap">Swap position…</button><button class="btn sm" data-tray="pnote">Note…</button><span style="flex:1"></span><button class="btn sm${added.length?' primary':' ghost'}" data-tray="cancel">${added.length?'Done':'Close'}</button>`;
   } else if(tr.mode==='assist'){ const e=M.events.find(x=>x.id===tr.eventId);
     head=`<strong>${esc(T('goal').label)} · ${esc(e&&e.pid?firstName(P(e.pid)):'')}</strong> · who gave the assist?`;
@@ -5767,7 +5795,10 @@ document.addEventListener('click',e=>{
   if(b=g('[data-setphase]')) return setPhase(b.dataset.setphase);
   if(b=g('[data-seekphase]')) return seek(M.phases[b.dataset.seekphase]);
   if(b=g('[data-clearphase]')){ M.phases[b.dataset.clearphase]=null; save(); renderPhases(); renderTimeline(); renderEvents(); renderLiveBar(); tick(true); return; }
-  if(b=g('[data-pl]')){ if(view!=='match') return; ui.lastAnchor=b.dataset.anchor||null; ui.popMore=false; return onPlayerClick(b.dataset.pl,!!b.dataset.on); }
+  if(b=g('[data-pl]')){ if(view!=='match') return; const mod=e.shiftKey||e.ctrlKey||e.metaKey; if(!(mod&&ui.tray&&ui.tray.mode==='player')){ ui.lastAnchor=b.dataset.anchor||null; ui.popMore=false; } return onPlayerClick(b.dataset.pl,!!b.dataset.on,mod); }
+  if(b=g('[data-trmulti]')){ const tr=ui.tray; if(tr&&tr.mode==='player'){ tr.multi=!tr.multi; renderTagging(); } return; }
+  if(b=g('[data-trtog]')){ const tr=ui.tray; if(tr&&tr.mode==='player'){ const st=new Set(tr.more||[]), id=b.dataset.trtog; st.has(id)?st.delete(id):st.add(id); tr.more=[...st]; renderTagging(); } return; }
+  if(b=g('[data-trless]')){ const tr=ui.tray; if(tr&&tr.mode==='player'){ tr.more=(tr.more||[]).filter(x=>x!==b.dataset.trless); renderTagging(); } return; }
   if(b=g('[data-tagk]')) return tagClick(b.dataset.tagk);
   if(b=g('[data-tray]')) return trayAction(b.dataset.tray);
   if(b=g('[data-cvx]')){ layout().items=layout().items.filter(i=>i.id!==b.dataset.cvx); if(ui.layoutSel===b.dataset.cvx) ui.layoutSel=null; saveSettings(); renderTagging(); return; }
@@ -5819,6 +5850,8 @@ document.addEventListener('click',e=>{
   if(b=g('[data-delev]')) return removeEvent(b.dataset.delev);
   if(b=g('[data-timeev]')){ ui.timeEdit=ui.timeEdit===b.dataset.timeev?null:b.dataset.timeev; renderEvents(); return; }
   if(b=g('[data-tprev]')){ const ev=M.events.find(x=>x.id===b.dataset.tprev); if(ev){ if(!hasVideo()) return toast('Load the match video first.'); ui.clip={list:[ev],i:0}; playClip(); } return; }
+  if(b=g('[data-invev]')){ ui.invEdit=ui.invEdit===b.dataset.invev?null:b.dataset.invev; renderEvents(); return; }
+  if(b=g('[data-invtog]')){ const ev=M.events.find(x=>x.id===b.dataset.ev); if(ev){ const st=new Set(ev.inv||[]), id=b.dataset.invtog; st.has(id)?st.delete(id):st.add(id); st.delete(ev.pid); if(st.size) ev.inv=[...st]; else delete ev.inv; save(); renderEvents(); } return; }
   if(b=g('[data-noteev]')){ ui.noteEdit=ui.noteEdit===b.dataset.noteev?null:b.dataset.noteev; renderEvents(); return; }
   if(b=g('[data-fhalf]')){ ui.fHalf=b.dataset.fhalf; renderEvents(); return; }
   if(b=g('[data-shalf]')){ ui.statHalf=b.dataset.shalf; renderStats(); return; }
