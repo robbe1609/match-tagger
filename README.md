@@ -107,9 +107,7 @@ The site opens on the **Calendar**. From there you plan everything:
 
 ### Training attendance
 
-Click a training day in the calendar → **Take attendance** (or **Today's attendance** at the top of the calendar, or **Take attendance** on a day in the week planner). Tap a letter per player: **P**resent, **L**ate, **E**xcused, **A**bsent, **I**njured. **Mark the rest present** fills everyone you have not marked. Each player page shows her attendance for the season, the Players table has a **Train %** column, and **Export → Attendance (.csv)** gives a sheet per month or season.
-
-Players from another group: on an attendance page click **Other team players…** and then **Other team** next to their name, or use **Mark as other team** on the player's page. They leave the attendance list, counts and exports for that whole season (their matches and stats stay). **Back to my team** undoes it.
+Click a training day in the calendar → **Take attendance**. For each player choose **P** (present), **A** (absent: type the reason next to her name, earlier reasons are suggested), **I** (injured) or **NT** (national team). **Mark the rest present** fills in everyone left. Attendance % = present out of all sessions except national team call-ups. Older marks were converted: late → present, excused → absent with the reason "Excused".
 
 ### Bringing over the old Week Planner and Wedstrijdplanner
 
@@ -141,6 +139,14 @@ Every match is a **Competition**, **Cup** or **Friendly** match. Pick it in the 
 - **Colours:** competition yellow, cup purple, friendly teal, in the calendar, its PDF/PowerPoint export, and as a small label in the match lists.
 - **Filter:** next to **Season** you find **Matches: All / Competition / Cup / Friendly**. It applies to Analyses, Players (cards, table and chart, including the 50% line and the PDF), each player's page and Team. The choice is remembered in this browser. The Overview always shows all matches.
 
+## Availability and playing time
+
+On a match page, under **Squad**, every squad player who is not selected gets a reason: **Coach's decision** (default), **Injured**, **Streepjes** or **Other, not selectable** (type the reason). You can set the same on the **Match data** page for matches entered by hand. If a player was marked injured at the last training, the list says so.
+
+- **Her 50% target only counts matches she was available for.** Injured, streepjes and other leave the match out; a coach's decision (or sitting on the bench) keeps it in.
+- **Players chart · Minutes:** each bar is the length of all the team's minutes and shows minutes played (blue), available but not played (light blue) and not available (striped: red injured, orange streepjes, grey other). The orange tick is her own 50% mark, the % is her share of her available minutes, and **Lowest % first** puts the players who need minutes on top. **Per available match** divides by the matches she was available for. The PDF export shows the same.
+- **Player page · Playing time:** her % of available minutes, above or below 50%, and a column per match filled to the minutes she played, with NS / INJ / STR / OTH when she was not selected. Click a column to open that match.
+
 ## Players chart
 
 On **Players**, click **Chart** (next to Cards and Table).
@@ -148,8 +154,7 @@ On **Players**, click **Chart** (next to Cards and Table).
 - **Show:** minutes played, appearances, starts, training attendance, or any stat you tag (goals, assists, shots, recoveries…).
 - **Total / Per match / Per 90 min:** per match divides by appearances; per 90 uses the minutes each player actually played.
 - **The dotted line** is the average of the players on the chart, so it moves when you hide or show players.
-- **The orange dashed line** (minutes only) is 50% of the available minutes: half of all minutes the team played in the matches of that season (with **Per match**, half a match). Players below it show their minutes in orange, and the header counts them.
-- **The % in each bar** (minutes only) is the share of all available minutes that player played (with **Per match**, the share of a full match).
+- **Minutes** use each player's availability: see *Availability and playing time*.
 - **Export PDF** saves the chart as an A4 page with both lines and the legend. Long squads continue on a second page.
 - **Players · x of y:** pick who is on the chart. **All**, **None**, **Only players with minutes** and **Hide other team** are quick filters; click a name to add or remove her. Your choice is remembered in this browser.
 - The season picker at the top applies to the chart too.

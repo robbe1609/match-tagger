@@ -494,6 +494,64 @@ button.res:hover{transform:translateY(-1px)}
 .mn-row select{max-width:210px}
 .mn-del{margin-left:auto}
 .mn-warn{flex-basis:100%;margin:0;font-size:13px;color:var(--warn);font-weight:600}
+.ns-list{border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:5px}
+.ns-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin-bottom:4px}
+.ns-head h3{margin:0;font-family:var(--f-display);font-size:19px}
+.ns-row{display:grid;grid-template-columns:30px minmax(0,1fr) auto;align-items:center;gap:6px 10px;padding:4px 6px;border-radius:9px;border-left:4px solid var(--line)}
+.ns-row.r-injured{border-left-color:var(--against);background:color-mix(in srgb,var(--against) 6%,transparent)}
+.ns-row.r-streepjes{border-left-color:var(--warn);background:color-mix(in srgb,var(--warn) 7%,transparent)}
+.ns-row.r-other{border-left-color:var(--neutral);background:var(--surface-2)}
+.ns-row .num{font-family:var(--f-display);font-weight:800;color:var(--muted);text-align:right}
+.ns-row .nm{font-weight:600;font-size:14px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ns-row select,.ns-row input,.mn-ns select,.mn-ns input{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:5px 8px;font:inherit;font-size:13px;color:var(--ink);min-width:0}
+.ns-row input{grid-column:2 / -1}
+.ns-hint{margin-left:8px;font-size:11px;font-weight:700;color:var(--against)}
+.mn-ns{grid-column:2 / -1;display:flex;gap:6px;flex-wrap:wrap}.mn-ns input{flex:1;min-width:120px}
+/* playing time */
+.pch-stack{position:absolute;left:0;top:50%;height:16px;transform:translateY(-50%);display:flex;border-radius:0 4px 4px 0;overflow:hidden}
+.pch-stack .seg,.pt-bar .seg{display:block;height:100%;flex:0 0 auto}
+.seg.played{background:var(--accent)}
+.seg.free{background:var(--accent-soft);box-shadow:inset 0 0 0 1px rgba(0,120,191,.25)}
+.seg.un{background-color:var(--surface-2)}
+.seg.un.injured{background-image:repeating-linear-gradient(135deg,color-mix(in srgb,var(--against) 55%,transparent) 0 2px,transparent 2px 6px)}
+.seg.un.streepjes{background-image:repeating-linear-gradient(135deg,color-mix(in srgb,var(--warn) 60%,transparent) 0 2px,transparent 2px 6px)}
+.seg.un.other{background-image:repeating-linear-gradient(135deg,color-mix(in srgb,var(--neutral) 55%,transparent) 0 2px,transparent 2px 6px)}
+.pch-t50,.pt-t50{position:absolute;z-index:2;width:3px;margin-left:-1.5px;background:var(--warn);border-radius:2px;pointer-events:none}
+.pch-t50{top:4px;bottom:4px}
+.pch-legend .lg-seg{width:16px;height:10px;display:inline-block;border-radius:2px}
+.pch-legend .lg-t50{width:3px;height:14px;border-radius:2px;background:var(--warn)}
+.pt-sum{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px 18px;align-items:center}
+.pt-kpi{display:flex;flex-direction:column;align-items:flex-start}
+.pt-kpi b{font-family:var(--f-display);font-weight:800;font-size:44px;line-height:1}
+.pt-kpi.ok b{color:var(--res-w)}.pt-kpi.low b{color:var(--warn)}
+.pt-kpi span{font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.pt-facts{display:flex;flex-direction:column;gap:2px;font-size:14px}
+.pt-ok{color:var(--res-w);font-weight:700}.pt-low{color:var(--warn);font-weight:700}
+.pt-bar{grid-column:1 / -1;position:relative;display:flex;height:16px;border-radius:4px;overflow:visible;background:var(--surface-2)}
+.pt-bar .seg:first-child{border-radius:4px 0 0 4px}
+.pt-t50{top:-4px;bottom:-4px}
+.pt-strip{display:flex;gap:4px;overflow-x:auto;padding:4px 2px 8px}
+.pt-col{flex:0 0 46px;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer}
+.pt-box{position:relative;width:100%;height:84px;border-radius:7px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden;display:flex;align-items:flex-end}
+.pt-box i{display:block;width:100%;background:var(--accent)}
+.pt-col.st-sub .pt-box i{background:color-mix(in srgb,var(--accent) 60%,#fff)}
+.pt-box em{position:absolute;left:0;right:0;top:4px;text-align:center;font-style:normal;font-size:11px;font-weight:800;color:var(--ink)}
+.pt-col.st-start .pt-box em,.pt-col.st-sub .pt-box em{text-shadow:0 0 3px var(--surface)}
+.pt-col.full .pt-box em{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.35)}
+.pt-col.st-unused .pt-box{border-style:dashed}
+.pt-col.st-coach .pt-box{background:var(--surface-2);border-style:dotted}
+.pt-col.st-injured .pt-box{background-image:repeating-linear-gradient(135deg,color-mix(in srgb,var(--against) 45%,transparent) 0 2px,transparent 2px 6px)}
+.pt-col.st-streepjes .pt-box{background-image:repeating-linear-gradient(135deg,color-mix(in srgb,var(--warn) 50%,transparent) 0 2px,transparent 2px 6px)}
+.pt-col.st-other .pt-box{background-image:repeating-linear-gradient(135deg,color-mix(in srgb,var(--neutral) 45%,transparent) 0 2px,transparent 2px 6px)}
+.pt-col:hover .pt-box{border-color:var(--accent)}
+.pt-d{font-size:11px;font-weight:700;font-variant-numeric:tabular-nums}
+.pt-o{font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.04em}
+.pt-legend .lg-sq{width:14px;height:14px;border-radius:3px;display:inline-block;border:1px solid var(--line);background:var(--surface-2)}
+.lg-sq.st-start{background:var(--accent);border-color:var(--accent)}.lg-sq.st-sub{background:color-mix(in srgb,var(--accent) 60%,#fff)}.lg-sq.st-unused{border-style:dashed}.lg-sq.st-coach{border-style:dotted}
+.lg-sq.st-injured{background-image:repeating-linear-gradient(135deg,color-mix(in srgb,var(--against) 45%,transparent) 0 2px,transparent 2px 5px)}
+.lg-sq.st-streepjes{background-image:repeating-linear-gradient(135deg,color-mix(in srgb,var(--warn) 50%,transparent) 0 2px,transparent 2px 5px)}
+.lg-sq.st-other{background-image:repeating-linear-gradient(135deg,color-mix(in srgb,var(--neutral) 45%,transparent) 0 2px,transparent 2px 5px)}
+@media (max-width:560px){.pt-sum{grid-template-columns:minmax(0,1fr)}.ns-row{grid-template-columns:26px minmax(0,1fr)}.ns-row select{grid-column:2}}
 /* Players */
 .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
 .pcard{position:relative;overflow:hidden;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px 12px;display:flex;flex-direction:column;gap:4px;color:var(--ink);transition:border-color .15s,transform .15s}
@@ -899,6 +957,11 @@ html.locked body>*:not(#gate):not(#toasts){visibility:hidden}
 .att-row .nm{flex:1;min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .att-row.present{border-left-color:var(--res-w)}.att-row.late{border-left-color:var(--goal)}.att-row.excused{border-left-color:var(--accent)}.att-row.absent{border-left-color:var(--against)}.att-row.injured{border-left-color:#8E5BD0}
 .att-btns{display:flex;gap:4px;flex:none}
+.att-btns button.nt{font-size:14px}
+.att-btns button.nt[aria-pressed="true"]{background:var(--accent)}
+.att-row.nt{border-left-color:var(--accent)}.att-chip.nt{border-color:rgba(0,120,191,.5)}.att-dot.nt{background:var(--accent)}
+.att-why{flex:0 1 180px;min-width:90px;border:1px solid var(--line);background:var(--surface-2);border-radius:7px;padding:6px 8px;font:inherit;font-size:14px;color:var(--ink)}
+@media (max-width:560px){.att-row{flex-wrap:wrap}.att-why{order:5;flex:1 1 100%}}
 .att-btns button{width:36px;height:36px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);font-family:var(--f-display);font-weight:700;font-size:17px;color:var(--muted);padding:0}
 .att-btns button:hover{border-color:var(--muted);color:var(--ink)}
 .att-btns button[aria-pressed="true"]{color:#fff;border-color:transparent}
@@ -3206,7 +3269,7 @@ function renderPlayers(){
   const val=(s,k)=>{ const a=agg[s.id]; if(k==='num') return +s.num||999; if(k==='name') return norm(s.name); if(k==='pos') return s.pos||'zz'; if(k==='apps'||k==='starts'||k==='min') return a[k]; if(k==='att'){ const r=attStats(s.id,season); return r.pct==null?-1:r.pct; } return a.line[k]||0; };
   const ps=ui.psort||{k:'num',d:1};
   list.sort((x,y)=>{ const a=val(x,ps.k), b=val(y,ps.k); return (a<b?-1:a>b?1:0)*(['num','name','pos'].includes(ps.k)?ps.d:-ps.d)||(+x.num||999)-(+y.num||999); });
-  const cols=[['num','#'],['name','Player'],['pos','Pos'],['apps','Apps'],['starts','Starts'],['min','Min'],['att','Train %','Training attendance: present or late']].concat(STAT_COLS.map(c=>[c[0],c[1],c[2]]),cust.map(k=>[k,tagInfo(k).label]));
+  const cols=[['num','#'],['name','Player'],['pos','Pos'],['apps','Apps'],['starts','Starts'],['min','Min'],['att','Train %','Training attendance: present, national team call-ups not counted']].concat(STAT_COLS.map(c=>[c[0],c[1],c[2]]),cust.map(k=>[k,tagInfo(k).label]));
   const pmode=['cards','table','chart'].includes(ui.pview)?ui.pview:'cards', cards=pmode==='cards';
   el.innerHTML=`<div class="wrap page">
     <header class="page-head"><div><span class="eyebrow">${esc(teamName())} · ${esc(seasonText(season))}</span><h1>Players</h1><p>${pq?list.length+' of '+all.length+' players match “'+esc(ui.pq.trim())+'”':all.length+' player'+(all.length===1?'':'s')+' · stats update automatically from every tagged match.'}</p></div>
@@ -3228,7 +3291,7 @@ const pch={metric:'min',mode:'total',sort:'value',hide:[],inited:false,open:fals
 try{ Object.assign(pch,JSON.parse(localStorage.getItem(PCH_LS)||'{}')); pch.open=false; }catch(e){}
 function pchSave(){ try{ localStorage.setItem(PCH_LS,JSON.stringify({metric:pch.metric,mode:pch.mode,sort:pch.sort,hide:pch.hide,inited:pch.inited})); }catch(e){} }
 function pchMetrics(cust){ return [['min','Minutes played'],['apps','Appearances'],['starts','Starts'],['att','Training attendance']].concat(STAT_COLS.map(c=>[c[0],c[2]]),cust.map(k=>[k,tagInfo(k).label])); }
-function pchModes(m){ if(m==='att') return [['total','%']]; if(m==='apps'||m==='starts') return [['total','Total']]; if(m==='min') return [['total','Total'],['match','Per match']]; return [['total','Total'],['match','Per match'],['p90','Per 90 min']]; }
+function pchModes(m){ if(m==='att') return [['total','%']]; if(m==='apps'||m==='starts') return [['total','Total']]; if(m==='min') return [['total','Total'],['match','Per available match']]; return [['total','Total'],['match','Per match'],['p90','Per 90 min']]; }
 function pchValue(s,a,season,metric,mode){
   if(metric==='att'){ if(isOther(s,season==='all'?nowSeason():season)) return null; return attStats(s.id,season).pct; }
   const raw=['min','apps','starts'].includes(metric)?a[metric]:(a.line[metric]||0);
@@ -3240,12 +3303,123 @@ function pchNice(max){ if(!(max>0)) return {max:1,step:1}; const raw=max/5, p=10
 function matchLen(m){ const p=m.phases||{}, L=(m.halfLen||45)*60; if(p.h1s==null) return null;
   const h1=(p.h1e!=null?p.h1e:(p.h2s!=null?p.h2s:p.h1s+L))-p.h1s, h2=p.h2s!=null?(p.h2e!=null?p.h2e:p.h2s+L)-p.h2s:0; return Math.max(0,Math.round((h1+h2)/60)); }
 function availMinutes(season){ const ls=matchesIn(season).filter(isPlayed).map(matchLen).filter(x=>x!=null); return {total:ls.reduce((a,b)=>a+b,0),n:ls.length}; }
+/* =================== AVAILABILITY & PLAYING TIME ===================
+   Squad players who are not selected for a match get a reason: m.selection.out[squadId] = {r, note}.
+   Injured, streepjes and other (not selectable) make the match unavailable for her: it leaves her 50% target.
+   Coach's decision (also the default) keeps it in. */
+const NS_REASONS=[['coach',"Coach's decision"],['injured','Injured'],['streepjes','Streepjes'],['other','Other, not selectable']];
+const NS_UNAVAIL=['injured','streepjes','other'];
+const nsLabel=r=>(NS_REASONS.find(x=>x[0]===r)||NS_REASONS[0])[1];
+function nsOf(m,sid){ const o=((m.selection||{}).out||{})[sid]; return o&&o.r?o:{r:'coach',note:''}; }
+function nsSet(m,sid,r,note){ const sel=fxSel(m); sel.out=sel.out||{}; if(r==='coach'&&!note) delete sel.out[sid]; else sel.out[sid]={r,note:r==='other'?(note||''):''}; saveMatchObj(m); }
+const inMatchSquad=(m,sid)=>m.players.some(p=>p.sq===sid)||((m.selection||{}).ids||[]).includes(sid);
+/* the most recent training attendance on or before a date (to hint at injuries) */
+function lastAttBefore(sid,ymd){ const ds=trainingDates().filter(d=>d<=ymd&&attOf(d)[sid]); const d=ds[ds.length-1]; return d?{d,v:attOf(d)[sid]}:null; }
+const PT_ST={start:'Started',sub:'Came on',unused:'On the bench, did not play',coach:"Not selected · coach's decision",injured:'Not selected · injured',streepjes:'Not selected · streepjes',other:'Not selected · other',otherteam:'Other team'};
+/* playing time per player over the played matches in a season (respects the Matches filter) */
+function playTime(season){
+  const ms=matchesIn(season).filter(isPlayed).sort(byDateAsc).map(m=>{ const mins=minutesFor(m)||{}, len=matchLen(m)||0, bySq={};
+    m.players.forEach(p=>{ if(p.sq) bySq[p.sq]={min:mins[p.id]!=null?mins[p.id]:0,started:p.slot!=null&&p.slot<11}; }); return {m,len,bySq}; });
+  const cache={};
+  const per=sid=>{ if(cache[sid]) return cache[sid]; const s=SQ(sid); const r={total:0,avail:0,played:0,un:{injured:0,streepjes:0,other:0},nAvail:0,nUn:0,rows:[]};
+    ms.forEach(x=>{ const ssn=seasonOf(isoDate(x.m.date)); if(isOther(s,ssn)){ r.rows.push({m:x.m,len:x.len,st:'otherteam',min:0}); return; }
+      const b=x.bySq[sid]; let st;
+      if(b||inMatchSquad(x.m,sid)) st=b&&b.min>0?(b.started?'start':'sub'):'unused'; else st=nsOf(x.m,sid).r;
+      r.total+=x.len; const mn=b?b.min:0;
+      if(NS_UNAVAIL.includes(st)){ r.un[st]+=x.len; r.nUn++; } else { r.avail+=x.len; r.nAvail++; }
+      r.played+=mn; r.rows.push({m:x.m,len:x.len,st,min:mn,note:st==='other'?nsOf(x.m,sid).note:''}); });
+    r.share=r.avail>0?r.played/r.avail:null; return cache[sid]=r; };
+  return {ms,per}; }
+/* player page: a column per match, filled up to the minutes played */
+/* match page: why each squad player is not in the matchday squad */
+function nsListHtml(m,ss){
+  const picked=new Set(((m.selection||{}).ids||[]).concat(m.players.map(p=>p.sq).filter(Boolean)));
+  if(!picked.size) return '';
+  const out=squad().filter(x=>!picked.has(x.id)&&!isOther(x,ss)).sort((a,b)=>(+a.num||999)-(+b.num||999)||a.name.localeCompare(b.name));
+  if(!out.length) return '';
+  const d=isoDate(m.date);
+  return `<div class="ns-list"><div class="ns-head"><h3>Not selected · ${out.length}</h3><span class="hint">Injured, streepjes and other leave this match out of her 50% playing-time target. A coach's decision counts.</span></div>
+    ${out.map(x=>{ const o=nsOf(m,x.id), la=d?lastAttBefore(x.id,d):null;
+      return `<div class="ns-row r-${o.r}"><span class="num">${esc(x.num||'–')}</span><span class="nm">${esc(x.name)}${la&&la.v==='injured'&&o.r!=='injured'?`<small class="ns-hint" title="Training ${esc(fmtDate(la.d,{day:'numeric',month:'short'}))}">injured at last training</small>`:''}</span>
+        <select data-nsr="${x.id}" aria-label="Reason ${esc(x.name)} is not selected">${NS_REASONS.map(([k,l])=>`<option value="${k}"${o.r===k?' selected':''}>${esc(l)}</option>`).join('')}</select>
+        ${o.r==='other'?`<input data-nsn="${x.id}" value="${esc(o.note||'')}" placeholder="Reason (e.g. school trip)" aria-label="Reason">`:''}</div>`; }).join('')}</div>`; }
+document.addEventListener('change',e=>{ const t=e.target; if(!t.dataset||!t.dataset.nsr||!['fixture','entry'].includes(view)) return; const m=store[viewArg]; if(!m) return;
+  const o=nsOf(m,t.dataset.nsr); nsSet(m,t.dataset.nsr,t.value,o.note); renderView(); if(t.value==='other'){ const n=document.querySelector(`[data-nsn="${t.dataset.nsr}"]`); if(n) n.focus(); } });
+document.addEventListener('input',e=>{ const t=e.target; if(!t.dataset||!t.dataset.nsn||!['fixture','entry'].includes(view)) return; const m=store[viewArg]; if(!m) return;
+  const sel=fxSel(m); sel.out=sel.out||{}; sel.out[t.dataset.nsn]={r:'other',note:t.value}; saveMatchObj(m); });
+function playTimeCard(s,season){
+  const pt=playTime(season), r=pt.per(s.id), rows=r.rows.filter(x=>x.st!=='otherteam');
+  if(!rows.length) return `<section class="card"><div class="card-head"><h2>Playing time</h2></div><p class="hint">No played matches in ${esc(seasonText(season).toLowerCase())}${mtScope()?' ('+esc(mtScope().toLowerCase())+')':''} yet.</p></section>`;
+  const pct=r.share==null?null:Math.round(r.share*100), ok=pct!=null&&pct>=50;
+  const unTxt=NS_UNAVAIL.filter(k=>r.un[k]).map(k=>`${nsLabel(k).toLowerCase()} ${r.rows.filter(x=>x.st===k).length}×`).join(', ');
+  const short=m=>String(m.themShort||m.them||'').slice(0,4).toUpperCase();
+  return `<section class="card pt-card"><div class="card-head"><h2>Playing time</h2><span class="hint">${esc(seasonText(season))}${mtScope()?' · '+esc(mtScope()):''}</span></div>
+    <div class="pt-sum">
+      <div class="pt-kpi ${pct==null?'':ok?'ok':'low'}"><b>${pct==null?'–':pct+'%'}</b><span>of her available minutes</span></div>
+      <div class="pt-facts"><span><b>${r.played}</b> of <b>${r.avail}</b> available minutes played</span>
+        <span>Available for <b>${r.nAvail}</b> of ${rows.length} match${rows.length===1?'':'es'}${unTxt?' · not available: '+esc(unTxt):''}</span>
+        <span class="${pct==null?'':ok?'pt-ok':'pt-low'}">${pct==null?'Not available for any match yet':ok?'Above her 50% target':'Below her 50% target ('+Math.round(r.avail/2)+' min)'}</span></div>
+      <div class="pt-bar" title="${esc(r.played+' played · '+Math.max(0,r.avail-r.played)+' available, not played'+(r.total>r.avail?' · '+(r.total-r.avail)+' not available':''))}">
+        <i class="seg played" style="flex-basis:${r.total?r.played/r.total*100:0}%"></i><i class="seg free" style="flex-basis:${r.total?Math.max(0,r.avail-r.played)/r.total*100:0}%"></i>${NS_UNAVAIL.map(k=>r.un[k]?`<i class="seg un ${k}" style="flex-basis:${r.un[k]/r.total*100}%"></i>`:'').join('')}
+        ${r.avail?`<i class="pt-t50" style="left:${r.avail/2/r.total*100}%"></i>`:''}</div></div>
+    <div class="pt-strip" role="list">${rows.map(x=>{ const h=x.len?Math.min(100,x.min/x.len*100):0, lab=NS_UNAVAIL.includes(x.st)||x.st==='coach'?{coach:'NS',injured:'INJ',streepjes:'STR',other:'OTH'}[x.st]:x.st==='unused'?'0′':x.min+'′';
+      return `<button class="pt-col st-${x.st}${h>=72?' full':''}" role="listitem" data-go="report" data-arg="${x.m.id}" title="${esc(fmtDate(isoDate(x.m.date),{day:'numeric',month:'short'})+' '+vsLabel(x.m)+' · '+PT_ST[x.st]+(x.note?' ('+x.note+')':'')+(x.min?' · '+x.min+' of '+x.len+' min':''))}">
+        <span class="pt-box"><i style="height:${h}%"></i><em>${esc(lab)}</em></span><span class="pt-d">${esc(fmtDate(isoDate(x.m.date),{day:'numeric',month:'numeric'}))}</span><span class="pt-o">${esc(short(x.m))}</span></button>`; }).join('')}</div>
+    <div class="pch-legend pt-legend"><span><i class="lg-sq st-start"></i>Started</span><span><i class="lg-sq st-sub"></i>Came on</span><span><i class="lg-sq st-unused"></i>Bench, 0 min</span><span><i class="lg-sq st-coach"></i>NS · coach's decision</span><span><i class="lg-sq st-injured"></i>INJ · injured</span><span><i class="lg-sq st-streepjes"></i>STR · streepjes</span><span><i class="lg-sq st-other"></i>OTH · other, not selectable</span></div>
+    <p class="hint">Each column is a match, filled up to the minutes she played. Injured, streepjes and other leave a match out of her 50% target; a coach's decision does not. Set the reason on the match page under Squad.</p></section>`; }
+/* chart rows for minutes: one bar the length of all the team's minutes, split into played / available / not available */
+function pchMinutes(shown,season,fmt){
+  const pt=playTime(season), match=pch.mode==='match';
+  const rows=shown.map(s=>{ const r=pt.per(s.id); const v=match?(r.nAvail?r.played/r.nAvail:null):r.played; const half=match?(r.nAvail?r.avail/r.nAvail/2:null):(r.avail?r.avail/2:null);
+    return {s,a:null,r,v,half,share:r.share==null?null:Math.round(r.share*100)}; });
+  rows.sort((x,y)=>pch.sort==='num'?((+x.s.num||999)-(+y.s.num||999)||x.s.name.localeCompare(y.s.name)):pch.sort==='share'?((x.share==null?999:x.share)-(y.share==null?999:y.share)||(+x.s.num||999)-(+y.s.num||999)):((y.v==null?-1:y.v)-(x.v==null?-1:x.v)||(+x.s.num||999)-(+y.s.num||999)));
+  const vals=rows.filter(x=>x.v!=null).map(x=>x.v), avg=vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:null;
+  const top=match?Math.max(0,...rows.map(x=>x.v||0),...rows.map(x=>x.half?x.half*2:0)):Math.max(0,...rows.map(x=>x.r.total));
+  const nice=pchNice(top), pct=v=>Math.max(0,Math.min(100,v/nice.max*100));
+  const below=rows.filter(x=>x.share!=null&&x.share<50).length;
+  return {rows,avg,nice,pct,below,match,pt}; }
+function pchCtl(list,hide,sx,metrics,modes,nRows){
+  const nSel=list.length-list.filter(s=>hide.has(s.id)).length, others=list.filter(s=>isOther(s,sx));
+  return `<div class="pch-bar">
+      <label class="sel">Show <select id="pchMetric">${metrics.map(([k,l])=>`<option value="${esc(k)}"${k===pch.metric?' selected':''}>${esc(l)}</option>`).join('')}</select></label>
+      ${modes.length>1?`<div class="seg" role="group" aria-label="Value">${modes.map(([k,l])=>`<button data-pchmode="${k}" aria-pressed="${pch.mode===k}">${l}</button>`).join('')}</div>`:''}
+      <div class="seg" role="group" aria-label="Order"><button data-pchsort="value" aria-pressed="${pch.sort!=='num'&&pch.sort!=='share'}">Highest first</button>${pch.metric==='min'?`<button data-pchsort="share" aria-pressed="${pch.sort==='share'}">Lowest % first</button>`:''}<button data-pchsort="num" aria-pressed="${pch.sort==='num'}">By number</button></div>
+      <button class="btn${pch.open?' primary':''}" data-pchpick aria-expanded="${pch.open}">Players · ${nSel} of ${list.length}</button>
+      <span class="spacer"></span><button class="btn primary" data-pchpdf ${nRows?'':'disabled'}>Export PDF</button>
+    </div>
+    ${pch.open?`<div class="pch-pick">
+      <div class="pch-acts"><button class="btn sm" data-pchall>All</button><button class="btn sm" data-pchnone>None</button><button class="btn sm" data-pchplayed>Only players with minutes</button>${others.length?`<button class="btn sm" data-pchmine>Hide other team</button>`:''}<span class="hint">Click a name to show or hide it.</span></div>
+      <div class="pch-chips">${list.map(s=>`<button class="pch-chip" data-pchtoggle="${s.id}" aria-pressed="${!hide.has(s.id)}"><b>${esc(s.num||'–')}</b>${esc(s.name)}${isOther(s,sx)?'<small>other team</small>':''}</button>`).join('')}</div></div>`:''}`; }
+function pchMinHtml(list,shown,season,metrics,modes,hide,sx){
+  const fmt=v=>v==null?'–':Math.round(v).toLocaleString('en-GB')+' min';
+  const c=pchMinutes(shown,season,fmt), {rows,avg,nice,pct,below,match}=c;
+  const ticks=[]; for(let t=0;t<=nice.max+1e-9;t+=nice.step) ticks.push(t);
+  const modeTxt=match?' per available match':'';
+  pch.last={kind:'min',label:'Minutes played',modeTxt,season,rows,avg,nice,ticks,fmt,tick:t=>Math.round(t).toLocaleString('en-GB'),below,match};
+  const tip=x=>{ const r=x.r; return `#${x.s.num||'–'} ${x.s.name} · ${r.played} min played of ${r.avail} available (${x.share==null?'–':x.share+'%'})`+(r.total>r.avail?` · not available ${r.total-r.avail} min (${NS_UNAVAIL.filter(k=>r.un[k]).map(k=>nsLabel(k).toLowerCase()+' '+r.un[k]).join(', ')})`:'')+` · 50% target ${Math.round(r.avail/2)} min`; };
+  const bar=x=>{ const r=x.r;
+    if(match) return `<span class="pch-fill" style="width:${x.v==null?0:pct(x.v)}%"></span>${x.half!=null?`<i class="pch-t50" style="left:${pct(x.half)}%"></i>`:''}`;
+    const T=r.total||1; return `<span class="pch-stack" style="width:${pct(r.total)}%"><i class="seg played" style="flex-basis:${r.played/T*100}%"></i><i class="seg free" style="flex-basis:${Math.max(0,r.avail-r.played)/T*100}%"></i>${NS_UNAVAIL.map(k=>r.un[k]?`<i class="seg un ${k}" style="flex-basis:${r.un[k]/T*100}%"></i>`:'').join('')}</span>${r.avail?`<i class="pch-t50" style="left:${pct(r.avail/2)}%"></i>`:''}`; };
+  return `<section class="card pch">${pchCtl(list,hide,sx,metrics,modes,rows.length)}
+    <div class="card-head"><h2>Minutes played${esc(modeTxt)}</h2><span class="hint">${esc(seasonText(season))}${mtScope()?' · '+esc(mtScope()):''}${avg!=null?` · average <b class="pch-avgtxt">${fmt(avg)}</b>`:''} · <b class="pch-halftxt">${below}</b> below 50% of their available minutes</span></div>
+    ${!rows.length?`<div class="empty-state"><strong>No players selected</strong><p>Choose which players to show.</p><button class="btn" data-pchall>Show all players</button></div>`:`
+    <div class="pch-chart" style="--avg:${avg!=null?pct(avg):0}%;--grid:${nice.step/nice.max*100}%" role="img" aria-label="Minutes played per player against the minutes each was available">
+      ${avg!=null?`<div class="pch-row pch-top" aria-hidden="true"><span></span><div class="pch-track"><span class="pch-avglbl${pct(avg)>78?' r':''}">Average ${fmt(avg)}</span><i class="pch-avg"></i></div><span></span></div>`:''}
+      ${rows.map(x=>`<div class="pch-row" title="${esc(tip(x))}"><button class="pch-name" data-go="player" data-arg="${x.s.id}"><b>${esc(x.s.num||'–')}</b><span>${esc(x.s.name)}</span></button>
+        <div class="pch-track">${bar(x)}${x.share!=null&&x.v!=null?`<span class="pch-pct${pct(x.v)<9?' out':''}" style="--w:${pct(x.v)}%">${x.share}%</span>`:''}${avg!=null?'<i class="pch-avg"></i>':''}</div>
+        <span class="pch-val${x.v==null?' none':''}${x.share!=null&&x.share<50?' low':''}">${x.v==null?'–':Math.round(x.v)+'<span class="u"> min</span>'}</span></div>`).join('')}
+      <div class="pch-row pch-axis" aria-hidden="true"><span></span><div class="pch-ticks">${ticks.map(t=>`<span style="left:${pct(t)}%">${Math.round(t)}</span>`).join('')}</div><span></span></div>
+    </div>
+    <div class="pch-legend"><span><i class="lg-bar"></i>Played</span>${match?'':`<span><i class="lg-seg seg free"></i>Available, not played</span><span><i class="lg-seg seg un injured"></i>Injured</span><span><i class="lg-seg seg un streepjes"></i>Streepjes</span><span><i class="lg-seg seg un other"></i>Other, not selectable</span>`}<span><i class="lg-t50"></i>50% of her available ${match?'match':'minutes'}</span>${avg!=null?`<span><i class="lg-avg"></i>Average</span>`:''}<span>% = share of her available minutes</span><span class="hint">Click a name to open the player.</span></div>`}
+  </section>`; }
+
 function pchHtml(list,agg,season,cust){
   const sx=season==='all'?nowSeason():season;
   if(!pch.inited){ pch.hide=squad().filter(s=>isOther(s,sx)).map(s=>s.id); pch.inited=true; pchSave(); }
   const metrics=pchMetrics(cust); if(!metrics.some(m=>m[0]===pch.metric)) pch.metric='min';
   const modes=pchModes(pch.metric); if(!modes.some(m=>m[0]===pch.mode)) pch.mode=modes[0][0];
   const label=metrics.find(m=>m[0]===pch.metric)[1], hide=new Set(pch.hide), shown=list.filter(s=>!hide.has(s.id));
+  if(pch.metric==='min') return pchMinHtml(list,shown,season,metrics,modes,hide,sx);
   const dec=(pch.metric==='min'||pch.metric==='att'||pch.mode==='total')?0:2;
   const unit=pch.metric==='att'?'%':(pch.metric==='min'?' min':'');
   const fmt=v=>v==null?'–':(+v.toFixed(dec)).toLocaleString('en-GB',{maximumFractionDigits:dec})+unit;
@@ -3262,17 +3436,7 @@ function pchHtml(list,agg,season,cust){
   const halfTxt=half!=null?(pch.mode==='match'?`50% of a match (${fmt(half)})`:`50% of available minutes (${fmt(half)} of ${fmt(av.total)}, ${av.n} match${av.n===1?'':'es'})`):'';
   pch.last={label,modeTxt,season,rows,avg,half,halfTxt,share,nice,ticks,fmt,tick,below:half!=null?rows.filter(r=>r.v!=null&&r.v<half).length:0};
   const tipOf=r=>{ const s=r.s, a=r.a; return `#${s.num||'–'} ${s.name} · ${label}${modeTxt}: ${fmt(r.v)}${share(r.v)!=null?' ('+share(r.v)+'% of available minutes)':''} · ${a.apps} app${a.apps===1?'':'s'}, ${a.starts} start${a.starts===1?'':'s'}, ${a.min} min`; };
-  return `<section class="card pch">
-    <div class="pch-bar">
-      <label class="sel">Show <select id="pchMetric">${metrics.map(([k,l])=>`<option value="${esc(k)}"${k===pch.metric?' selected':''}>${esc(l)}</option>`).join('')}</select></label>
-      ${modes.length>1?`<div class="seg" role="group" aria-label="Value">${modes.map(([k,l])=>`<button data-pchmode="${k}" aria-pressed="${pch.mode===k}">${l}</button>`).join('')}</div>`:''}
-      <div class="seg" role="group" aria-label="Order"><button data-pchsort="value" aria-pressed="${pch.sort!=='num'}">Highest first</button><button data-pchsort="num" aria-pressed="${pch.sort==='num'}">By number</button></div>
-      <button class="btn${pch.open?' primary':''}" data-pchpick aria-expanded="${pch.open}">Players · ${nSel} of ${list.length}</button>
-      <span class="spacer"></span><button class="btn primary" data-pchpdf ${rows.length?'':'disabled'}>Export PDF</button>
-    </div>
-    ${pch.open?`<div class="pch-pick">
-      <div class="pch-acts"><button class="btn sm" data-pchall>All</button><button class="btn sm" data-pchnone>None</button><button class="btn sm" data-pchplayed>Only players with minutes</button>${others.length?`<button class="btn sm" data-pchmine>Hide other team</button>`:''}<span class="hint">Click a name to show or hide it.</span></div>
-      <div class="pch-chips">${list.map(s=>`<button class="pch-chip" data-pchtoggle="${s.id}" aria-pressed="${!hide.has(s.id)}"><b>${esc(s.num||'–')}</b>${esc(s.name)}${isOther(s,sx)?'<small>other team</small>':''}</button>`).join('')}</div></div>`:''}
+  return `<section class="card pch">${pchCtl(list,hide,sx,metrics,modes,rows.length)}
     <div class="card-head"><h2>${esc(label)}${esc(modeTxt)}</h2><span class="hint">${esc(seasonText(season))}${mtScope()?' · '+esc(mtScope()):''}${avg!=null?` · average <b class="pch-avgtxt">${fmt(avg)}</b> over ${vals.length} player${vals.length===1?'':'s'}`:''}${half!=null?` · <b class="pch-halftxt">${pch.last.below}</b> below 50% of available minutes`:''}${pch.mode==='p90'?' · players with minutes only':pch.mode==='match'?' · players with appearances only':''}</span></div>
     ${!rows.length?`<div class="empty-state"><strong>No players selected</strong><p>Choose which players to show.</p><button class="btn" data-pchall>Show all players</button></div>`:`
     <div class="pch-chart" style="--avg:${avg!=null?pct(avg):0}%;--half:${half!=null?pct(half):0}%;--grid:${nice.step/nice.max*100}%" role="img" aria-label="${esc(label+modeTxt+' per player, average '+fmt(avg))}">
@@ -3309,7 +3473,7 @@ async function pchPdf(){
       doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.setTextColor(...ink); doc.text(title,mg,mg+7);
       doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(...mut); doc.text(sub,mg,mg+13);
       let sy=mg+19; doc.setFontSize(10); doc.setTextColor(...ink);
-      const stats=[c.avg!=null?'Average: '+c.fmt(c.avg):'', c.half!=null?c.halfTxt+' · '+c.below+' player'+(c.below===1?'':'s')+' below':''].filter(Boolean);
+      const stats=[c.avg!=null?'Average: '+c.fmt(c.avg):'', c.half!=null?c.halfTxt+' · '+c.below+' player'+(c.below===1?'':'s')+' below':'', c.kind==='min'?c.below+' player'+(c.below===1?'':'s')+' below 50% of their available minutes (injured, streepjes and other non-selectable matches left out)':''].filter(Boolean);
       stats.forEach(t=>{ doc.text(t,mg,sy); sy+=5; });
       doc.setDrawColor(...ink); doc.setLineWidth(.5); doc.setLineDashPattern([],0); doc.line(mg,sy,pw-mg,sy);
       const rows=c.rows.slice(pg*per,(pg+1)*per), top=sy+12, bottom=top+rows.length*rowH;
@@ -3320,9 +3484,13 @@ async function pchPdf(){
       const pcts=[]; rows.forEach((r,i)=>{ const y=top+i*rowH, cy=y+rowH/2;
         doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(...mut); doc.text(String(r.s.num||'–'),mg+7,cy+1.2,{align:'right'});
         doc.setTextColor(...ink); doc.setFont('helvetica','normal'); let nm=r.s.name; while(doc.getTextWidth(nm)>nameW-13&&nm.length>3) nm=nm.slice(0,-2)+'…'; doc.text(nm,mg+9,cy+1.2);
-        if(r.v!=null&&r.v>0){ const w=X(r.v)-x0; doc.setFillColor(...acc); doc.roundedRect(x0,cy-2.3,Math.max(w,.6),4.6,Math.min(1,w/2),Math.min(1,w/2),'F'); if(w>2) doc.rect(x0,cy-2.3,Math.min(1,w),4.6,'F'); }
-        const sh=c.share?c.share(r.v):null; if(sh!=null) pcts.push({t:sh+'%',w:r.v>0?X(r.v)-x0:0,cy});
-        doc.setFont('helvetica','bold'); doc.setTextColor(...(c.half!=null&&r.v!=null&&r.v<c.half?warn:r.v==null?mut:ink)); doc.text(r.v==null?'–':c.fmt(r.v),pw-mg,cy+1.2,{align:'right'}); });
+        if(c.kind==='min'&&!c.match){ const R=r.r; let x=x0; const seg=(v,col)=>{ if(v<=0) return; const w=X(v)-x0; doc.setFillColor(...col); doc.rect(x,cy-2.3,w,4.6,'F'); x+=w; };
+          seg(R.played,acc); seg(Math.max(0,R.avail-R.played),[214,231,245]); seg(R.un.injured,[244,212,205]); seg(R.un.streepjes,[251,226,200]); seg(R.un.other,[222,226,231]);
+          if(R.avail){ const tx=X(R.avail/2); doc.setFillColor(...warn); doc.rect(tx-.4,cy-3.3,.8,6.6,'F'); } }
+        else { if(r.v!=null&&r.v>0){ const w=X(r.v)-x0; doc.setFillColor(...acc); doc.roundedRect(x0,cy-2.3,Math.max(w,.6),4.6,Math.min(1,w/2),Math.min(1,w/2),'F'); if(w>2) doc.rect(x0,cy-2.3,Math.min(1,w),4.6,'F'); }
+          if(c.kind==='min'&&r.half!=null){ const tx=X(r.half); doc.setFillColor(...warn); doc.rect(tx-.4,cy-3.3,.8,6.6,'F'); } }
+        const sh=c.kind==='min'?r.share:c.share?c.share(r.v):null; if(sh!=null) pcts.push({t:sh+'%',w:r.v>0?X(r.v)-x0:0,cy});
+        doc.setFont('helvetica','bold'); doc.setTextColor(...((c.kind==='min'?r.share!=null&&r.share<50:c.half!=null&&r.v!=null&&r.v<c.half)?warn:r.v==null?mut:ink)); doc.text(r.v==null?'–':c.fmt(r.v),pw-mg,cy+1.2,{align:'right'}); });
       // reference lines
       doc.setLineCap('round');
       if(c.avg!=null){ const x=X(c.avg); doc.setDrawColor(...ink); doc.setLineWidth(.5); doc.setLineDashPattern([0.01,1.1],0); doc.line(x,top-6,x,bottom+1); doc.setLineDashPattern([],0);
@@ -3338,6 +3506,9 @@ async function pchPdf(){
       let ly=bottom+12; doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...mut);
       doc.setFillColor(...acc); doc.rect(mg,ly-2.6,6,3.2,'F'); doc.text(title,mg+8,ly); let lx=mg+12+doc.getTextWidth(title);
       if(c.avg!=null){ doc.setDrawColor(...ink); doc.setLineWidth(.5); doc.setLineCap('round'); doc.setLineDashPattern([0.01,1.1],0); doc.line(lx,ly-3,lx,ly+.6); doc.setLineDashPattern([],0); doc.setLineCap('butt'); doc.text('Average of the players shown',lx+2.5,ly); lx+=8+doc.getTextWidth('Average of the players shown'); }
+      if(c.kind==='min'){ const sw=(col,t)=>{ doc.setFillColor(...col); doc.rect(lx,ly-2.6,5,3.2,'F'); doc.text(t,lx+6.5,ly); lx+=10+doc.getTextWidth(t); };
+        if(!c.match){ sw([214,231,245],'Available, not played'); sw([244,212,205],'Injured'); sw([251,226,200],'Streepjes'); sw([222,226,231],'Other'); }
+        ly+=5.5; lx=mg; doc.setFillColor(...warn); doc.rect(lx+2,ly-3.2,.8,4.2,'F'); doc.text('50% of her available minutes; orange values are below it · % = share of her available minutes',lx+5,ly); }
       if(c.half!=null){ doc.setDrawColor(...warn); doc.setLineDashPattern([1.2,.9],0); doc.line(lx,ly-3,lx,ly+.6); doc.setLineDashPattern([],0); doc.text('50% line; values in orange are below it',lx+2.5,ly); lx+=8+doc.getTextWidth('50% line; values in orange are below it'); doc.text('% in the bar = share of '+(c.modeTxt?'a full match':'all available minutes'),lx,ly); }
       doc.setFontSize(8); doc.setTextColor(140,150,160); doc.text('Match Tagger · Players chart'+(pages>1?' · page '+(pg+1)+' of '+pages:''),mg,ph-7);
     }
@@ -3503,7 +3674,8 @@ function renderEntry(){
     <div class="mn-grid">
       <section class="card"><div class="card-head"><h2>Line-up</h2><span class="hint${nStart&&nStart!==11?' mn-alert':''}">${nStart}/11 starters · ${nBench} bench</span></div>
         ${roster.length?`<div class="mn-roster">${roster.map(x=>{ const v=mn.lineup[x.id]||''; return `<div class="mn-pl ${v}"><span class="num">${esc(x.num||'–')}</span><span class="nm">${esc(x.name)}${isOther(x,ss)?'<small>other team</small>':''}</span>
-          <span class="seg" role="group" aria-label="${esc(x.name)}"><button data-mnlu="${x.id}" data-v="start" aria-pressed="${v==='start'}">Start</button><button data-mnlu="${x.id}" data-v="bench" aria-pressed="${v==='bench'}">Bench</button><button data-mnlu="${x.id}" data-v="" aria-pressed="${!v}" aria-label="Not in the squad">–</button></span>${v?`<b class="mn-mins" title="Minutes played">${minOf(x.id)}'</b>`:''}</div>`; }).join('')}</div>`
+          <span class="seg" role="group" aria-label="${esc(x.name)}"><button data-mnlu="${x.id}" data-v="start" aria-pressed="${v==='start'}">Start</button><button data-mnlu="${x.id}" data-v="bench" aria-pressed="${v==='bench'}">Bench</button><button data-mnlu="${x.id}" data-v="" aria-pressed="${!v}" aria-label="Not in the squad">–</button></span>${v?`<b class="mn-mins" title="Minutes played">${minOf(x.id)}'</b>`:'<span></span>'}
+          ${!v&&!isOther(x,ss)&&Object.keys(mn.lineup).length?(()=>{ const o=nsOf(m,x.id); return `<span class="mn-ns"><select data-nsr="${x.id}" aria-label="Reason ${esc(x.name)} is not selected">${NS_REASONS.map(([k,l])=>`<option value="${k}"${o.r===k?' selected':''}>Not selected: ${esc(l.charAt(0).toLowerCase()+l.slice(1))}</option>`).join('')}</select>${o.r==='other'?`<input data-nsn="${x.id}" value="${esc(o.note||'')}" placeholder="Reason">`:''}</span>`; })():''}</div>`; }).join('')}</div>`
           :'<div class="empty-state"><strong>No players yet</strong><p>Add your squad on the Players page first.</p><button class="btn primary" data-go="players">Players</button></div>'}
       </section>
       <div class="mn-side">
@@ -3604,6 +3776,7 @@ function renderPlayer(){
         ${a.log.map(r=>`<tr><td class="name"><button class="tlink" data-go="report" data-arg="${r.m.id}">${esc(fmtDate(r.m.date,{day:'numeric',month:'short'})+' '+vsLabel(r.m))}</button></td><td>${resChip(r.m)} <span class="tnum">${finalScore(r.m)}</span></td><td>${r.started?'Start':r.cameOn?'Sub':'–'}</td><td>${r.min==null?'–':r.min}</td>${logCols.map(([k])=>`<td class="${r.line[k]?'':'zero'}">${r.line[k]||0}</td>`).join('')}</tr>`).join('')}
       </tbody></table></div>`:'<p class="hint">She has not played in a tagged match yet.</p>'}</section>
     </div>
+    ${playTimeCard(s,season)}
     ${attPlayerCard(s,season)}
   </div>`;
   const slot=$('#pvSlot'); if(slot) slot.replaceWith(pvVideo());
@@ -4166,7 +4339,7 @@ async function plSync(){
       try{ const r=JSON.parse(await (await it.handle.getFile()).text()); if(r&&r.days&&(!plWeeks[k]||(r.updatedAt||0)>(plWeeks[k].updatedAt||0))){ plWeeks[k]=plMigrate(r); changed=true; } else if(plWeeks[k]&&(plWeeks[k].updatedAt||0)>(r.updatedAt||0)) plDirty.add(k); }catch(e){ console.warn('planner week',k,e); }
     }
     Object.keys(plWeeks).forEach(k=>{ if(!remote.has(k)) plDirty.add(k); });
-    plStoreLocal(); await plFlush();
+    if(attMigrate()) changed=true; plStoreLocal(); await plFlush();
   } finally { plSyncing=false; }
   if(changed&&['calendar','week'].includes(view)) renderView();
 }
@@ -4317,7 +4490,7 @@ function renderCalendar(){
     const dow=(plParse(d.date).getUTCDay()+6)%7;
     const items=d.items.map(it=>it.kind==='match'
       ?`<button class="cal-ev mt mt-${it.mtype}" data-go="fixture" data-arg="${it.id}" title="${esc(it.mlabel)} · open the match page"><b>${esc(it.time||(it.mtype==='league'?'Match':it.mlabel))}</b> ${esc(it.opponent)} <i>${it.venue==='H'?'H':'A'}</i></button>`
-      :it.kind==='training'?`<span class="cal-ev tr"><b>${esc(it.time||'Training')}</b>${attTaken(d.date)?`<em class="cal-att" title="Present or late / marked">✓ ${attBadge(d.date)}</em>`:''}${it.place?' '+esc(it.place):''}</span>`
+      :it.kind==='training'?`<span class="cal-ev tr"><b>${esc(it.time||'Training')}</b>${attTaken(d.date)?`<em class="cal-att" title="Present / marked">✓ ${attBadge(d.date)}</em>`:''}${it.place?' '+esc(it.place):''}</span>`
       :`<span class="cal-ev off">${esc(cal.offLabel)}${it.reason?' · '+esc(it.reason):''}</span>`).join('');
     return `<div class="cal-day${d.inMonth?'':' out'}${d.date===today?' today':''}${dow>4?' we':''}${plUi.daySel===d.date?' sel':''}" data-calday="${d.date}" role="button" tabindex="0" aria-label="${esc(fmtDate(d.date,{weekday:'long',day:'numeric',month:'long'}))}"><span class="cal-dn">${d.dayNum}</span>${items}</div>`;
   };
@@ -4373,7 +4546,7 @@ function renderDayModal(){
     <div class="seg" role="group" aria-label="Day type">${seg}</div>
     ${e.type==='training'?`<div class="form"><div class="field"><label for="cdStart">Start</label><input type="time" id="cdStart" data-cdf="start" value="${esc(e.start||'')}"></div><div class="field"><label for="cdEnd">End</label><input type="time" id="cdEnd" data-cdf="end" value="${esc(e.end||'')}"></div>
       <div class="field full"><label for="cdPlace">Location</label><input id="cdPlace" data-cdf="place" value="${esc(e.place||'')}" placeholder="KTA, The Nest, Tempelhof…"></div></div>
-      <div class="cd-att"><span>${attTaken(ymd)?(()=>{ const c=attCount(ymd); return `<b>Attendance:</b> ${c.present} present${c.late?', '+c.late+' late':''}${c.excused?', '+c.excused+' excused':''}${c.absent?', '+c.absent+' absent':''}${c.injured?', '+c.injured+' injured':''}`; })():'<b>Attendance</b> not taken yet'}</span><button class="btn sm primary" data-go="training" data-arg="${ymd}">${attTaken(ymd)?'Edit attendance':'Take attendance'}</button></div>`
+      <div class="cd-att"><span>${attTaken(ymd)?(()=>{ const c=attCount(ymd); return `<b>Attendance:</b> ${c.present} present${c.absent?', '+c.absent+' absent':''}${c.injured?', '+c.injured+' injured':''}${c.nt?', '+c.nt+' national team':''}`; })():'<b>Attendance</b> not taken yet'}</span><button class="btn sm primary" data-go="training" data-arg="${ymd}">${attTaken(ymd)?'Edit attendance':'Take attendance'}</button></div>`
     :e.type==='off'?`<div class="field"><label for="cdReason">Reason (optional)</label><input id="cdReason" data-cdf="reason" value="${esc(e.reason||'')}" placeholder="Rest day after a match, exams, pitch closed…"></div>`:''}
     <div class="cd-matches"><span class="eyebrow">Matches</span>${ms.length?ms.map(m=>`<button class="cal-ev mt mt-${mtypeOf(m)} big" data-go="fixture" data-arg="${m.id}"><b>${esc(m.kickoff||'')}</b> ${esc(vsLabel(m))}</button>`).join(''):'<span class="hint">No match on this day.</span>'}</div>
     <div class="row-actions"><button class="btn primary" data-caladd="${ymd}">+ Match on this day</button><button class="btn" data-go="week" data-arg="${plKey(plYmd(plMonday(dt)))}">Open the week plan</button></div>`;
@@ -4569,6 +4742,7 @@ function renderFixture(){
           :`<p class="hint">${squad().length?'No player matches your search.':'No players yet. Add them on the Players page, or name them in a match lineup.'}</p>`}
         <p class="hint">Click players to select them for this match (the template has ${SEL_MAX} places). ${m.events.length?'This match already has tags, so the tagger lineup only changes when you click below.':'The selection is the lineup in the tagger: pick the starting XI there.'}</p>
         <div class="row-actions">${m.events.length?`<button class="btn sm" data-fxlineup="${m.id}">Update the tagger lineup from this squad</button>`:''}<button class="btn sm" data-fxxi="${m.id}">Pick the starting XI in the tagger →</button></div>
+        ${nsListHtml(m,ss)}
       </section>
       <section class="card"><div class="card-head"><h2>Selection slides</h2><button class="btn primary sm" data-fxpptx="${m.id}" ${list.length?'':'disabled'}>Download .pptx</button></div>
         <div class="form fx-form">
@@ -4791,23 +4965,29 @@ document.addEventListener('keydown',e=>{
 plLoad();
 
 /* =================== TRAINING ATTENDANCE ===================
-   Stored with the day in the month calendar: plCal.days[date].att = {squadId: status}, .attNote = text */
-const ATT=[['present','Present','P'],['late','Late','L'],['excused','Excused','E'],['absent','Absent','A'],['injured','Injured','I']];
+   Stored with the day in the month calendar: plCal.days[date].att = {squadId: status}, .attWhy = {squadId: reason when absent}, .attNote = text.
+   Statuses: present, absent (with a reason), injured, nt (national team). Attendance % = present / (sessions - national team). */
+const ATT=[['present','Present','P'],['absent','Absent','A'],['injured','Injured','I'],['nt','National team','NT']];
+const ATT_WHY=['Sick','School','Exam','Family','Holiday','No transport','Work','Unexcused'];
+/* older marks: late counts as present, excused becomes absent with the reason "Excused" */
+function attMigrate(){ let ch=false; Object.values(plCal.days||{}).forEach(d=>{ if(!d.att) return; Object.keys(d.att).forEach(sid=>{ const v=d.att[sid];
+  if(v==='late'){ d.att[sid]='present'; ch=true; } else if(v==='excused'){ d.att[sid]='absent'; d.attWhy=d.attWhy||{}; if(!d.attWhy[sid]) d.attWhy[sid]='Excused'; ch=true; } }); }); if(ch) plTouch('cal'); return ch; }
+const attWhy=(ymd,sid)=>{ const e=plCal.days[ymd]; return (e&&e.attWhy&&e.attWhy[sid])||''; };
 const ATT_LBL=Object.fromEntries(ATT.map(a=>[a[0],a[1]]));
 function attOf(ymd){ const e=plCal.days[ymd]; return (e&&e.att)||{}; }
 /* players from another group: marked per season, left out of attendance */
 const isOther=(s,season)=>!!(s&&s.otherTeam&&s.otherTeam[season]);
 const nowSeason=()=>seasonOf(new Date().toISOString().slice(0,10));
 function setOther(sid,season,on){ const s=SQ(sid); if(!s) return; s.otherTeam=Object.assign({},s.otherTeam); if(on) s.otherTeam[season]=true; else delete s.otherTeam[season]; if(!Object.keys(s.otherTeam).length) delete s.otherTeam; saveSettings(); }
-function attCount(ymd){ const c={present:0,late:0,excused:0,absent:0,injured:0,n:0}, team=new Set(attSquad(seasonOf(ymd)).map(x=>x.id)); Object.entries(attOf(ymd)).forEach(([id,v])=>{ if(team.has(id)&&c[v]!=null){ c[v]++; c.n++; } }); return c; }
+function attCount(ymd){ const c={present:0,absent:0,injured:0,nt:0,n:0}, team=new Set(attSquad(seasonOf(ymd)).map(x=>x.id)); Object.entries(attOf(ymd)).forEach(([id,v])=>{ if(team.has(id)&&c[v]!=null){ c[v]++; c.n++; } }); return c; }
 const attTaken=ymd=>Object.keys(attOf(ymd)).length>0;
-function attBadge(ymd){ if(!attTaken(ymd)) return ''; const c=attCount(ymd); return (c.present+c.late)+'/'+c.n; }
+function attBadge(ymd){ if(!attTaken(ymd)) return ''; const c=attCount(ymd); return c.present+'/'+c.n; }
 const attSquad=season=>squad().filter(x=>!season||!isOther(x,season)).sort((a,b)=>(+a.num||999)-(+b.num||999)||a.name.localeCompare(b.name));
 const trainingDates=()=>Object.keys(plCal.days).filter(d=>plCal.days[d].type==='training').sort();
 function attStats(sid,season){
-  const r={present:0,late:0,excused:0,absent:0,injured:0,sessions:0,list:[]};
-  const sq=SQ(sid); trainingDates().filter(d=>attTaken(d)&&(season==='all'||seasonOf(d)===season)&&!isOther(sq,seasonOf(d))).forEach(d=>{ const v=attOf(d)[sid]; if(!v||r[v]==null) return; r[v]++; r.sessions++; r.list.push({d,v}); });
-  r.pct=r.sessions?Math.round(100*(r.present+r.late)/r.sessions):null; return r;
+  const r={present:0,absent:0,injured:0,nt:0,sessions:0,list:[]};
+  const sq=SQ(sid); trainingDates().filter(d=>attTaken(d)&&(season==='all'||seasonOf(d)===season)&&!isOther(sq,seasonOf(d))).forEach(d=>{ const v=attOf(d)[sid]; if(!v||r[v]==null) return; r[v]++; r.sessions++; r.list.push({d,v,why:v==='absent'?attWhy(d,sid):''}); });
+  const base=r.sessions-r.nt; r.pct=base>0?Math.round(100*r.present/base):null; return r;
 }
 function renderTraining(){
   const el=$('#view-training'), ymd=viewArg, e=plCal.days[ymd]||{type:'none'}, dt=plParse(ymd);
@@ -4826,10 +5006,11 @@ function renderTraining(){
     <div class="fx-tools"><input class="search" id="attSearch" type="search" placeholder="Search name or number" value="${esc(plUi.attQ||'')}" aria-label="Search players">
       <button class="btn sm primary" data-attrest ${open&&all.length?'':'disabled'}>Mark the rest present</button><button class="btn sm ghost" data-attclear ${c.n?'':'disabled'}>Clear</button><button class="btn sm${manage?' primary':''}" data-attmanage aria-pressed="${manage}">${manage?'Done':'Other team players…'}</button></div>
     ${manage?`<p class="notice">Mark players from another group as <b>Other team</b>. They leave the attendance list, counts and exports for the whole ${esc(seasonText(season).toLowerCase())}. Their matches and stats stay.</p>`:''}
-    ${all.length?(list.length?`<div class="att-list">${list.map(s=>{ const v=att[s.id]||''; return `<div class="att-row ${v}"><span class="num">${esc(s.num||'–')}</span><span class="nm">${esc(s.name)}</span>
+    ${all.length?(list.length?`<div class="att-list">${list.map(s=>{ const v=att[s.id]||''; return `<div class="att-row ${v}"><span class="num">${esc(s.num||'–')}</span><span class="nm">${esc(s.name)}</span>${v==='absent'&&!manage?`<input class="att-why" data-attwhy="${s.id}" list="attWhyList" value="${esc(attWhy(ymd,s.id))}" placeholder="Reason" aria-label="Reason ${esc(s.name)} is absent">`:''}
       ${manage?`<button class="btn sm" data-attother="${s.id}">Other team</button>`:`<span class="att-btns" role="group" aria-label="Attendance for ${esc(s.name)}">${ATT.map(([k,l,a])=>`<button class="${k}" aria-pressed="${v===k}" title="${l}" aria-label="${l}" data-att="${s.id}" data-v="${k}">${a}</button>`).join('')}</span>`}</div>`; }).join('')}</div>`:'<p class="hint">No player matches your search.</p>')
       :'<div class="empty-state"><strong>No players yet</strong><p>Add your players on the Players page first.</p><button class="btn primary" data-go="players">Players</button></div>'}
-    <p class="hint">Tap a letter: <b>P</b>resent, <b>L</b>ate, <b>E</b>xcused, <b>A</b>bsent, <b>I</b>njured. Tap it again to clear. Totals show on each player's page.</p>
+    <datalist id="attWhyList">${(()=>{ const n={}; Object.values(plCal.days).forEach(d=>Object.values(d.attWhy||{}).forEach(w=>{ w=String(w).trim(); if(w) n[w]=(n[w]||0)+1; })); return [...new Set(Object.keys(n).sort((a,b)=>n[b]-n[a]).concat(ATT_WHY))].slice(0,20).map(w=>`<option value="${esc(w)}">`).join(''); })()}</datalist>
+    <p class="hint">Tap: <b>P</b> present, <b>A</b> absent (type the reason next to her name), <b>I</b> injured, <b>NT</b> national team. Tap again to clear. Attendance % = present out of all sessions except national team call-ups.</p>
     ${others.length?`<section class="card att-others"><div class="card-head"><h2>Other team · ${others.length}</h2><span class="hint">Not in attendance for ${esc(seasonText(season).toLowerCase())}</span></div>
       <div class="att-otherlist">${others.map(x=>`<span class="att-other"><b>${esc(x.num||'–')}</b> ${esc(x.name)}<button class="btn sm ghost" data-attmine="${x.id}">Back to my team</button></span>`).join('')}</div></section>`:''}
     <div class="field"><label for="attNote">Notes</label><textarea id="attNote" class="att-note" placeholder="Who left early, reasons for absence…">${esc(e.attNote||'')}</textarea></div>
@@ -4838,6 +5019,7 @@ function renderTraining(){
 function attSet(ymd,sid,v){
   const e=plCal.days[ymd]; if(!e||e.type!=='training'){ toast('Make this day a training first.'); return; } e.att=e.att||{};
   if(!v||e.att[sid]===v) delete e.att[sid]; else e.att[sid]=v;
+  if(e.att[sid]!=='absent'&&e.attWhy&&e.attWhy[sid]!=null){ delete e.attWhy[sid]; }
   plTouch('cal');
 }
 /* CSV: one row per player, one column per session */
@@ -4845,13 +5027,13 @@ function attCsv(scope){
   const month=plUi.month, dates=trainingDates().filter(d=>attTaken(d)&&(scope==='all'?seasonOf(d)===seasonOf(month+'-15'):d.slice(0,7)===month));
   if(!dates.length){ toast('No attendance has been taken '+(scope==='all'?'this season':'this month')+' yet.'); return; }
   const q=v=>{ v=String(v==null?'':v); return /[",\n;]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; };
-  const head=['#','Player'].concat(dates.map(d=>d.slice(8,10)+'/'+d.slice(5,7)),['Present','Late','Excused','Absent','Injured','Attendance %']);
-  const rows=attSquad(seasonOf((scope==='all'?month:month)+'-15')).map(s=>{ const cells=dates.map(d=>{ const v=attOf(d)[s.id]; return v?ATT.find(a=>a[0]===v)[2]:''; });
-    const t={present:0,late:0,excused:0,absent:0,injured:0}; dates.forEach(d=>{ const v=attOf(d)[s.id]; if(v&&t[v]!=null) t[v]++; });
-    const n=t.present+t.late+t.excused+t.absent+t.injured;
-    return [s.num||'',s.name].concat(cells,[t.present,t.late,t.excused,t.absent,t.injured,n?Math.round(100*(t.present+t.late)/n)+'%':'']).map(q).join(','); });
+  const head=['#','Player'].concat(dates.map(d=>d.slice(8,10)+'/'+d.slice(5,7)),['Present','Absent','Injured','National team','Attendance %']);
+  const rows=attSquad(seasonOf((scope==='all'?month:month)+'-15')).map(s=>{ const cells=dates.map(d=>{ const v=attOf(d)[s.id], a=v&&ATT.find(x=>x[0]===v); if(!a) return ''; const w=v==='absent'?attWhy(d,s.id):''; return a[2]+(w?' ('+w+')':''); });
+    const t={present:0,absent:0,injured:0,nt:0}; dates.forEach(d=>{ const v=attOf(d)[s.id]; if(v&&t[v]!=null) t[v]++; });
+    const base=t.present+t.absent+t.injured;
+    return [s.num||'',s.name].concat(cells,[t.present,t.absent,t.injured,t.nt,base?Math.round(100*t.present/base)+'%':'']).map(q).join(','); });
   const name=fileSafe('Attendance '+(scope==='all'?'season '+seasonOf(month+'-15'):plCalModel(month).title))+'.csv';
-  return offerFile(name,'﻿'+[head.map(q).join(',')].concat(rows,['','P = present · L = late · E = excused · A = absent · I = injured']).join('\r\n'));
+  return offerFile(name,'﻿'+[head.map(q).join(',')].concat(rows,['','P = present · A = absent (reason) · I = injured · NT = national team · Attendance % leaves national team call-ups out']).join('\r\n'));
 }
 function attPlayerCard(s,season){
   const sx=season==='all'?nowSeason():season;
@@ -4859,9 +5041,9 @@ function attPlayerCard(s,season){
   const r=attStats(s.id,season);
   if(!r.sessions) return `<section class="card"><div class="card-head"><h2>Training attendance</h2></div><p class="hint">No attendance taken for ${esc(s.name)} in ${esc(seasonText(season).toLowerCase())} yet. Take it from a training day in the calendar.</p></section>`;
   return `<section class="card"><div class="card-head"><h2>Training attendance</h2><span class="hint">${r.sessions} session${r.sessions===1?'':'s'} with attendance</span></div>
-    <div class="att-kpi"><b>${r.pct}%</b><span>present or late</span></div>
+    <div class="att-kpi"><b>${r.pct==null?'–':r.pct+'%'}</b><span>present${r.nt?' (national team call-ups not counted)':''}</span></div>
     <div class="att-sum">${ATT.map(([k,l])=>`<span class="att-chip ${k}"><b>${r[k]}</b> ${l}</span>`).join('')}</div>
-    <div class="att-dots">${r.list.slice(-40).map(x=>`<button class="att-dot ${x.v}" data-go="training" data-arg="${x.d}" title="${esc(fmtDate(x.d,{weekday:'short',day:'numeric',month:'short'})+' · '+ATT_LBL[x.v])}" aria-label="${esc(fmtDate(x.d,{day:'numeric',month:'short'})+': '+ATT_LBL[x.v])}"></button>`).join('')}</div>
+    <div class="att-dots">${r.list.slice(-40).map(x=>`<button class="att-dot ${x.v}" data-go="training" data-arg="${x.d}" title="${esc(fmtDate(x.d,{weekday:'short',day:'numeric',month:'short'})+' · '+ATT_LBL[x.v]+(x.why?' · '+x.why:''))}" aria-label="${esc(fmtDate(x.d,{day:'numeric',month:'short'})+': '+ATT_LBL[x.v])}"></button>`).join('')}</div>
     <p class="hint">Each square is a training, oldest first. Click one to open that session.</p></section>`;
 }
 document.addEventListener('click',e=>{ const b=e.target.closest('[data-potherteam]'); if(!b) return; const sq=SQ(b.dataset.potherteam), on=!isOther(sq,b.dataset.season);
@@ -4881,7 +5063,9 @@ document.addEventListener('input',e=>{
   const t=e.target;
   if(t.id==='attSearch'){ plUi.attQ=t.value; const pos=t.selectionStart; renderTraining(); const n=$('#attSearch'); if(n){ n.focus(); try{ n.setSelectionRange(pos,pos); }catch(err){} } return; }
   if(t.id==='attNote'){ const d=plCal.days[viewArg]; if(!d) return; d.attNote=t.value; plTouch('cal'); }
+  if(t.dataset&&t.dataset.attwhy){ const d=plCal.days[viewArg]; if(!d) return; d.attWhy=d.attWhy||{}; if(t.value.trim()) d.attWhy[t.dataset.attwhy]=t.value; else delete d.attWhy[t.dataset.attwhy]; plTouch('cal'); }
 });
+attMigrate();
 
 /* =================== TACTICS BOARD ===================
    Free boards with your squad as numbered circles, opponents, equipment, arrows, areas and text.
