@@ -3116,6 +3116,7 @@ function go(v,arg){
   if(v==='match'||v==='report'){ if(!(arg&&store[arg])){ if(v==='match'&&store[M.id]) arg=M.id; else { v='matches'; arg=null; } } }
   if(v==='player'&&!(arg&&SQ(arg))){ v='players'; arg=null; }
   if(v==='tactics'){ if(arg&&tbBoards[arg]){ tbUi.cur=arg; tbStoreLocal(); } arg=tbCur().id; }
+  if(v==='portal'&&view!=='portal'&&po.players) setTimeout(()=>poLoad(true),0);   // coming back: pick up new notes, players and replies
   if(view==='tactics'&&(v!=='tactics'||arg!==viewArg)){ tbUi.drag=null; tbUi.rename=false; if(v!=='tactics'||arg!==viewArg) tbUi.sel=null; }
   if(!['match','report','player','fixture','week','training','tactics','entry'].includes(v)) arg=null;
   if(view==='training'&&(v!=='training'||arg!==viewArg)) plUi.attQ='';
@@ -3793,8 +3794,14 @@ async function poLoad(force){
     po.players=needs?(await FSX.portal('players','POST',{players:want,disable})).players:have;
     po.share=await FSX.portal('share'); po.share.matches=po.share.matches||[]; po.share.batches=po.share.batches||[]; po.share.videos=po.share.videos||{};
     po.comments=(await FSX.portal('comments')).comments||{};
+    const n=poRefreshBatches(); if(n){ po.share=await FSX.portal('share','PUT',po.share); toast('Updated '+n+' published clip'+(n===1?'':'s')+' with your latest notes and changes.'); }
   }catch(e){ console.error(e); po.err=e.name==='OldWorker'?'old':e.message; }
   finally{ po.loading=false; } renderPortal(); }
+/* published clips are a snapshot: bring notes, labels, timing and players in line with the matches as they are now */
+function poRefreshBatches(){ let n=0;
+  (po.share.batches||[]).forEach(b=>{ b.items=(b.items||[]).map(it=>{ const m=store[it.mid], ev=m&&m.events.find(e=>it.id===m.id+'-'+e.id); if(!ev||!poClipable(m)) return it;
+    const fresh=poClipItem(m,ev); if(['note','label','minute','who','t0','t1','color'].some(k=>String(fresh[k]||'')!==String(it[k]||''))||String(fresh.players)!==String(it.players)){ n++; return fresh; } return it; }); });
+  return n; }
 async function poSaveShare(msg){ try{ po.share=await FSX.portal('share','PUT',po.share); if(msg) toast(msg); }catch(e){ toast('Could not save: '+e.message); } renderPortal(); }
 const poMatchVideo=m=>{ const v=typeof matchCloudVideo==='function'?matchCloudVideo(m):null; return v?v.key:null; };
 const poClipable=m=>!!poMatchVideo(m)&&m.timebase!=='live'&&!m.manualData;

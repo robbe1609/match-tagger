@@ -179,6 +179,7 @@ Then open **Portal** in the top menu.
   - **Choose players**.
 
   Pick the clips (by match, tag or player) and **Publish batch**. **Edit** and **Unpublish** change it later.
+- **Notes:** the note you add to a tag in the tagger shows on the clip for the player (in the list and under the video). Published batches are a snapshot: notes and other changes you make later reach the players the next time you open **Portal**.
 - **Comments:** players comment on any clip; each conversation is private between you and that player. Reply under **Comments** on the Portal page; threads waiting for an answer are marked.
 
 ## Players chart
