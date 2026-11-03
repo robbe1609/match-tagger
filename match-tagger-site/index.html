@@ -2177,6 +2177,13 @@ document.addEventListener('fullscreenchange',()=>{ const mn=$('#view-match .main
   if(fs) mn.appendChild(tb); else document.body.appendChild(tb); });
 
 /* ---------- Tag panel editor ---------- */
+/* keep scroll positions when a panel is redrawn (lists jumped back to the top after every click) */
+function scrollSnap(root){ const out=[], seen={}; if(!root) return {out,wy:window.scrollY};
+  [root,...root.querySelectorAll('*')].forEach(el=>{ if(el.scrollTop>0||el.scrollLeft>0){ const k=el.id?'#'+el.id:(el.classList[0]||el.tagName); seen[k]=(seen[k]||0)+1; out.push({k,i:seen[k]-1,t:el.scrollTop,l:el.scrollLeft,root:el===root}); } });
+  return {out,wy:window.scrollY,root}; }
+function scrollRestore(sn){ if(!sn) return; const root=sn.root;
+  sn.out.forEach(x=>{ let el=null; if(x.root) el=root; else if(root){ el=[...root.querySelectorAll(x.k.startsWith('#')?x.k:(/^[A-Z]+$/.test(x.k)?x.k:'.'+CSS.escape(x.k)))][x.i]||null; } if(el){ el.scrollTop=x.t; el.scrollLeft=x.l; } });
+  if(Math.abs(window.scrollY-sn.wy)>1) window.scrollTo(0,sn.wy); }
 function renderTagsModal(){
   const m=$('#tagsModal'); m.hidden=!ui.tagsOpen; if(!ui.tagsOpen) return;
   const p=panel(), onPanel=new Set(panelTags());
@@ -2193,6 +2200,7 @@ function renderTagsModal(){
   const builtLeft=PLAYER_TAGS.concat(TEAM_TAGS,['note']).filter(k=>!onPanel.has(k));
   const ownLeft=settings.custom.filter(c=>!onPanel.has(c.id));
   const tgt=Math.min(ui.peTarget==null?p.length-1:ui.peTarget,p.length-1);
+  const tgSnap=scrollSnap($('#tagsModal'));
   $('#tagsSheet').innerHTML=`<div class="sheet-head"><div><h2 id="tgTitle">Your tag panel</h2><p>Build the panel you tag with. Drag tags by the ⋮⋮ handle to reorder them or move them to another section. Click a name, colour or key to change it.</p></div><button class="btn sm ghost" data-tclose>Done</button></div>
     <div class="pe">
       <div class="pe-main">
@@ -2217,6 +2225,7 @@ function renderTagsModal(){
           <button class="btn primary" type="submit">Create and add to panel</button></form>
       </aside>
     </div>`;
+  scrollRestore(tgSnap);
 }
 function closeTags(){ ui.tagsOpen=false; ui.peResetArm=false; renderTagsModal(); renderDock(); if(ui.tab==='events') renderEvents(); if(ui.tab==='stats') renderStats(); }
 /* drag tags inside the editor (handle only, so the text fields stay editable) */
@@ -2303,6 +2312,7 @@ function renderEvents(){
   const used=[...new Set(M.events.map(e=>e.type))];
   const list=filteredEvents();
   const playerOpts=M.players.filter(p=>M.events.some(e=>[e.pid,e.assist,e.in,e.out,e.a,e.b].includes(p.id)||(e.inv||[]).includes(p.id))).sort((a,b)=>a.num-b.num);
+  const evSnap=scrollSnap(el);
   el.innerHTML=`<div style="display:flex;flex-direction:column;gap:10px">
     <div class="ev-tools">
       <select id="fType" aria-label="Filter by event"><option value="">All events</option><option value="shots"${ui.fType==='shots'?' selected':''}>All shots</option>${used.map(k=>`<option value="${esc(k)}"${ui.fType===k?' selected':''}>${esc(T(k).label)}</option>`).join('')}</select>
@@ -2324,7 +2334,8 @@ function renderEvents(){
         ${ui.noteEdit===e.id?`<div class="note-edit"><input id="noteInput" value="${esc(e.note||'')}" placeholder="Add a note and press Enter"></div>`:''}
       </div>`).join(''):`<div class="empty">${M.events.length?'No events match these filters.':'No events yet. Mark the kick-off, then click a player in the lineup or use the team buttons to tag.'}</div>`}</div>
   </div>`;
-  if(ui.noteEdit){ const n=$('#noteInput'); if(n){ n.focus(); n.select(); } }
+  scrollRestore(evSnap);
+  if(ui.noteEdit){ const n=$('#noteInput'); if(n){ n.focus({preventScroll:true}); n.select(); } }
 }
 
 /* clips */
