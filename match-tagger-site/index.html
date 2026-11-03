@@ -565,6 +565,31 @@ button.res:hover{transform:translateY(-1px)}
 .inv-tog.main{border-style:dashed;color:var(--ink);cursor:default}
 .ev .acts button.on{color:var(--accent)}
 .ev .acts button svg{width:16px;height:16px}
+.po-tbl td,.po-tbl th{white-space:nowrap}
+.page-actions a.btn{text-decoration:none}
+.po-user{border:1px solid var(--line);background:var(--surface-2);border-radius:7px;padding:4px 8px;font:inherit;font-size:14px;color:var(--ink);width:170px}
+.po-st{font-size:12px;font-weight:700;border-radius:999px;padding:2px 9px;border:1px solid var(--line)}
+.po-st.start{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 50%,transparent)}.po-st.own{color:var(--res-w);border-color:color-mix(in srgb,var(--res-w) 50%,transparent)}.po-st.lock{color:var(--against)}
+.po-acts{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
+.po-matches{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:6px}
+.po-m{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:9px;padding:7px 10px;font-size:14px;cursor:pointer}
+.po-m input{width:17px;height:17px;accent-color:var(--accent)}
+.po-batches{display:flex;flex-direction:column;gap:6px}
+.po-batch{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:10px;padding:8px 12px;flex-wrap:wrap}
+.po-batch>div{display:flex;flex-direction:column}
+.po-edit{border:1px solid var(--accent);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;background:var(--surface-2)}
+.po-row{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.po-evs{display:flex;flex-direction:column;gap:3px;max-height:360px;overflow:auto;border:1px solid var(--line);border-radius:9px;background:var(--surface);padding:4px}
+.po-ev{display:flex;align-items:center;gap:9px;padding:5px 8px;border-radius:7px;cursor:pointer;font-size:14px}
+.po-ev.on{background:var(--accent-soft)}
+.po-ev input{width:16px;height:16px;accent-color:var(--accent)}
+.po-ev .min{font-variant-numeric:tabular-nums;font-weight:700;min-width:46px}
+.po-ev .dot{width:9px;height:9px;border-radius:50%}
+.po-thread{border:1px solid var(--line);border-left:4px solid var(--line);border-radius:10px;padding:8px 12px;display:flex;flex-direction:column;gap:5px;margin-bottom:8px}
+.po-thread.new{border-left-color:var(--warn)}
+.po-th-head{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.po-msg{margin:0;font-size:14px}.po-msg.coach{color:var(--muted)}
+.po-reply{display:flex;gap:6px}.po-reply input{flex:1;min-width:0;border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:6px 9px;font:inherit;font-size:14px;color:var(--ink)}
 /* Players */
 .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
 .pcard{position:relative;overflow:hidden;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px 12px;display:flex;flex-direction:column;gap:4px;color:var(--ink);transition:border-color .15s,transform .15s}
@@ -1404,7 +1429,7 @@ body.tb-dragging,body.tb-dragging *{cursor:grabbing!important;user-select:none!i
 
 <nav class="nav" aria-label="Main"><div class="wrap nav-in">
   <button class="nav-brand" data-go="calendar" aria-label="Match Tagger calendar"><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="1.5" y="5.5" width="29" height="21" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><line x1="16" y1="5.5" x2="16" y2="26.5" stroke="currentColor" stroke-width="2"/><circle cx="16" cy="16" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="25" cy="16" r="3" fill="var(--hero-accent)"/></svg><span>Match Tagger</span></button>
-  <div class="nav-links"><button data-go="calendar" data-nav="calendar">Calendar</button><button data-go="week" data-nav="week">Week</button><button data-go="matches" data-nav="matches">Analyses</button><button data-go="players" data-nav="players">Players</button><button data-go="tactics" data-nav="tactics">Tactics</button><button data-go="team" data-nav="team">Team</button><button data-go="home" data-nav="home">Overview</button></div>
+  <div class="nav-links"><button data-go="calendar" data-nav="calendar">Calendar</button><button data-go="week" data-nav="week">Week</button><button data-go="matches" data-nav="matches">Analyses</button><button data-go="players" data-nav="players">Players</button><button data-go="tactics" data-nav="tactics">Tactics</button><button data-go="portal" data-nav="portal">Portal</button><button data-go="team" data-nav="team">Team</button><button data-go="home" data-nav="home">Overview</button></div>
   <span class="spacer"></span>
   <button class="sync" id="sync" data-od title="Your Match Tagger folder"><i></i><span>Opening folder…</span></button>
   <button class="btn primary sm" data-go="new">New match</button>
@@ -1421,6 +1446,7 @@ body.tb-dragging,body.tb-dragging *{cursor:grabbing!important;user-select:none!i
 <section class="view" id="view-player" hidden></section>
 <section class="view" id="view-tactics" hidden></section>
 <section class="view" id="view-entry" hidden></section>
+<section class="view" id="view-portal" hidden></section>
 <section class="view" id="view-team" hidden></section>
 <section class="view" id="view-new" hidden></section>
 <section class="view" id="view-match" hidden>
@@ -1826,7 +1852,7 @@ async function connectDb(){
     col=true; lastSync=Date.now(); linkAll(); if(view==='match') renderLiveBar();
     if(changedCurrent){ if(store[M.id]) M=store[M.id]; renderAll(); } else renderDrawer();
     lsSave(); setSync('cloud'); flush();
-    refreshVideos(); plSync(); tbSync(); phSync();
+    refreshVideos(); plSync(); tbSync(); phSync(); if(view==='portal'){ po.players=null; po.err=''; setTimeout(()=>poLoad(true),300); }
   }catch(e){ console.error(e); if(e&&e.name==='AuthError'){ authLost(); return; } setSync('error'); toast(FSX.kind==='cloud'?'Could not reach your online storage. Your work is kept in this browser and saved online as soon as the connection is back.':'Could not open your Match Tagger folder. Your work is kept in this browser. Click the status at the top to reconnect.'); clearTimeout(ui.retryT); if(FSX.kind==='cloud') ui.retryT=setTimeout(connectDb,20000); }
 }
 const localMode=()=>{ try{ return localStorage.getItem('matchTagger.localMode')==='1'; }catch(e){ return false; } };
@@ -3073,9 +3099,9 @@ function matchMin(t){ const c=matchClock(t); return c.phase==='pre'?null:c.secs/
 /* ---------- Router ---------- */
 let view='home', viewArg=null;
 const sessionFiles={};
-const VIEWS=['home','calendar','week','fixture','training','tactics','entry','matches','report','players','player','team','new','match'];
+const VIEWS=['home','calendar','week','fixture','training','tactics','entry','portal','matches','report','players','player','team','new','match'];
 function parseHash(){ let h=''; try{ h=(location.hash||'').slice(1); }catch(e){}
-  if(/^(home|matches|players|team|new|calendar|tactics)$/.test(h)) return [h,null];
+  if(/^(home|matches|players|team|new|calendar|tactics|portal)$/.test(h)) return [h,null];
   const w=h.match(/^week(?:-(\d{4}-W\d{2}))?$/); if(w) return ['week',w[1]||null];
   const tr=h.match(/^training-(\d{4}-\d{2}-\d{2})$/); if(tr) return ['training',tr[1]];
   const k=h.match(/^(match|report|player|fixture|tactics|entry)-([A-Za-z0-9]+)$/); return k?[k[1],k[2]]:['calendar',null]; }
@@ -3105,7 +3131,7 @@ function go(v,arg){
   try{ window.scrollTo(0,0); }catch(e){}
 }
 window.addEventListener('hashchange',()=>{ let h=''; try{ h=location.hash.slice(1); }catch(e){} if(ui.hashLock===h){ ui.hashLock=null; return; } const [v,a]=parseHash(); if(v!==view||a!==viewArg) go(v,a); });
-function renderView(){ const f={entry:renderEntry,tactics:renderTactics,training:renderTraining,calendar:renderCalendar,week:renderWeek,fixture:renderFixture,home:renderHome,matches:renderMatches,report:renderReport,players:renderPlayers,player:renderPlayer,team:renderTeam,new:renderNew}[view]; if(f) f(); }
+function renderView(){ const f={portal:renderPortal,entry:renderEntry,tactics:renderTactics,training:renderTraining,calendar:renderCalendar,week:renderWeek,fixture:renderFixture,home:renderHome,matches:renderMatches,report:renderReport,players:renderPlayers,player:renderPlayer,team:renderTeam,new:renderNew}[view]; if(f) f(); }
 function watchEvent(mid,eid){ const m=store[mid]; const e=m&&m.events.find(x=>x.id===eid); if(!e) return; ui.pendingSeek=e.t; go('match',mid); if(hasVideo()){ ui.pendingSeek=null; seek(e.t-3); } else toast('Load the video for this match to watch the moment.'); }
 
 const IC={
@@ -3744,6 +3770,133 @@ document.addEventListener('change',e=>{
   if(t.dataset.mnlen){ const k=t.dataset.mnlen, v=Math.max(0,Math.round(+t.value||0)); if(k==='halfLen') m.halfLen=Math.max(5,Math.min(60,v||45)); else mnInit(m)[k]=Math.min(30,v); mnSave(m); renderEntry(); return; }
 });
 document.addEventListener('keydown',e=>{ if(view==='entry'&&e.key==='Enter'&&e.target.dataset&&e.target.dataset.mnf==='min'){ e.preventDefault(); e.target.blur(); } });
+
+/* =================== PLAYER PORTAL (coach side) ===================
+   Player accounts, which matches players can watch, clip batches and comments. Everything lives in the storage
+   service (version 3) under Portal/, which only the coach login can change. Passwords are never visible here. */
+const po={players:null, share:null, comments:null, err:'', loading:false, edit:null, armed:null, open:{}};
+function poUsername(s){ if(s.portalUser) return s.portalUser; const w=String(s.name||'').trim().split(/\s+/).filter(Boolean); if(!w.length) return '';
+  return [w[w.length-1]].concat(w.slice(0,-1)).join('').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9]/g,''); }
+function poDisplay(s){ const w=String(s.name||'').trim().split(/\s+/).filter(Boolean); return w.length>1?[w[w.length-1]].concat(w.slice(0,-1)).join(' '):String(s.name||''); }
+const poLink=()=>location.origin+location.pathname.replace(/[^/]*$/,'')+'player.html?s='+encodeURIComponent(/^https:/.test(FSX.api||'')?FSX.host:(FSX.api||''));
+function poRoster(){ const ss=nowSeason(); return squad().filter(s=>!isOther(s,ss)&&String(s.name||'').trim()).sort((a,b)=>(+a.num||999)-(+b.num||999)||a.name.localeCompare(b.name)); }
+function poWanted(){ const used={}, out=[];
+  poRoster().forEach(s=>{ let u=poUsername(s); if(!u) return; if(used[u.toLowerCase()]) u=u+(s.num||''); used[u.toLowerCase()]=1; out.push({id:s.id,username:u,name:poDisplay(s),num:String(s.num||''),all:false}); });
+  out.push({id:'test',username:'test',name:'Test player',num:'',all:true}); return out; }
+async function poLoad(force){
+  if(FSX.kind!=='cloud'||!col){ po.err='cloud'; renderPortal(); return; }
+  if(po.loading||(!force&&po.players)) return; po.loading=true; po.err=''; renderPortal();
+  try{
+    const have=(await FSX.portal('players')).players, want=poWanted(), wantIds=new Set(want.map(x=>x.id));
+    const disable=have.filter(a=>!wantIds.has(a.id)).map(a=>a.id);
+    const needs=want.some(w=>{ const h=have.find(a=>a.id===w.id); return !h||h.username!==w.username||h.num!==w.num||h.name!==w.name||h.all!==w.all; })||disable.length;
+    po.players=needs?(await FSX.portal('players','POST',{players:want,disable})).players:have;
+    po.share=await FSX.portal('share'); po.share.matches=po.share.matches||[]; po.share.batches=po.share.batches||[]; po.share.videos=po.share.videos||{};
+    po.comments=(await FSX.portal('comments')).comments||{};
+  }catch(e){ console.error(e); po.err=e.name==='OldWorker'?'old':e.message; }
+  finally{ po.loading=false; } renderPortal(); }
+async function poSaveShare(msg){ try{ po.share=await FSX.portal('share','PUT',po.share); if(msg) toast(msg); }catch(e){ toast('Could not save: '+e.message); } renderPortal(); }
+const poMatchVideo=m=>{ const v=typeof matchCloudVideo==='function'?matchCloudVideo(m):null; return v?v.key:null; };
+const poClipable=m=>!!poMatchVideo(m)&&m.timebase!=='live'&&!m.manualData;
+function poMatchEntry(m){ const s=goalsFA(m), d=isoDate(m.date); return {id:m.id,title:(m.home?'vs ':'at ')+(m.them||'Opponent'),date:d,comp:m.comp||'',type:mtLabel(mtypeOf(m)),score:isPlayed(m)?(m.home?s.f+'–'+s.a:s.a+'–'+s.f):'',video:poMatchVideo(m)}; }
+function poClipItem(m,e){ return withMatch(m,()=>{ const sqOf=id=>{ const p=P(id); return p&&p.sq; };
+  const players=[...new Set([e.pid,e.type==='goal'?e.assist:null].concat(e.inv||[]).map(sqOf).filter(Boolean))];
+  return {id:m.id+'-'+e.id,mid:m.id,t0:Math.max(0,+(e.t-preOf(e)).toFixed(1)),t1:+(e.t+postOf(e)).toFixed(1),label:T(e.type).label,color:T(e.type).hex||'#6B6F78',minute:minuteLabel(e.t),who:evWho(e),note:e.note||'',match:(m.home?'vs ':'at ')+(m.them||'Opponent'),date:isoDate(m.date),players}; }); }
+function renderPortal(){
+  const el=$('#view-portal'); if(!el) return;
+  const head=`<header class="page-head"><div><span class="eyebrow">Player portal</span><h1>Portal</h1><p>Players log in on their own page and only see what you share with them.</p></div>
+    <div class="page-actions">${FSX.kind==='cloud'&&FSX.host?`<button class="btn" data-pocopy="link">Copy player link</button><a class="btn primary" href="${esc(poLink())}" target="_blank" rel="noopener">Open player page</a>`:''}</div></header>`;
+  if(po.err==='cloud'||FSX.kind!=='cloud'){ el.innerHTML=`<div class="wrap page">${head}<div class="empty-state"><strong>Needs online storage</strong><p>The player portal works with your online storage. Log in to it first (status at the top right).</p></div></div>`; return; }
+  if(po.err==='old'){ el.innerHTML=`<div class="wrap page">${head}<div class="empty-state"><strong>Update your storage service</strong><p>The player portal needs version 3 of the storage service. In Cloudflare: Workers &amp; Pages → match-tagger-storage → Edit code, replace everything with the new worker.js from GitHub (storage-service/worker.js) and click Deploy. Nothing else changes.</p><button class="btn primary" data-poreload>Try again</button></div></div>`; return; }
+  if(!po.players){ el.innerHTML=`<div class="wrap page">${head}<p class="hint">${po.err?esc(po.err):'Loading the portal…'}</p>${po.err?'<button class="btn" data-poreload>Try again</button>':''}</div>`; if(!po.loading&&!po.err) poLoad(); return; }
+  const sh=po.share, ms=Object.values(store).filter(m=>poMatchVideo(m)).sort(byDateDesc);
+  const accRow=a=>{ const s=SQ(a.id), inv=a.state==='start';
+    return `<tr><td>${esc(a.num||'')}</td><td class="name">${esc(a.name)}${a.all?' <span class="tbadge">sees everything</span>':''}</td>
+      <td>${a.id==='test'?`<code>test</code>`:`<input class="po-user" data-pouser="${a.id}" value="${esc(a.username)}" aria-label="Username ${esc(a.name)}" spellcheck="false">`}</td>
+      <td><span class="po-st ${a.locked?'lock':a.state}">${a.locked?'Locked for 15 min':inv?'Starting password':'Own password'}</span></td>
+      <td>${a.lastLogin?esc(fmtDate(new Date(a.lastLogin).toISOString().slice(0,10),{day:'numeric',month:'short'})):'<span class="hint">never</span>'}</td>
+      <td class="po-acts">${inv?`<button class="btn sm" data-pocopy="${a.id}">Copy invite</button>`:''}<button class="btn sm ghost" data-poreset="${a.id}">${po.armed===a.id?'Reset? Click again':'Reset password'}</button></td></tr>`; };
+  const batchRow=b=>{ const nC=Object.values(po.comments[b.id]||[]).length, rec=b.to==='involved'?'Each player: her own clips':b.to==='all'?'Whole team':(b.to||[]).map(id=>(po.players.find(a=>a.id===id)||{}).name||'').filter(Boolean).join(', ');
+    return `<div class="po-batch"><div><b>${esc(b.name)}</b><span class="hint">${esc(fmtDate(b.date,{day:'numeric',month:'short'}))} · ${b.items.length} clip${b.items.length===1?'':'s'} · ${esc(rec)}${nC?' · '+nC+' comment'+(nC===1?'':'s'):''}</span></div>
+      <span class="po-acts"><button class="btn sm" data-poedit="${b.id}">Edit</button><button class="btn sm ghost danger" data-podel="${b.id}">${po.armed==='del'+b.id?'Unpublish? Click again':'Unpublish'}</button></span></div>`; };
+  el.innerHTML=`<div class="wrap page po-page">${head}
+    <section class="card"><div class="card-head"><h2>Logins</h2><span class="hint">Username: first and last name without spaces · starting password: shirt number + username</span></div>
+      <div class="tbl-wrap"><table class="po-tbl"><thead><tr><th>#</th><th class="name">Player</th><th>Username</th><th>Password</th><th>Last login</th><th></th></tr></thead><tbody>${po.players.slice().sort((x,y)=>(x.id==='test')-(y.id==='test')||(+x.num||999)-(+y.num||999)).map(accRow).join('')}</tbody></table></div>
+      <p class="hint">Passwords are stored scrambled: nobody can see them, you included. <b>Reset password</b> puts it back to the starting password (for example 78LizDeBlock); she chooses a new one at her next login. Players marked as other team have no login. The test account (username <b>test</b>, starting password <b>test</b>) sees everything you share.</p></section>
+    <section class="card"><div class="card-head"><h2>Matches players can watch</h2><span class="hint">Full match videos from your online storage</span></div>
+      ${ms.length?`<div class="po-matches">${ms.map(m=>{ const on=sh.matches.some(x=>x.id===m.id); return `<label class="po-m"><input type="checkbox" data-poshare="${m.id}"${on?' checked':''}><span>${mtTag(m)} <b>${esc(fmtDate(isoDate(m.date),{day:'numeric',month:'short'}))}</b> ${esc(vsLabel(m))}</span></label>`; }).join('')}</div>`:'<p class="hint">No matches with a video in your online storage yet.</p>'}
+      <p class="hint">Ticked matches are visible to the whole team. Clips you publish below work even if the full match is not ticked.</p></section>
+    <section class="card"><div class="card-head"><h2>Clip batches</h2>${po.edit?'':'<button class="btn primary sm" data-ponew>New batch</button>'}</div>
+      ${po.edit?poEditorHtml():''}
+      ${sh.batches.length?`<div class="po-batches">${sh.batches.slice().sort((a,b)=>(b.created||0)-(a.created||0)).map(batchRow).join('')}</div>`:po.edit?'':'<p class="hint">No batches yet. A batch is a set of clips you release at once, for example "Week 44 · pressing".</p>'}</section>
+    <section class="card"><div class="card-head"><h2>Comments</h2><button class="btn sm ghost" data-poreload>Refresh</button></div>${poCommentsHtml()}</section>
+  </div>`;
+}
+function poEditorHtml(){ const ed=po.edit, sel=new Set(ed.sel), ms=Object.values(store).filter(poClipable).sort(byDateDesc);
+  const m=store[ed.mid]||ms[0]; if(m) ed.mid=m.id;
+  const evs=m?withMatch(m,()=>sortedEvents().filter(e=>!['swap','formation','sub'].includes(e.type)&&(!ed.tag||e.type===ed.tag)&&(!ed.pl||[e.pid,e.assist].concat(e.inv||[]).some(id=>{ const p=P(id); return p&&p.sq===ed.pl; })))):[];
+  const tags=m?[...new Set(m.events.filter(e=>!['swap','formation','sub'].includes(e.type)).map(e=>e.type))]:[];
+  const players=po.players.filter(a=>a.id!=='test');
+  return `<div class="po-edit">
+    <div class="form fx-form"><div class="field"><label for="poName">Name</label><input id="poName" value="${esc(ed.name)}" placeholder="Week 44 · pressing"></div>
+      <div class="field"><label for="poNote">Message for the players (optional)</label><input id="poNote" value="${esc(ed.note||'')}" placeholder="Watch these before Thursday's training"></div></div>
+    <div class="po-row"><span class="tb-lbl">Who gets it</span><span class="seg" role="group">${[['involved','Each player: her own clips'],['all','Whole team'],['pick','Choose players']].map(([k,l])=>`<button data-poto="${k}" aria-pressed="${ed.to===k}">${l}</button>`).join('')}</span></div>
+    ${ed.to==='pick'?`<div class="pch-chips">${players.map(a=>`<button class="pch-chip" data-popick="${a.id}" aria-pressed="${ed.pick.includes(a.id)}"><b>${esc(a.num||'–')}</b>${esc(a.name)}</button>`).join('')}</div>`:''}
+    ${ed.to==='involved'?'<p class="hint">Every clip goes to the players tagged in it (main player, assist and players involved). Each player only sees her own clips.</p>':''}
+    <div class="po-row"><label class="sel">Match <select id="poMatch">${ms.map(x=>`<option value="${x.id}"${m&&x.id===m.id?' selected':''}>${esc(fmtDate(isoDate(x.date),{day:'numeric',month:'short'})+' '+vsLabel(x))}</option>`).join('')}</select></label>
+      <label class="sel">Tag <select id="poTag"><option value="">All tags</option>${tags.map(k=>`<option value="${esc(k)}"${ed.tag===k?' selected':''}>${esc(withMatch(m,()=>T(k).label))}</option>`).join('')}</select></label>
+      <label class="sel">Player <select id="poPl"><option value="">All players</option>${players.map(a=>`<option value="${a.id}"${ed.pl===a.id?' selected':''}>${esc((a.num?a.num+' · ':'')+a.name)}</option>`).join('')}</select></label>
+      <button class="btn sm" data-poall>Select all shown</button><button class="btn sm ghost" data-ponone>Clear shown</button></div>
+    ${ms.length?'':'<p class="hint">Clips need a match whose video is in your online storage (and, for live-tagged matches, synced).</p>'}
+    <div class="po-evs">${evs.length?evs.map(e=>{ const k=m.id+'-'+e.id; return `<label class="po-ev${sel.has(k)?' on':''}"><input type="checkbox" data-poev="${k}"${sel.has(k)?' checked':''}><span class="min">${esc(withMatch(m,()=>minuteLabel(e.t)))}</span><span class="dot" style="background:${withMatch(m,()=>T(e.type).css)}"></span><b>${esc(withMatch(m,()=>T(e.type).label))}</b><span class="hint">${esc(withMatch(m,()=>evWho(e)))}</span></label>`; }).join(''):'<p class="hint">No clips with these filters.</p>'}</div>
+    <div class="row-actions"><b>${sel.size} clip${sel.size===1?'':'s'} selected</b>${sel.size?`<span class="hint">from ${new Set([...sel].map(k=>k.split('-')[0])).size} match(es)</span>`:''}<span style="flex:1"></span><button class="btn ghost" data-pocancel>Cancel</button><button class="btn primary" data-popublish ${sel.size&&ed.name.trim()&&(ed.to!=='pick'||ed.pick.length)?'':'disabled'}>${ed.id?'Save batch':'Publish batch'}</button></div></div>`; }
+function poCommentsHtml(){ const c=po.comments||{}, out=[];
+  (po.share.batches||[]).forEach(b=>{ const list=c[b.id]||[]; if(!list.length) return; const threads={};
+    list.forEach(x=>{ const k=x.item+'|'+x.pid; (threads[k]=threads[k]||[]).push(x); });
+    Object.entries(threads).forEach(([k,msgs])=>{ const [item,pid]=k.split('|'), it=(b.items||[]).find(i=>i.id===item)||{}, who=(po.players.find(a=>a.id===pid)||{}).name||'Player', last=msgs[msgs.length-1];
+      out.push({at:last.at,html:`<div class="po-thread${last.by==='player'?' new':''}"><div class="po-th-head"><b>${esc(who)}</b><span class="hint">${esc(b.name)} · ${esc(it.minute||'')} ${esc(it.label||'')} · ${esc(it.match||'')}</span>${last.by==='player'?'<span class="tbadge">Waiting for you</span>':''}</div>
+        ${msgs.map(x=>`<p class="po-msg ${x.by}"><b>${x.by==='coach'?'You':esc(x.name||who)}</b> ${esc(x.text)} <span class="hint">${esc(new Date(x.at).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}))}</span></p>`).join('')}
+        <div class="po-reply"><input data-poreply="${esc(b.id)}|${esc(item)}|${esc(pid)}" placeholder="Reply to ${esc(who)}"><button class="btn sm primary" data-posend="${esc(b.id)}|${esc(item)}|${esc(pid)}">Send</button></div></div>`}); }); });
+  return out.length?out.sort((a,b)=>b.at-a.at).map(x=>x.html).join(''):'<p class="hint">No comments yet. Players can comment on every clip you publish; each conversation is private between you and that player.</p>'; }
+async function poSync(){ try{ po.players=(await FSX.portal('players','POST',{players:poWanted()})).players; }catch(e){ toast('Could not update the logins: '+e.message); } renderPortal(); }
+document.addEventListener('click',async e=>{
+  if(view!=='portal') return; const g=s=>e.target.closest(s); let b;
+  if(g('[data-poreload]')){ po.players=null; po.err=''; poLoad(true); return; }
+  if(b=g('[data-pocopy]')){ const id=b.dataset.pocopy, a=id==='link'?null:po.players.find(x=>x.id===id);
+    const txt=a?`Hi ${a.name.split(' ')[0]}! Your login for the ${teamName()} video portal:\n${poLink()}\nUsername: ${a.username}\nStarting password: ${String(a.num||'')+a.username}\nYou choose your own password the first time you log in.`:poLink();
+    try{ await navigator.clipboard.writeText(txt); toast(a?'Invite for '+a.name+' copied: paste it in WhatsApp.':'Player link copied.'); }catch(err){ prompt('Copy this:',txt); } return; }
+  if(b=g('[data-poreset]')){ const id=b.dataset.poreset; if(po.armed!==id){ po.armed=id; renderPortal(); setTimeout(()=>{ if(po.armed===id){ po.armed=null; renderPortal(); } },4000); return; }
+    po.armed=null; try{ const r=await FSX.portal('reset','POST',{id}); po.players=po.players.map(a=>a.id===id?r.player:a); toast('Password of '+r.player.name+' is back to the starting password. She picks a new one at her next login.'); }catch(err){ toast('Could not reset: '+err.message); } renderPortal(); return; }
+  if(g('[data-ponew]')){ po.edit={id:null,name:'Clips · '+fmtDate(new Date().toISOString().slice(0,10),{day:'numeric',month:'short'}),note:'',to:'involved',pick:[],sel:[],mid:'',tag:'',pl:''}; renderPortal(); return; }
+  if(b=g('[data-poedit]')){ const x=po.share.batches.find(y=>y.id===b.dataset.poedit); if(!x) return; po.edit={id:x.id,name:x.name,note:x.note||'',to:Array.isArray(x.to)?'pick':x.to,pick:Array.isArray(x.to)?x.to.slice():[],sel:x.items.map(i=>i.id),mid:(x.items[0]||{}).mid||'',tag:'',pl:'',created:x.created}; renderPortal(); return; }
+  if(g('[data-pocancel]')){ po.edit=null; renderPortal(); return; }
+  if(b=g('[data-poto]')){ po.edit.to=b.dataset.poto; renderPortal(); return; }
+  if(b=g('[data-popick]')){ const s=new Set(po.edit.pick), id=b.dataset.popick; s.has(id)?s.delete(id):s.add(id); po.edit.pick=[...s]; renderPortal(); return; }
+  if(g('[data-poall]')||g('[data-ponone]')){ const add=!!g('[data-poall]'), s=new Set(po.edit.sel); document.querySelectorAll('[data-poev]').forEach(i=>add?s.add(i.dataset.poev):s.delete(i.dataset.poev)); po.edit.sel=[...s]; renderPortal(); return; }
+  if(g('[data-popublish]')){ const ed=po.edit, items=[], vids={};
+    ed.sel.forEach(k=>{ const i=k.indexOf('-'), m=store[k.slice(0,i)], ev=m&&m.events.find(x=>x.id===k.slice(i+1)); if(!m||!ev||!poClipable(m)) return; items.push(poClipItem(m,ev)); vids[m.id]=poMatchVideo(m); });
+    items.sort((a,b)=>(a.date+a.mid).localeCompare(b.date+b.mid)||a.t0-b.t0);
+    const batch={id:ed.id||('b'+newId()),name:ed.name.trim(),note:(ed.note||'').trim(),date:new Date().toISOString().slice(0,10),to:ed.to==='pick'?ed.pick.slice():ed.to,items,created:ed.created||Date.now()};
+    try{ po.share=await FSX.portal('share'); }catch(err){} po.share.batches=(po.share.batches||[]).filter(x=>x.id!==batch.id).concat(batch); po.share.videos=Object.assign({},po.share.videos||{},vids);
+    po.edit=null; await poSaveShare((ed.id?'Saved ':'Published ')+batch.name+' ('+items.length+' clip'+(items.length===1?'':'s')+').'); return; }
+  if(b=g('[data-podel]')){ const id=b.dataset.podel; if(po.armed!=='del'+id){ po.armed='del'+id; renderPortal(); setTimeout(()=>{ if(po.armed==='del'+id){ po.armed=null; renderPortal(); } },4000); return; }
+    po.armed=null; try{ po.share=await FSX.portal('share'); }catch(err){} po.share.batches=(po.share.batches||[]).filter(x=>x.id!==id); await poSaveShare('Batch unpublished: players no longer see it.'); return; }
+  if(b=g('[data-posend]')){ const [batch,item,pid]=b.dataset.posend.split('|'), inp=document.querySelector(`[data-poreply="${CSS.escape(b.dataset.posend)}"]`), text=inp?inp.value.trim():''; if(!text) return;
+    b.disabled=true; try{ po.comments[batch]=(await FSX.portal('comments','POST',{batch,item,pid,text})).comments; }catch(err){ toast('Could not send: '+err.message); } renderPortal(); return; }
+});
+document.addEventListener('change',async e=>{
+  if(view!=='portal') return; const t=e.target;
+  if(t.dataset.poshare){ const m=store[t.dataset.poshare]; if(!m) return; try{ po.share=await FSX.portal('share'); }catch(err){}
+    po.share.matches=(po.share.matches||[]).filter(x=>x.id!==m.id); if(t.checked) po.share.matches.push(Object.assign(poMatchEntry(m),{to:'all'}));
+    await poSaveShare(t.checked?'Players can now watch '+vsLabel(m)+'.':vsLabel(m)+' is no longer visible to players.'); return; }
+  if(t.dataset.poev){ const s=new Set(po.edit.sel); t.checked?s.add(t.dataset.poev):s.delete(t.dataset.poev); po.edit.sel=[...s]; renderPortal(); return; }
+  if(t.id==='poMatch'){ po.edit.mid=t.value; po.edit.tag=''; renderPortal(); return; }
+  if(t.id==='poTag'){ po.edit.tag=t.value; renderPortal(); return; }
+  if(t.id==='poPl'){ po.edit.pl=t.value; renderPortal(); return; }
+  if(t.dataset.pouser){ const s=SQ(t.dataset.pouser), v=t.value.replace(/[^A-Za-z0-9]/g,''); if(!s||!v) { renderPortal(); return; } s.portalUser=v; saveSettings(); await poSync(); toast('Username changed to '+v+'.'); return; }
+});
+document.addEventListener('input',e=>{ if(view!=='portal'||!po.edit) return; const t=e.target; if(t.id==='poName'){ po.edit.name=t.value; const b=$('[data-popublish]'); if(b) b.disabled=!(po.edit.sel.length&&t.value.trim()&&(po.edit.to!=='pick'||po.edit.pick.length)); } if(t.id==='poNote') po.edit.note=t.value; });
+document.addEventListener('keydown',e=>{ if(view==='portal'&&e.key==='Enter'&&e.target.dataset&&e.target.dataset.poreply){ const b=document.querySelector(`[data-posend="${CSS.escape(e.target.dataset.poreply)}"]`); if(b) b.click(); } });
 
 function addSquadPlayer(){
   const name=$('#apName').value.trim(); if(!name) return;

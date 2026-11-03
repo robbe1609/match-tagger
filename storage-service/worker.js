@@ -1,9 +1,11 @@
-/* Match Tagger · online storage service (version 2: adds downloads)
+/* Match Tagger · online storage service (version 3: adds the player portal)
    A Cloudflare Worker that keeps your match videos and tags in your own R2 bucket.
    Needs two settings on the Worker:
      - an R2 bucket binding with the variable name  BUCKET
      - a secret called  ADMIN_PASSWORD  (the password you log in with)
-   Open the Worker's address in a browser to check that both are set. */
+   Open the Worker's address in a browser to check that both are set.
+   Version 3 keeps player accounts and what you share with players in the bucket under Portal/.
+   Passwords are stored only as salted PBKDF2 hashes: nobody, the coach included, can read them. */
 
 const PREFIXES = ['Data/', 'Videos/', 'Exports/', 'Backups/'];
 const PART_MAX = 95 * 1024 * 1024;        // the site sends 50 MB parts; Cloudflare accepts at most 100 MB per request
@@ -65,6 +67,141 @@ async function serveObject(env, req, key, url) {
   return new Response(head ? null : obj.body, { status: 200, headers: h });
 }
 
+/* =================== PLAYER PORTAL ===================
+   Portal/accounts.json  {id: {id, username, name, num, all, salt, hash, it, must, ver, fails, lockUntil, lastLogin, changedAt}}
+   Portal/share.json     {matches: [{id, title, date, ..., video, to}], batches: [{id, name, date, to, items: [...]}]}
+   Portal/comments/<batch>.json  [{id, batch, item, pid, by, name, text, at}]   (each thread is between the coach and one player)
+   Portal/ is not reachable through /api/obj, so players and even the coach's file calls cannot read it directly. */
+const P_ACC = 'Portal/accounts.json', P_SHARE = 'Portal/share.json', P_PEPPER = 'Portal/pepper';
+const P_TOKEN_DAYS = 60, P_IT = 20000;
+async function rjson(env, key, dflt) { const o = await env.BUCKET.get(key); if (!o) return dflt; try { return await o.json(); } catch (e) { return dflt; } }
+const wjson = (env, key, data) => env.BUCKET.put(key, JSON.stringify(data), { httpMetadata: { contentType: 'application/json' } });
+async function pepper(env) { const o = await env.BUCKET.get(P_PEPPER); if (o) return await o.text(); const p = b64u(crypto.getRandomValues(new Uint8Array(32))); await env.BUCKET.put(P_PEPPER, p); return p; }
+async function pwHash(env, pw, salt, it) {
+  const k = await crypto.subtle.importKey('raw', enc.encode(String(pw)), 'PBKDF2', false, ['deriveBits']);
+  return b64u(await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: enc.encode(salt + '|' + await pepper(env)), iterations: it, hash: 'SHA-256' }, k, 256));
+}
+const fold = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const defaultPw = a => String(a.num || '') + a.username;
+async function setPw(env, a, pw, must) { a.salt = b64u(crypto.getRandomValues(new Uint8Array(16))); a.it = P_IT; a.hash = await pwHash(env, pw, a.salt, a.it); a.must = !!must; a.ver = (a.ver || 0) + 1; a.fails = 0; a.lockUntil = 0; a.changedAt = Date.now(); }
+async function pToken(env, a, exp) { exp = exp || Date.now() + P_TOKEN_DAYS * 864e5; return { token: ['p', a.id, a.ver, exp, await hmac(env, 'ptok|' + a.id + '|' + a.ver + '|' + exp)].join('.'), exp }; }
+async function pAuth(env, req) {
+  const h = req.headers.get('Authorization') || ''; const t = h.startsWith('Bearer ') ? h.slice(7) : '';
+  const [kind, id, ver, exp, sig] = t.split('.'); if (kind !== 'p' || !id || !sig || +exp < Date.now()) return null;
+  if (!same(sig, await hmac(env, 'ptok|' + id + '|' + ver + '|' + exp))) return null;
+  const accs = await rjson(env, P_ACC, {}); const a = accs[id]; if (!a || String(a.ver) !== String(ver) || a.off) return null;
+  return { a, accs };
+}
+const pub = a => ({ id: a.id, username: a.username, name: a.name, num: a.num || '', all: !!a.all, state: a.must ? 'start' : 'own', lastLogin: a.lastLogin || null, changedAt: a.changedAt || null, locked: (a.lockUntil || 0) > Date.now() });
+const sees = (a, to) => a.all || to === 'all' || (Array.isArray(to) && to.includes(a.id));
+function feedFor(a, share) {
+  const matches = (share.matches || []).filter(m => sees(a, m.to)).map(m => ({ id: m.id, title: m.title, date: m.date, comp: m.comp || '', type: m.type || '', score: m.score || '' }));
+  const batches = (share.batches || []).filter(b => sees(a, b.to) || (b.to === 'involved' && (a.all || (b.items || []).some(i => (i.players || []).includes(a.id)))))
+    .map(b => ({ id: b.id, name: b.name, date: b.date, note: b.note || '',
+      items: (b.items || []).filter(i => b.to !== 'involved' || a.all || (i.players || []).includes(a.id)).map(i => Object.assign({}, i, { mine: (i.players || []).includes(a.id) })) }))
+    .filter(b => b.items.length);
+  return { matches, batches };
+}
+function videoAllowed(a, share, mid) {
+  const f = feedFor(a, share);
+  if (f.matches.some(m => m.id === mid) || f.batches.some(b => b.items.some(i => i.mid === mid))) return ((share.matches || []).find(m => m.id === mid) || {}).video || ((share.videos || {})[mid]) || null;
+  return null;
+}
+async function signLink(env, url, key) { const exp = Date.now() + LINK_HOURS * 36e5; return { url: `${url.origin}/api/obj/${key.split('/').map(encodeURIComponent).join('/')}?exp=${exp}&sig=${await hmac(env, 'get|' + key + '|' + exp)}`, exp }; }
+const cleanText = (t, n) => String(t || '').replace(/\s+$/, '').slice(0, n || 2000);
+
+async function playerRoute(req, env, url) {
+  const p = url.pathname, m = req.method;
+  let body = {}; if (m === 'POST') { try { body = await req.json(); } catch (e) {} }
+  if (p === '/api/p/login' && m === 'POST') {
+    const accs = await rjson(env, P_ACC, {}), u = fold(body.username).replace(/\s+/g, '');
+    const a = Object.values(accs).find(x => fold(x.username) === u && !x.off);
+    const slow = () => new Promise(r => setTimeout(r, 700));
+    if (!a) { await slow(); return fail(401, 'Wrong username or password.'); }
+    if ((a.lockUntil || 0) > Date.now()) return fail(429, 'Too many tries. Wait 15 minutes, or ask your coach to reset your password.');
+    if (!same(await pwHash(env, String(body.password || ''), a.salt, a.it || P_IT), a.hash)) {
+      a.fails = (a.fails || 0) + 1; if (a.fails >= 8) { a.lockUntil = Date.now() + 15 * 6e4; a.fails = 0; }
+      await wjson(env, P_ACC, accs); await slow(); return fail(401, 'Wrong username or password.');
+    }
+    a.fails = 0; a.lockUntil = 0; a.lastLogin = Date.now(); await wjson(env, P_ACC, accs);
+    return json(Object.assign(await pToken(env, a), { must: !!a.must, me: pub(a) }));
+  }
+  const auth = await pAuth(env, req); if (!auth) return fail(401, 'Log in again');
+  const { a, accs } = auth;
+  if (p === '/api/p/password' && m === 'POST') {
+    const nw = String(body.password || '');
+    if (!same(await pwHash(env, String(body.old || ''), a.salt, a.it || P_IT), a.hash)) return fail(403, 'Your current password is not right.');
+    if (nw.length < 6) return fail(400, 'Use at least 6 characters.');
+    if (nw === defaultPw(a)) return fail(400, 'Choose a password that is different from the starting password.');
+    await setPw(env, a, nw, false); await wjson(env, P_ACC, accs);
+    return json(Object.assign(await pToken(env, a), { must: false, me: pub(a) }));
+  }
+  if (a.must) return fail(403, 'Choose your own password first.');
+  if (p === '/api/p/me') return json({ me: pub(a) });
+  const share = await rjson(env, P_SHARE, {});
+  if (p === '/api/p/feed') return json(Object.assign({ me: pub(a) }, feedFor(a, share)));
+  if (p === '/api/p/video' && m === 'POST') { const key = videoAllowed(a, share, String(body.mid || '')); if (!key || !keyFrom(key)) return fail(404, 'This video is not available.'); return json(await signLink(env, url, key)); }
+  if (p === '/api/p/comments') {
+    const batch = String(url.searchParams.get('batch') || body.batch || ''); if (!/^[A-Za-z0-9_-]{1,40}$/.test(batch)) return fail(400, 'Bad batch');
+    const f = feedFor(a, share), b = f.batches.find(x => x.id === batch); if (!b) return fail(404, 'Not found');
+    const key = 'Portal/comments/' + batch + '.json', list = await rjson(env, key, []);
+    if (m === 'POST') {
+      const text = cleanText(body.text); if (!text.trim()) return fail(400, 'Write something first.');
+      if (!b.items.some(i => i.id === body.item)) return fail(404, 'Not found');
+      list.push({ id: b64u(crypto.getRandomValues(new Uint8Array(9))), batch, item: String(body.item), pid: a.id, by: 'player', name: a.name, text, at: Date.now() });
+      await wjson(env, key, list);
+    }
+    return json({ comments: list.filter(c => c.pid === a.id) });
+  }
+  return fail(404, 'Not found');
+}
+async function adminPortal(req, env, url) {
+  const p = url.pathname, m = req.method;
+  let body = {}; if (m === 'POST' || m === 'PUT') { try { body = await req.json(); } catch (e) {} }
+  if (p === '/api/admin/players') {
+    const accs = await rjson(env, P_ACC, {});
+    if (m === 'POST') {
+      let ch = false;
+      for (const x of (body.players || [])) {
+        const id = String(x.id || ''); if (!/^[A-Za-z0-9_-]{1,40}$/.test(id)) continue;
+        const username = String(x.username || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 40); if (!username) continue;
+        const clash = Object.values(accs).find(o => o.id !== id && fold(o.username) === fold(username)); if (clash) continue;
+        let a = accs[id];
+        if (!a) { a = accs[id] = { id, username, name: String(x.name || ''), num: String(x.num || ''), all: !!x.all, created: Date.now() }; await setPw(env, a, defaultPw(a), true); ch = true; continue; }
+        const was = defaultPw(a);
+        if (a.username !== username || a.num !== String(x.num || '') || a.name !== String(x.name || '') || !!a.all !== !!x.all || a.off) {
+          a.username = username; a.num = String(x.num || ''); a.name = String(x.name || ''); a.all = !!x.all; delete a.off; ch = true;
+          if (a.must && was !== defaultPw(a)) await setPw(env, a, defaultPw(a), true);   // still on the starting password: it follows the new name/number
+        }
+      }
+      for (const id of (body.disable || [])) if (accs[id] && !accs[id].off) { accs[id].off = true; accs[id].ver = (accs[id].ver || 0) + 1; ch = true; }
+      if (ch) await wjson(env, P_ACC, accs);
+    }
+    return json({ players: Object.values(accs).filter(a => !a.off).map(pub) });
+  }
+  if (p === '/api/admin/reset' && m === 'POST') {
+    const accs = await rjson(env, P_ACC, {}), a = accs[String(body.id || '')]; if (!a) return fail(404, 'No such player');
+    await setPw(env, a, defaultPw(a), true); await wjson(env, P_ACC, accs); return json({ player: pub(a) });
+  }
+  if (p === '/api/admin/share') {
+    if (m === 'PUT') { const d = body && typeof body === 'object' ? body : {}; await wjson(env, P_SHARE, { matches: d.matches || [], batches: d.batches || [], videos: d.videos || {}, updatedAt: Date.now() }); }
+    return json(await rjson(env, P_SHARE, { matches: [], batches: [], videos: {} }));
+  }
+  if (p === '/api/admin/comments') {
+    if (m === 'POST') {
+      const batch = String(body.batch || ''); if (!/^[A-Za-z0-9_-]{1,40}$/.test(batch)) return fail(400, 'Bad batch');
+      const text = cleanText(body.text); if (!text.trim()) return fail(400, 'Write something first.');
+      const key = 'Portal/comments/' + batch + '.json', list = await rjson(env, key, []);
+      list.push({ id: b64u(crypto.getRandomValues(new Uint8Array(9))), batch, item: String(body.item || ''), pid: String(body.pid || ''), by: 'coach', name: 'Coach', text, at: Date.now() });
+      await wjson(env, key, list); return json({ comments: list });
+    }
+    const out = {}; let cursor;
+    do { const r = await env.BUCKET.list({ prefix: 'Portal/comments/', cursor }); for (const o of r.objects) { const id = o.key.slice(16).replace(/\.json$/, ''); out[id] = await rjson(env, o.key, []); } cursor = r.truncated ? r.cursor : undefined; } while (cursor);
+    return json({ comments: out });
+  }
+  return fail(404, 'Not found');
+}
+
 async function route(req, env, url) {
   const p = url.pathname, m = req.method;
   if (p === '/' || p === '') {
@@ -81,6 +218,8 @@ async function route(req, env, url) {
     return json(await makeToken(env));
   }
 
+  if (p.startsWith('/api/p/')) return playerRoute(req, env, url);
+
   // videos and files: also readable with a signed link (for the video player)
   if (p.startsWith('/api/obj/') && (m === 'GET' || m === 'HEAD')) {
     const key = keyFrom(p.slice(9)); if (!key) return fail(400, 'Bad file name');
@@ -90,7 +229,8 @@ async function route(req, env, url) {
 
   if (!(await tokenOk(env, req))) return fail(401, 'Log in again');
 
-  if (p === '/api/check') return json({ ok: true });
+  if (p === '/api/check') return json({ ok: true, version: 3 });
+  if (p.startsWith('/api/admin/')) return adminPortal(req, env, url);
 
   if (p === '/api/list' && m === 'GET') {
     const prefix = url.searchParams.get('prefix') || '';

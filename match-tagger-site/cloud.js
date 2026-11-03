@@ -130,7 +130,10 @@ const CLOUD=(function(){
     throw new Error('The upload could not be completed. Try again.');
   }
 
-  return {init,login,logout,forget,readText,readBlob,write,remove,ensure,list,listVideos,upload,usage,
+  /* player portal (storage version 3): JSON calls to /api/admin/... */
+  async function portal(path,method,body){ const r=await api('/api/admin/'+path,{method:method||'GET',headers:body?{'Content-Type':'application/json'}:{},body:body?JSON.stringify(body):undefined});
+    if(r.status===404) throw Object.assign(new Error('Your storage service is still version 2. Update it to version 3 (see the guide) to use the player portal.'),{name:'OldWorker'}); await ok(r); return r.json(); }
+  return {init,login,logout,forget,readText,readBlob,write,remove,ensure,list,listVideos,upload,usage,portal,
     kind:'cloud', supported:true,
     pick:async()=>{ throw Object.assign(new Error('Not available'),{name:'AbortError'}); },
     reconnect:async()=>state,

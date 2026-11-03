@@ -155,6 +155,32 @@ A clip can belong to more than one player, so everyone involved in a press, a bu
 - **Afterwards:** in the **Events** list, click the people icon of an event and tick the players involved.
 - The first player stays the main player: goals, assists and the other stats count only for her. The others get the clip on their player page as "· involved", with its own filter, and it is included when you export their clips.
 
+## Player portal (test phase)
+
+Players get their own login page where they watch the matches and clips you share, and comment on clips. It needs **version 3 of the storage service**:
+
+1. Cloudflare → **Workers & Pages** → **match-tagger-storage** → **Edit code**.
+2. Select all the code, delete it, paste the new `storage-service/worker.js` from GitHub, click **Deploy**. Your bucket, password and videos stay as they are.
+
+Then open **Portal** in the top menu.
+
+- **Logins:** every player in your squad (not "other team") gets an account automatically.
+  - **Username:** first and last name without spaces, for example `LizDeBlock`. You can change it in the table.
+  - **Starting password:** shirt number + username, for example `78LizDeBlock`. She must choose her own password at her first login.
+  - **Copy invite** gives a ready WhatsApp message with the link, username and starting password.
+  - **Reset password** puts it back to the starting password and logs her out everywhere.
+  - Passwords are stored scrambled (salted hashes): nobody can read them, you included.
+- **Test account:** username `test`, starting password `test`. It sees everything you share, like a player who is in every batch.
+- **Player page:** **Copy player link** / **Open player page**. Players don't need your storage password: their login only opens what you share.
+- **Matches players can watch:** tick a match to show its full video to the whole team.
+- **Clip batches:** **New batch** → name and optional message → who gets it:
+  - **Each player: her own clips** — the main player, the assist and the players involved;
+  - **Whole team**;
+  - **Choose players**.
+
+  Pick the clips (by match, tag or player) and **Publish batch**. **Edit** and **Unpublish** change it later.
+- **Comments:** players comment on any clip; each conversation is private between you and that player. Reply under **Comments** on the Portal page; threads waiting for an answer are marked.
+
 ## Players chart
 
 On **Players**, click **Chart** (next to Cards and Table).
@@ -206,7 +232,7 @@ A full match of 3 GB takes about 20 minutes at an upload speed of 20 Mbps, and a
 
 ## Updating the storage service
 
-When a new version of `storage-service/worker.js` comes with an update (for example version 2, which adds downloads):
+When a new version of `storage-service/worker.js` comes with an update (version 2 added downloads, version 3 the player portal):
 
 1. **Workers & Pages** → **match-tagger-storage** → **Edit code**.
 2. Select all the code in the editor, delete it, and paste the new `worker.js`.
