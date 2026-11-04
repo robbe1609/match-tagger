@@ -53,6 +53,7 @@ label.f input:focus{outline:2px solid var(--accent);outline-offset:1px}
 .pw{position:relative}.pw button{position:absolute;right:8px;bottom:8px;background:none;border:0;color:var(--muted);font-size:13px;font-weight:700}
 main{padding:16px 0 40px}
 .hello{display:flex;flex-direction:column;gap:2px;margin:6px 0 14px}
+.hello h1{overflow-wrap:anywhere}@media (max-width:400px){.hello h1{font-size:30px}}
 .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:14px}
 .tabs button{background:none;border:0;border-bottom:3px solid transparent;padding:10px 12px;font-family:var(--f-display);font-weight:700;font-size:19px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
 .tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
@@ -240,7 +241,7 @@ function render(){
   if(S.batch) return renderBatch();
   if(S.match) return renderMatch();
   const f=S.feed, ml=matchList(), bs=f.batches.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  app.innerHTML=`<main class="wrap"><div class="hello"><span class="eyebrow">${esc(f.me.username)}</span><h1>Hi ${esc(first(f.me.name))}</h1></div>${statsHtml(f.stats)}
+  app.innerHTML=`<main class="wrap"><div class="hello"><span class="eyebrow">${esc(f.me.username)}</span><h1>Hi ${esc(String(f.me.name||"").trim()||f.me.username)}</h1></div>${statsHtml(f.stats)}
     <div class="tabs" role="tablist"><button data-tab="clips" aria-selected="${S.tab==='clips'}">Clips<span class="n">${bs.length}</span></button><button data-tab="matches" aria-selected="${S.tab==='matches'}">Matches<span class="n">${ml.length}</span></button></div>
     ${S.tab==='clips'?(bs.length?`<div class="list">${bs.map(b=>{ const mine=b.items.filter(i=>i.mine).length; return `<button class="row" data-batch="${esc(b.id)}"><span class="main"><b>${esc(b.name)}</b><span class="hint">${mj([esc(fmtD(b.date)),b.items.length+' clip'+(b.items.length===1?'':'s')])}</span></span>${mine?`<span class="badge">${mine} of you</span>`:''}<span class="chev">›</span></button>`; }).join('')}</div>`:'<div class="empty">No clips yet. Your coach will share them here.</div>')
       :(ml.length?`<div class="list">${ml.map(m=>{ const n=myClips(m.id).length; return `<button class="row" data-match="${esc(m.id)}"><span class="main"><b>${esc(m.title)}</b><span class="hint">${mj([fmtD(m.date),m.type,m.comp,m.full?'':'Your clips only'].filter(Boolean).map(esc))}</span></span>${n?`<span class="badge soft">${n} of you</span>`:''}${m.score?`<span class="score">${esc(m.score)}</span>`:''}<span class="chev">›</span></button>`; }).join('')}</div>`:'<div class="empty">No matches shared yet.</div>')}
