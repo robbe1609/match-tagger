@@ -162,6 +162,12 @@ const first=n=>String(n||'').split(' ')[0];
 const mj=parts=>parts.filter(x=>x!=null&&x!=='').map(x=>'<span class="mi">'+x+'</span>').join(' ');
 const META=id=>((S.feed&&S.feed.meta)||{})[id]||null;
 const pad=n=>String(n).padStart(2,'0'), mmss=s=>{ s=Math.max(0,Math.floor(s)); return pad(Math.floor(s/60))+':'+pad(s%60); };
+/* goals start 15 s before the tag, like in the coach's tagger, so the build-up is in view */
+const GOAL_PRE=15, goalStart=g=>Math.max(0,g.t-GOAL_PRE);
+const goalClip=(g,clips,used)=>clips.find(c=>!(used&&used.has(c.id))&&/goal/i.test(c.label)&&c.t0-GOAL_PRE-1<=g.t&&g.t<=c.t1+1)||null;
+/* a goal clip published before this change may still start late: start it 15 s before the goal anyway */
+function clipStart(i){ const md=META(i.mid); if(!md||!/goal/i.test(i.label||'')) return i.t0;
+  const g=(md.goals||[]).find(g=>i.t0-1<=g.t&&g.t<=i.t1+1); return g?Math.min(i.t0,goalStart(g)):i.t0; }
 const scoreStr=a=>a[0]+'\u2013'+a[1];
 /* match clock from the coach's phase marks (video seconds) */
 function clockOf(md,t){ const p=md.ph||{}, L=(+md.half||45)*60;
@@ -246,8 +252,8 @@ function tlHtml(md,clips,full,D){
   const halves=[[p.h1s,p.h1e],[p.h2s,p.h2e]].filter(h=>h[0]!=null).map(h=>`<i class="half" style="left:${X(h[0])};width:${W(h[0],h[1]!=null?h[1]:hi)}"></i>`).join('');
   const marks=[[p.h1s,'KO'],[p.h1e,'HT'],[p.h2e,'FT']].filter(x=>x[0]!=null);
   let last=-99, lv=0; const gl=goals.map(g=>{ const x=pc(g.t); lv=x-last<6?1-lv:0; last=x;
-    const tag=full?'button':'span', team=g.us?md.us:md.them;
-    return `<${tag} class="tg${g.us?' us':''}${lv?' lv1':''}" style="left:${X(g.t)}"${full?` type="button" data-seek="${g.t}"`:''} title="${esc(g.min+' goal '+team+(g.who?', '+g.who:''))}"><b>${esc(g.min)}</b><i></i></${tag}>`; }).join('');
+    const gc=goalClip(g,clips), tag=full||gc?'button':'span', team=g.us?md.us:md.them;
+    return `<${tag} class="tg${g.us?' us':''}${lv?' lv1':''}" style="left:${X(g.t)}"${gc?` type="button" data-mclip="${esc(gc.id)}"`:full?` type="button" data-seek="${goalStart(g)}"`:''} title="${esc(g.min+' goal '+team+(g.who?', '+g.who:''))}"><b>${esc(g.min)}</b><i></i></${tag}>`; }).join('');
   return `<div class="tl${full?' full':''}" id="tl" data-lo="${lo}" data-hi="${hi}">
     <div class="tl-goals">${gl}</div>
     <div class="tl-track" data-track>${halves}${marks.map(x=>`<i class="mk" style="left:${X(x[0])}"></i>`).join('')}${clips.map(c=>`<button class="tc${S.mcur===c.id?' cur':''}" type="button" style="left:${X(c.t0)};width:${W(c.t0,c.t1)};--c:${esc(c.color||'#6B6F78')}" data-mclip="${esc(c.id)}" aria-label="${esc(c.minute+' '+c.label)}"></button>`).join('')}<i class="ph" id="ph" style="left:0"></i></div>
@@ -259,12 +265,12 @@ function momentsHtml(md,clips,full){
   if(p.h2s!=null) ev.push({t:p.h2s,o:0,k:'ph',min:L+"'",tx:'Second half'});
   if(p.h2e!=null) ev.push({t:p.h2e,o:2,k:'ph',min:'FT',tx:'Full time',sc:1});
   const used=new Set();
-  ((md&&md.goals)||[]).forEach(g=>{ const c=clips.find(c=>!used.has(c.id)&&/goal/i.test(c.label)&&c.t0-1<=g.t&&g.t<=c.t1+1); if(c) used.add(c.id);
-    ev.push({t:g.t,o:1,k:'gl'+(g.us?' us':''),min:g.min,tx:'Goal '+(g.us?md.us:md.them),sub:g.who,note:c&&c.note,sc:1,clip:c||null}); });
+  ((md&&md.goals)||[]).forEach(g=>{ const c=goalClip(g,clips,used); if(c) used.add(c.id);
+    ev.push({t:g.t,go:goalStart(g),o:1,k:'gl'+(g.us?' us':''),min:g.min,tx:'Goal '+(g.us?md.us:md.them),sub:g.who,note:c&&c.note,sc:1,clip:c||null}); });
   clips.forEach(c=>{ if(!used.has(c.id)) ev.push({t:c.t0,o:1,k:'cl',min:c.minute,tx:c.label,note:c.note,clip:c}); });
   ev.sort((a,b)=>a.t-b.t||a.o-b.o);
   return ev.map(e=>{ const click=e.clip||(full&&md); const tag=click?'button':'div';
-    const attr=e.clip?` type="button" data-mclip="${esc(e.clip.id)}"`:click?` type="button" data-seek="${e.t}"`:'';
+    const attr=e.clip?` type="button" data-mclip="${esc(e.clip.id)}"`:click?` type="button" data-seek="${e.go!=null?e.go:e.t}"`:'';
     return `<${tag} class="mo ${e.k}${e.clip&&S.mcur===e.clip.id?' cur':''}"${attr}${e.clip&&e.k==='cl'?` style="--c:${esc(e.clip.color||'#6B6F78')}"`:''}><span class="mt">${esc(e.min||'')}</span><span class="dot"></span><span class="tx"><b>${esc(e.tx)}</b>${e.sub?`<span class="hint">${esc(e.sub)}</span>`:''}${e.note?`<span class="mnote">${esc(e.note)}</span>`:''}</span>${e.clip?'<span class="badge">Your clip</span>':''}${e.sc&&md?`<span class="msc">${scoreStr(scoreAt(md,e.t))}</span>`:''}</${tag}>`; }).join(''); }
 function tlUpdate(){ const v=$('#vid'), tl=$('#tl'), ph=$('#ph'); if(!v) return; const t=v.currentTime||0;
   if(tl&&ph){ const lo=+tl.dataset.lo, hi=+tl.dataset.hi; ph.style.left=Math.max(0,Math.min(100,(t-lo)/(hi-lo)*100))+'%'; }
@@ -293,7 +299,7 @@ async function videoUrl(mid){ const c=S.vids[mid]; if(c&&c.exp>Date.now()+10*60e
 let stopAt=null, stopFrom=0;
 async function playClip(i){
   const v=$('#vid'); if(!v) return; let u; try{ u=await videoUrl(i.mid); }catch(e){ toast(e.message); return; }
-  stopAt=i.t1; stopFrom=i.t0; const go=()=>{ try{ v.currentTime=i.t0; }catch(e){} const p=v.play(); if(p&&p.catch) p.catch(()=>{}); };
+  const t0=clipStart(i); stopAt=i.t1; stopFrom=t0; const go=()=>{ try{ v.currentTime=t0; }catch(e){} const p=v.play(); if(p&&p.catch) p.catch(()=>{}); };
   if(v.dataset.mid!==i.mid||!v.src){ v.dataset.mid=i.mid; const sb=$('#sb'); if(sb) sb.dataset.mid=i.mid; v.src=u; v.addEventListener('loadedmetadata',go,{once:true}); } else go();
 }
 document.addEventListener('timeupdate',e=>{ const v=e.target; if(v.id!=='vid') return; if(stopAt!=null&&v.currentTime>=stopAt){ v.pause(); if(S.match) stopAt=null; } tlUpdate(); },true);
@@ -320,7 +326,7 @@ document.addEventListener('click',async e=>{
   if(g('[data-chgcancel]')){ S.chg=false; S.err=''; render(); return; }
   if(b=g('[data-tab]')){ S.tab=b.dataset.tab; render(); return; }
   if(b=g('[data-batch]')){ S.batch=b.dataset.batch; S.cur=null; delete S.comments[S.batch]; window.scrollTo(0,0); render(); return; }
-  if(b=g('[data-mclip]')){ const c=myClips(S.match).find(x=>x.id===b.dataset.mclip); if(c){ S.mcur=c.id; mRefresh(); mPlay(c.t0,c.t1); window.scrollTo({top:0,behavior:'smooth'}); } return; }
+  if(b=g('[data-mclip]')){ const c=myClips(S.match).find(x=>x.id===b.dataset.mclip); if(c){ S.mcur=c.id; mRefresh(); mPlay(clipStart(c),c.t1); window.scrollTo({top:0,behavior:'smooth'}); } return; }
   if(b=g('[data-seek]')){ S.mcur=null; mRefresh(); mPlay(+b.dataset.seek); window.scrollTo({top:0,behavior:'smooth'}); return; }
   if(b=g('[data-track]')){ const tl=$('#tl'); if(!tl) return; if(!tl.classList.contains('full')){ toast('Only your own clips from this match are shared. Tap a coloured block.'); return; }
     const r=b.getBoundingClientRect(), f=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)); S.mcur=null; mRefresh(); mPlay(+tl.dataset.lo+f*(+tl.dataset.hi-+tl.dataset.lo)); return; }
