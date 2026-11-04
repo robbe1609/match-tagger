@@ -1848,7 +1848,7 @@ async function connectDb(){
     else if(!remoteSet||(settings.updatedAt||0)>(remoteSet.updatedAt||0)) setTimeout(pushSettings,0);
     settings.deleted=[...new Set([...(settings.deleted||[]),...localDeleted,...((remoteSet&&remoteSet.deleted)||[])])];
     try{ localStorage.setItem(SET_KEY,JSON.stringify(settings)); }catch(e){}
-    if(!nameOrderMigrate()&&remoteSet&&remoteSet.nameOrder!=='first') saveSettings();
+    if(!nameOrderRevert()&&remoteSet&&remoteSet.nameOrder==='first') saveSettings();
     const gone=new Set(settings.deleted);
     for(const it of items.filter(x=>x.kind==='file'&&/\.json$/i.test(x.name))){
       try{ const m=normalize(JSON.parse(await (await it.handle.getFile()).text())); if(!m||!m.id) continue; remoteIds.add(m.id); if(gone.has(m.id)) continue;
@@ -3008,13 +3008,13 @@ function teamShort(){ return (settings.team&&settings.team.short)||((latestMatch
 const nameKey=x=>fold(x).split(/\s+/).filter(Boolean).sort().join(' ');
 const sameName=(a,b)=>!!norm(a)&&nameKey(a)===nameKey(b);
 const userOf=x=>String(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Za-z0-9]/g,'');
-/* names were imported surname first; show first name first everywhere (once). Usernames stay as they were. */
+/* undo the one-time "first name first" flip of 4 Nov: names go back exactly as they were typed, usernames stay unchanged */
 /* quiet = before the cloud merge: change this device only, keep the old timestamps so newer cloud data still wins */
-function nameOrderMigrate(quiet){
-  if(settings.nameOrder==='first') return false;
+function nameOrderRevert(quiet){
+  if(settings.nameOrder!=='first') return false;
   squad().forEach(s=>{ const w=String(s.name||'').trim().split(/\s+/).filter(Boolean); if(w.length<2) return;
-    const flipped=[w[w.length-1]].concat(w.slice(0,-1)).join(' '); if(!s.portalUser&&userOf(flipped)) s.portalUser=userOf(flipped); s.name=flipped; });
-  settings.nameOrder='first'; settings.nameOrderAt=Date.now();
+    if(!s.portalUser) s.portalUser=userOf(s.name); s.name=w.slice(1).concat(w[0]).join(' '); });
+  settings.nameOrder='typed'; settings.nameOrderAt=Date.now();
   if(quiet){ try{ localStorage.setItem(SET_KEY,JSON.stringify(settings)); }catch(e){} } else saveSettings(); syncLinkedNames(quiet); return true; }
 function syncLinkedNames(quiet){ let any=false; Object.values(store).forEach(m=>{ let ch=false; (m.players||[]).forEach(p=>{ const s=p.sq&&SQ(p.sq); if(s&&p.name!==s.name){ p.name=s.name; ch=true; } }); if(ch){ any=true; if(!quiet){ m.updatedAt=Date.now(); dirty.add(m.id); } } });
   if(any&&quiet) return any;
@@ -3829,8 +3829,8 @@ function poRefreshBatches(){ let n=0;
     const fresh=poClipItem(m,ev); if(['note','label','minute','who','t0','t1','color'].some(k=>String(fresh[k]||'')!==String(it[k]||''))||String(fresh.players)!==String(it.players)){ n++; return fresh; } return it; }); });
   return n; }
 /* what the player page needs to draw a match timeline and scoreboard */
-function poMeta(m){ return withMatch(m,()=>{ const p=m.phases||{};
-  const goals=sortedEvents().filter(e=>e.type==='goal'||e.type==='goal_against').map(e=>({t:+(+e.t).toFixed(1),us:e.type==='goal',min:minuteLabel(e.t),who:e.type==='goal'?(e.og?'Own goal':(e.pid&&P(e.pid)?firstName(P(e.pid)):'')):''}));
+function poMeta(m){ return withMatch(m,()=>{ const p=m.phases||{}, fullOf=id=>{ const x=id&&P(id); if(!x) return ''; const q=x.sq&&SQ(x.sq); return String((q&&q.name)||x.name||'').trim(); };
+  const goals=sortedEvents().filter(e=>e.type==='goal'||e.type==='goal_against').map(e=>({t:+(+e.t).toFixed(1),us:e.type==='goal',min:minuteLabel(e.t),who:e.type==='goal'?(e.og?'Own goal':fullOf(e.pid)):'',ast:e.type==='goal'&&!e.og?fullOf(e.assist):''}));
   return {us:m.usShort||teamShort(),them:m.themShort||String(m.them||'OPP').slice(0,3).toUpperCase(),usName:m.us||teamName(),themName:m.them||'Opponent',home:!!m.home,half:+m.halfLen||45,ph:{h1s:p.h1s,h1e:p.h1e,h2s:p.h2s,h2e:p.h2e},goals}; }); }
 function poBuildMeta(){ const mids=new Set((po.share.matches||[]).map(x=>x.id)); (po.share.batches||[]).forEach(b=>(b.items||[]).forEach(i=>mids.add(i.mid)));
   const meta={}; mids.forEach(id=>{ const m=store[id]; if(m&&m.timebase!=='live') meta[id]=poMeta(m); }); return meta; }
@@ -4045,10 +4045,11 @@ function attachFiles(files,forId){
 }
 document.addEventListener('click',e=>{ const b=e.target.closest('[data-swapname]'); if(!b) return; const s=SQ(b.dataset.swapname); if(!s) return;
   const w=String(s.name).trim().split(/\s+/); if(w.length<2) return; const name=w.slice(1).concat(w[0]).join(' ');
-  s.name=name; s.portalUser=userOf(name); saveSettings(); syncLinkedNames(); renderView(); toast('Now '+name+'. Her username is '+s.portalUser+'.'); });
+  if(!s.portalUser) s.portalUser=poUsername(s); s.name=name; saveSettings(); syncLinkedNames(); renderView(); toast('Now '+name+'. Her username stays '+s.portalUser+'.'); });
 function savePlayerEdit(){
   const s=SQ(viewArg); if(!s) return; const name=$('#epName').value.trim(); if(!name) return;
   if(squad().some(x=>x!==s&&norm(x.name)===norm(name))){ toast('Another player is already called '+name+'.'); return; }
+  if(name!==s.name&&!s.portalUser&&String(s.name||'').trim()) s.portalUser=poUsername(s);   /* renaming never changes her login */
   s.name=name; s.num=$('#epNum').value||''; s.pos=$('#epPos').value; saveSettings();
   Object.values(store).forEach(m=>{ let ch=false; m.players.forEach(p=>{ if(p.sq===s.id&&p.name!==name){ p.name=name; ch=true; } }); if(ch){ m.updatedAt=Date.now(); dirty.add(m.id); } });
   lsSave(); flush(); ui.editP=false; renderView(); toast('Player saved.');
@@ -6201,7 +6202,7 @@ try{ ui.mtf=localStorage.getItem('matchTagger.mtf')||'all'; }catch(e){ ui.mtf='a
 const saved=lsLoad();
 if(saved&&saved.store&&Object.keys(saved.store).length){ store=saved.store; Object.values(store).forEach(normalize); Object.keys(store).forEach(id=>{ if(isUntouchedBlank(store[id])) delete store[id]; }); M=store[saved.current]||Object.values(store).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0))[0]||blankMatch(); }
 else { M=blankMatch(); }
-nameOrderMigrate(true); syncLinkedNames(true);
+nameOrderRevert(true); syncLinkedNames(true);
 linkAll();
 if(settings.ui&&settings.ui.pre!=null) ui.pre=+settings.ui.pre; if(settings.ui&&settings.ui.post!=null) ui.post=+settings.ui.post;
 renderAll();

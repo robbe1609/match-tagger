@@ -130,6 +130,9 @@ button.mo:hover{background:var(--surface-2)}
 .mo.ph{background:var(--surface-2)}.mo.ph .mt,.mo.ph b{font-family:var(--f-display);letter-spacing:.06em;text-transform:uppercase}
 .mo.cur{box-shadow:inset 3px 0 0 var(--accent)}
 .mo .mnote{font-size:14px;margin-top:3px;padding-left:8px;border-left:2px solid var(--accent)}
+.gsc{display:flex;flex-wrap:wrap;gap:2px 14px;font-size:14px;color:var(--ink);margin-top:2px}
+.gsc>span{display:inline-flex;align-items:center;gap:6px}.gsc i{font-style:normal;font-size:15px;line-height:1}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .mo .tx{flex:1;min-width:0;display:flex;flex-direction:column}
 .mo .msc{font-family:var(--f-display);font-weight:700;font-size:18px;font-variant-numeric:tabular-nums}
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--hero-bg);color:var(--hero-ink);padding:10px 16px;border-radius:10px;font-weight:600;z-index:9;max-width:90vw}
@@ -253,7 +256,7 @@ function tlHtml(md,clips,full,D){
   const marks=[[p.h1s,'KO'],[p.h1e,'HT'],[p.h2e,'FT']].filter(x=>x[0]!=null);
   let last=-99, lv=0; const gl=goals.map(g=>{ const x=pc(g.t); lv=x-last<6?1-lv:0; last=x;
     const gc=goalClip(g,clips), tag=full||gc?'button':'span', team=g.us?md.us:md.them;
-    return `<${tag} class="tg${g.us?' us':''}${lv?' lv1':''}" style="left:${X(g.t)}"${gc?` type="button" data-mclip="${esc(gc.id)}"`:full?` type="button" data-seek="${goalStart(g)}"`:''} title="${esc(g.min+' goal '+team+(g.who?', '+g.who:''))}"><b>${esc(g.min)}</b><i></i></${tag}>`; }).join('');
+    return `<${tag} class="tg${g.us?' us':''}${lv?' lv1':''}" style="left:${X(g.t)}"${gc?` type="button" data-mclip="${esc(gc.id)}"`:full?` type="button" data-seek="${goalStart(g)}"`:''} title="${esc(g.min+' goal '+team+(g.who?', '+g.who:'')+(g.ast?', assist '+g.ast:''))}"><b>${esc(g.min)}</b><i></i></${tag}>`; }).join('');
   return `<div class="tl${full?' full':''}" id="tl" data-lo="${lo}" data-hi="${hi}">
     <div class="tl-goals">${gl}</div>
     <div class="tl-track" data-track>${halves}${marks.map(x=>`<i class="mk" style="left:${X(x[0])}"></i>`).join('')}${clips.map(c=>`<button class="tc${S.mcur===c.id?' cur':''}" type="button" style="left:${X(c.t0)};width:${W(c.t0,c.t1)};--c:${esc(c.color||'#6B6F78')}" data-mclip="${esc(c.id)}" aria-label="${esc(c.minute+' '+c.label)}"></button>`).join('')}<i class="ph" id="ph" style="left:0"></i></div>
@@ -266,12 +269,12 @@ function momentsHtml(md,clips,full){
   if(p.h2e!=null) ev.push({t:p.h2e,o:2,k:'ph',min:'FT',tx:'Full time',sc:1});
   const used=new Set();
   ((md&&md.goals)||[]).forEach(g=>{ const c=goalClip(g,clips,used); if(c) used.add(c.id);
-    ev.push({t:g.t,go:goalStart(g),o:1,k:'gl'+(g.us?' us':''),min:g.min,tx:'Goal '+(g.us?md.us:md.them),sub:g.who,note:c&&c.note,sc:1,clip:c||null}); });
+    ev.push({t:g.t,go:goalStart(g),o:1,k:'gl'+(g.us?' us':''),min:g.min,tx:'Goal '+(g.us?md.us:md.them),gs:g,note:c&&c.note,sc:1,clip:c||null}); });
   clips.forEach(c=>{ if(!used.has(c.id)) ev.push({t:c.t0,o:1,k:'cl',min:c.minute,tx:c.label,note:c.note,clip:c}); });
   ev.sort((a,b)=>a.t-b.t||a.o-b.o);
   return ev.map(e=>{ const click=e.clip||(full&&md); const tag=click?'button':'div';
     const attr=e.clip?` type="button" data-mclip="${esc(e.clip.id)}"`:click?` type="button" data-seek="${e.go!=null?e.go:e.t}"`:'';
-    return `<${tag} class="mo ${e.k}${e.clip&&S.mcur===e.clip.id?' cur':''}"${attr}${e.clip&&e.k==='cl'?` style="--c:${esc(e.clip.color||'#6B6F78')}"`:''}><span class="mt">${esc(e.min||'')}</span><span class="dot"></span><span class="tx"><b>${esc(e.tx)}</b>${e.sub?`<span class="hint">${esc(e.sub)}</span>`:''}${e.note?`<span class="mnote">${esc(e.note)}</span>`:''}</span>${e.clip?'<span class="badge">Your clip</span>':''}${e.sc&&md?`<span class="msc">${scoreStr(scoreAt(md,e.t))}</span>`:''}</${tag}>`; }).join(''); }
+    return `<${tag} class="mo ${e.k}${e.clip&&S.mcur===e.clip.id?' cur':''}"${attr}${e.clip&&e.k==='cl'?` style="--c:${esc(e.clip.color||'#6B6F78')}"`:''}><span class="mt">${esc(e.min||'')}</span><span class="dot"></span><span class="tx"><b>${esc(e.tx)}</b>${e.gs&&(e.gs.who||e.gs.ast)?`<span class="gsc">${e.gs.who?`<span><i aria-hidden="true">⚽</i><span class="sr">Scored by </span>${esc(e.gs.who)}</span>`:''}${e.gs.ast?`<span><i aria-hidden="true">🅰️</i><span class="sr">Assist by </span>${esc(e.gs.ast)}</span>`:''}</span>`:''}${e.sub?`<span class="hint">${esc(e.sub)}</span>`:''}${e.note?`<span class="mnote">${esc(e.note)}</span>`:''}</span>${e.clip?'<span class="badge">Your clip</span>':''}${e.sc&&md?`<span class="msc">${scoreStr(scoreAt(md,e.t))}</span>`:''}</${tag}>`; }).join(''); }
 function tlUpdate(){ const v=$('#vid'), tl=$('#tl'), ph=$('#ph'); if(!v) return; const t=v.currentTime||0;
   if(tl&&ph){ const lo=+tl.dataset.lo, hi=+tl.dataset.hi; ph.style.left=Math.max(0,Math.min(100,(t-lo)/(hi-lo)*100))+'%'; }
   sbUpdate(t); }

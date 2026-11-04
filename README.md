@@ -164,7 +164,7 @@ Players get their own login page where they watch the matches and clips you shar
 
 Then open **Portal** in the top menu.
 
-- **Names:** players show first name first everywhere (Celeste Geerseau). If one is the wrong way round, open her in **Players** → **Edit** → **Swap first and last name**. Usernames don't change.
+- **Names:** players see names exactly as you typed them in **Players**. Renaming a player never changes her username. Goals on the player's timeline show the scorer and the assist in full.
 - **Logins:** every player in your squad (not "other team") gets an account automatically.
   - **Username:** first and last name without spaces, for example `LizDeBlock`. You can change it in the table.
   - **Starting password:** shirt number + username, for example `78LizDeBlock`. She must choose her own password at her first login.
