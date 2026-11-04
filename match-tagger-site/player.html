@@ -135,6 +135,18 @@ button.mo:hover{background:var(--surface-2)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .mo .tx{flex:1;min-width:0;display:flex;flex-direction:column}
 .mo .msc{font-family:var(--f-display);font-weight:700;font-size:18px;font-variant-numeric:tabular-nums}
+.wrap.wide,body.wv .top .wrap{max-width:1320px}
+.split{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:28px;align-items:start;margin-top:12px}
+.split .lft{position:sticky;top:70px}
+.split .player{position:static;padding:0;background:none}
+.split video{max-height:calc(100vh - 230px)}
+.split .rgt{display:flex;flex-direction:column;gap:12px;min-width:0}
+.split .rgt .sec{margin:0}
+.split .panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.split .panel .thread{margin-top:6px}
+.split .panel .msg{max-width:92%}
+.split .moments{max-height:none}
+.vph{aspect-ratio:16/9;max-height:calc(100vh - 230px);width:100%;border-radius:12px;background:var(--hero-bg);color:var(--hero-muted);display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;font-family:var(--f-display);font-weight:700;font-size:20px;letter-spacing:.06em;text-transform:uppercase}
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--hero-bg);color:var(--hero-ink);padding:10px 16px;border-radius:10px;font-weight:600;z-index:9;max-width:90vw}
 </style>
 </head>
@@ -163,6 +175,8 @@ async function call(path,body,method){
 function logout(quiet){ S.tok=''; put(LS.tok,''); S.feed=null; S.me=null; S.batch=null; S.match=null; S.cur=null; if(!quiet) toast('Logged out.'); render(); }
 const first=n=>String(n||'').split(' ')[0];
 const mj=parts=>parts.filter(x=>x!=null&&x!=='').map(x=>'<span class="mi">'+x+'</span>').join(' ');
+/* laptop and desktop get a two-column layout; phones keep the single column */
+const WIDE=window.matchMedia('(min-width: 1000px)'), wide=()=>WIDE.matches;
 const META=id=>((S.feed&&S.feed.meta)||{})[id]||null;
 const pad=n=>String(n).padStart(2,'0'), mmss=s=>{ s=Math.max(0,Math.floor(s)); return pad(Math.floor(s/60))+':'+pad(s%60); };
 /* goals start 15 s before the tag, like in the coach's tagger, so the build-up is in view */
@@ -191,7 +205,7 @@ const fmtD=d=>{ try{ return new Date(d+'T12:00:00').toLocaleDateString('en-GB',{
 function top(){ $('#topActs').innerHTML=S.feed&&!S.must?`<button data-chg>Password</button> <button data-out>Log out</button>`:''; }
 
 function render(){
-  top();
+  top(); document.body.classList.toggle('wv',!!(wide()&&S.feed&&(S.batch||S.match)));
   if(!API()){ app.innerHTML=`<div class="gate"><div class="card"><h1>Player portal</h1><p>Open the link your coach sent you to log in.</p></div></div>`; return; }
   if(!S.tok){ app.innerHTML=`<div class="gate"><form class="card" id="fLogin" autocomplete="on"><span class="eyebrow">Welcome</span><h1>Log in</h1>
       <label class="f">Username<input id="u" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="FirstnameLastname" required></label>
@@ -228,6 +242,14 @@ function refreshSide(){ const b=S.feed&&S.feed.batches.find(x=>x.id===S.batch); 
 function renderBatch(){
   const b=S.feed.batches.find(x=>x.id===S.batch); if(!b){ S.batch=null; return render(); }
   const items=sortItems(b), cur=items.find(i=>i.id===S.cur)||null;
+  if(wide()){ app.innerHTML=`<main class="wrap wide"><button class="back" data-home>← All clips</button><h2>${esc(b.name)}</h2><p class="hint">${mj([esc(fmtD(b.date)),items.length+' clip'+(items.length===1?'':'s')])}</p>
+    ${b.note?`<p class="note">${esc(b.note)}</p>`:''}
+    <div class="split"><section class="lft">${cur?`<div class="player"><div class="vbox"><video id="vid" controls playsinline preload="metadata"></video>${META(cur.mid)?sbHtml(META(cur.mid),cur.mid):''}</div>
+      <div class="now"><span class="t"><b>${esc(cur.minute)} ${esc(cur.label)}</b> <span class="hint">${esc(cur.match)}</span></span><button class="btn sm" data-replay>Replay</button><button class="btn sm primary" data-next>Next ›</button></div>
+      ${cur.note?`<p class="cnote-full"><b>Coach's note</b>${esc(cur.note)}</p>`:''}</div>`:'<div class="vph">Choose a clip on the right</div>'}</section>
+      <aside class="rgt">${cur?`<div class="panel"><div class="sec">Conversation with your coach</div><div class="thread" id="thread">${threadHtml(b)}</div></div>`:''}
+        <div class="sec">Clips</div><div id="clips">${clipsHtml(b)}</div></aside></div></main>`;
+    if(cur) playClip(cur); if(!S.comments[b.id]) loadComments(b.id); return; }
   app.innerHTML=`<main class="wrap"><button class="back" data-home>← All clips</button><h2>${esc(b.name)}</h2><p class="hint">${mj([esc(fmtD(b.date)),items.length+' clip'+(items.length===1?'':'s')])}</p>
     ${b.note?`<p class="note">${esc(b.note)}</p>`:''}
     <div class="player"${cur?'':' hidden'}><div class="vbox"><video id="vid" controls playsinline preload="metadata"></video>${cur&&META(cur.mid)?sbHtml(META(cur.mid),cur.mid):''}</div>
@@ -282,7 +304,14 @@ function renderMatch(){
   const m=matchList().find(x=>x.id===S.match); if(!m){ S.match=null; return render(); }
   stopAt=null; S.mcur=null;
   const md=META(m.id), clips=myClips(m.id), hasTl=!!(md||clips.length);
-  app.innerHTML=`<main class="wrap"><button class="back" data-home>← All matches</button>
+  const vid=`<div class="vbox"><video id="vid" controls playsinline preload="metadata" data-mid="${esc(m.id)}"></video>${md?sbHtml(md,m.id):''}</div>`;
+  if(wide()) app.innerHTML=`<main class="wrap wide"><button class="back" data-home>← All matches</button>
+    <div class="mhead"><h2>${esc(m.title)}</h2>${m.score?`<span class="score">${esc(m.score)}</span>`:''}</div>
+    <p class="hint">${mj([fmtD(m.date),m.type,m.comp].filter(Boolean).map(esc))}</p>
+    ${m.full?'':'<p class="hint">Your coach shared your own clips from this match. Click one on the timeline to watch it.</p>'}
+    <div class="split"><section class="lft"><div class="player">${vid}${hasTl?`<div id="tlw">${tlHtml(md,clips,m.full,0)}</div>`:''}</div></section>
+      <aside class="rgt">${hasTl?`<div class="sec">Match timeline</div><div class="moments" id="moments">${momentsHtml(md,clips,m.full)}</div>`:'<p class="hint">No timeline for this match yet.</p>'}</aside></div></main>`;
+  else app.innerHTML=`<main class="wrap"><button class="back" data-home>← All matches</button>
     <div class="mhead"><h2>${esc(m.title)}</h2>${m.score?`<span class="score">${esc(m.score)}</span>`:''}</div>
     <p class="hint">${mj([fmtD(m.date),m.type,m.comp].filter(Boolean).map(esc))}</p>
     ${m.full?'':'<p class="hint">Your coach shared your own clips from this match. Tap one on the timeline to watch it.</p>'}
@@ -329,13 +358,13 @@ document.addEventListener('click',async e=>{
   if(g('[data-chgcancel]')){ S.chg=false; S.err=''; render(); return; }
   if(b=g('[data-tab]')){ S.tab=b.dataset.tab; render(); return; }
   if(b=g('[data-batch]')){ S.batch=b.dataset.batch; S.cur=null; delete S.comments[S.batch]; window.scrollTo(0,0); render(); return; }
-  if(b=g('[data-mclip]')){ const c=myClips(S.match).find(x=>x.id===b.dataset.mclip); if(c){ S.mcur=c.id; mRefresh(); mPlay(clipStart(c),c.t1); window.scrollTo({top:0,behavior:'smooth'}); } return; }
-  if(b=g('[data-seek]')){ S.mcur=null; mRefresh(); mPlay(+b.dataset.seek); window.scrollTo({top:0,behavior:'smooth'}); return; }
+  if(b=g('[data-mclip]')){ const c=myClips(S.match).find(x=>x.id===b.dataset.mclip); if(c){ S.mcur=c.id; mRefresh(); mPlay(clipStart(c),c.t1); if(!wide()) window.scrollTo({top:0,behavior:'smooth'}); } return; }
+  if(b=g('[data-seek]')){ S.mcur=null; mRefresh(); mPlay(+b.dataset.seek); if(!wide()) window.scrollTo({top:0,behavior:'smooth'}); return; }
   if(b=g('[data-track]')){ const tl=$('#tl'); if(!tl) return; if(!tl.classList.contains('full')){ toast('Only your own clips from this match are shared. Tap a coloured block.'); return; }
     const r=b.getBoundingClientRect(), f=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)); S.mcur=null; mRefresh(); mPlay(+tl.dataset.lo+f*(+tl.dataset.hi-+tl.dataset.lo)); return; }
   if(b=g('[data-match]')){ S.match=b.dataset.match; window.scrollTo(0,0); render(); return; }
   if(g('[data-home]')){ S.batch=null; S.match=null; S.cur=null; render(); return; }
-  if(b=g('[data-clip]')){ S.cur=b.dataset.clip; renderBatch(); loadComments(S.batch); window.scrollTo({top:0,behavior:'smooth'}); return; }
+  if(b=g('[data-clip]')){ S.cur=b.dataset.clip; renderBatch(); loadComments(S.batch); if(!wide()) window.scrollTo({top:0,behavior:'smooth'}); return; }
   if(g('[data-replay]')){ const bt=S.feed.batches.find(x=>x.id===S.batch), it=bt&&bt.items.find(i=>i.id===S.cur); if(it) playClip(it); return; }
   if(g('[data-next]')){ const bt=S.feed.batches.find(x=>x.id===S.batch); if(!bt) return; const items=sortItems(bt), i=items.findIndex(x=>x.id===S.cur);
     if(i>=0&&i<items.length-1){ S.cur=items[i+1].id; renderBatch(); loadComments(S.batch); } else toast('That was the last clip.'); return; }
@@ -343,6 +372,7 @@ document.addEventListener('click',async e=>{
     try{ const d=await call('/api/p/comments?batch='+encodeURIComponent(S.batch),{item:S.cur,text}); S.comments[S.batch]=d.comments||[]; toast('Sent to your coach.'); const t=$('#cmt'); if(t) t.value=''; refreshSide(); }
     catch(err){ b.disabled=false; toast(err.message); } return; }
 });
+WIDE.addEventListener('change',()=>{ if(S.batch||S.match) render(); });
 render();
 })();
 </script>
