@@ -589,6 +589,15 @@ button.res:hover{transform:translateY(-1px)}
 .po-ev .dot{width:9px;height:9px;border-radius:50%}
 .po-thread{border:1px solid var(--line);border-left:4px solid var(--line);border-radius:10px;padding:8px 12px;display:flex;flex-direction:column;gap:5px;margin-bottom:8px}
 .po-thread.new{border-left-color:var(--warn)}
+.po-th-head .btn{margin-left:auto}
+.pw-video video{width:100%;max-height:62vh;background:#000;border-radius:10px;display:block}
+.pw-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.pw-bar .hint{margin-left:auto;font-variant-numeric:tabular-nums}
+.pw-note{border-left:3px solid var(--accent);background:var(--surface-2);padding:8px 12px;border-radius:0 8px 8px 0;margin:0;font-size:14px;white-space:pre-wrap}
+.pw-note b{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.pw-thread{display:flex;flex-direction:column;gap:6px}
+.pw-thread .po-msg{padding:7px 10px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line);max-width:85%}
+.pw-thread .po-msg.coach{align-self:flex-end;color:var(--ink);background:color-mix(in srgb,var(--accent) 12%,var(--surface))}
 .po-th-head{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
 .po-msg{margin:0;font-size:14px}.po-msg.coach{color:var(--muted)}
 .po-reply{display:flex;gap:6px}.po-reply input{flex:1;min-width:0;border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:6px 9px;font:inherit;font-size:14px;color:var(--ink)}
@@ -1537,6 +1546,7 @@ body.tb-dragging,body.tb-dragging *{cursor:grabbing!important;user-select:none!i
 <input type="file" id="boardFile" accept=".json,application/json" hidden>
 <div class="toasts" id="toasts"></div>
 <div class="gate" id="gate" hidden></div>
+<div class="modal" id="poWatchModal" hidden role="dialog" aria-modal="true" aria-labelledby="pwTitle"><div class="sheet wide" id="poWatchSheet"></div></div>
 <div class="modal" id="lvModal" hidden role="dialog" aria-modal="true" aria-labelledby="lvTitle"><div class="sheet" id="lvSheet"></div></div>
 <div class="modal" id="odModal" hidden role="dialog" aria-modal="true" aria-labelledby="odTitle"><div class="sheet" id="odSheet"></div></div>
 <div class="modal" id="tagsModal" hidden role="dialog" aria-modal="true" aria-labelledby="tgTitle"><div class="sheet wide" id="tagsSheet"></div></div>
@@ -3889,11 +3899,48 @@ function poEditorHtml(){ const ed=po.edit, sel=new Set(ed.sel), ms=Object.values
     ${ms.length?'':'<p class="hint">Clips need a match whose video is in your online storage (and, for live-tagged matches, synced).</p>'}
     <div class="po-evs">${evs.length?evs.map(e=>{ const k=m.id+'-'+e.id; return `<label class="po-ev${sel.has(k)?' on':''}"><input type="checkbox" data-poev="${k}"${sel.has(k)?' checked':''}><span class="min">${esc(withMatch(m,()=>minuteLabel(e.t)))}</span><span class="dot" style="background:${withMatch(m,()=>T(e.type).css)}"></span><b>${esc(withMatch(m,()=>T(e.type).label))}</b><span class="hint">${esc(withMatch(m,()=>evWho(e)))}</span></label>`; }).join(''):'<p class="hint">No clips with these filters.</p>'}</div>
     <div class="row-actions"><b>${sel.size} clip${sel.size===1?'':'s'} selected</b>${sel.size?`<span class="hint">from ${new Set([...sel].map(k=>k.split('-')[0])).size} match(es)</span>`:''}<span style="flex:1"></span><button class="btn ghost" data-pocancel>Cancel</button><button class="btn primary" data-popublish ${sel.size&&ed.name.trim()&&(ed.to!=='pick'||ed.pick.length)?'':'disabled'}>${ed.id?'Save batch':'Publish batch'}</button></div></div>`; }
+/* ---- watch a commented clip and answer in one place (a dialog, so portal refreshes never stop the video) ---- */
+const pw={key:null,t0:0,t1:0,stop:true};
+function pwParts(){ if(!pw.key) return null; const [bid,item,pid]=pw.key.split('|'), b=(po.share.batches||[]).find(x=>x.id===bid); const it=b&&(b.items||[]).find(i=>i.id===item);
+  return b&&it?{b,it,pid,who:(po.players.find(a=>a.id===pid)||{}).name||'Player'}:null; }
+function pwBounds(it){ const m=store[it.mid], eid=it.id.slice(String(it.mid).length+1), e=m&&(m.events||[]).find(x=>x.id===eid);
+  return e?withMatch(m,()=>[Math.max(0,+(e.t-preOf(e)).toFixed(1)),+(e.t+postOf(e)).toFixed(1)]):[+it.t0||0,+it.t1||0]; }
+function pwThreadHtml(){ const x=pwParts(); if(!x) return ''; const msgs=((po.comments||{})[x.b.id]||[]).filter(c=>c.item===x.it.id&&c.pid===x.pid);
+  return `<div class="pw-thread">${msgs.map(c=>`<p class="po-msg ${c.by}"><b>${c.by==='coach'?'You':esc(c.name||x.who)}</b> ${esc(c.text)} <span class="hint">${esc(new Date(c.at).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}))}</span></p>`).join('')||'<p class="hint">No messages yet.</p>'}</div>
+    <div class="po-reply"><input id="pwIn" placeholder="Reply to ${esc(x.who)}" autocomplete="off"><button class="btn sm primary" data-pwsend>Send</button></div>`; }
+async function pwOpen(key){ pw.key=key; const x=pwParts(); if(!x){ toast('This clip is no longer published.'); return; }
+  const [t0,t1]=pwBounds(x.it); pw.t0=t0; pw.t1=t1; pw.stop=true;
+  const md=$('#poWatchModal'); md.hidden=false;
+  $('#poWatchSheet').innerHTML=`<div class="sheet-head"><div><h2 id="pwTitle">${esc(x.who)}</h2><p>${mj([esc((x.it.minute||'')+' '+(x.it.label||'')),esc(x.it.match||''),esc(x.b.name)])}</p></div><button class="btn ghost" data-pwclose>Close</button></div>
+    <div class="pw-video"><video id="pwVid" controls playsinline preload="metadata"></video></div>
+    <div class="pw-bar"><button class="btn sm" data-pwreplay>Replay clip</button><button class="btn sm ghost" data-pwon>Keep playing after the clip</button><span class="hint">${mmss(t0)} to ${mmss(t1)}</span></div>
+    ${x.it.note?`<p class="pw-note"><b>Your note</b>${esc(x.it.note)}</p>`:''}
+    <div id="pwThread">${pwThreadHtml()}</div>`;
+  const m=store[x.it.mid], key2=(po.share.videos||{})[x.it.mid]||((po.share.matches||[]).find(y=>y.id===x.it.mid)||{}).video;
+  const vi=(m&&matchCloudVideo(m))||videoIndex.find(v=>v.key===key2);
+  if(!vi){ $('.pw-video').innerHTML='<p class="hint">The video of this match is no longer in your online storage.</p>'; return; }
+  try{ const u=await vi.url(), v=$('#pwVid'); if(!v||pw.key!==key) return; v.src=u; v.addEventListener('loadedmetadata',()=>pwPlay(),{once:true}); }catch(e){ toast('Could not load the video: '+e.message); }
+  setTimeout(()=>{ const i=$('#pwIn'); if(i) i.focus({preventScroll:true}); },50); }
+function pwPlay(){ const v=$('#pwVid'); if(!v) return; pw.stop=true; try{ v.currentTime=pw.t0; }catch(e){} const p=v.play(); if(p&&p.catch) p.catch(()=>{}); }
+function pwClose(){ const v=$('#pwVid'); if(v){ v.pause(); v.removeAttribute('src'); v.load(); } pw.key=null; $('#poWatchModal').hidden=true; $('#poWatchSheet').innerHTML=''; }
+async function pwSend(){ const x=pwParts(), i=$('#pwIn'), text=i?i.value.trim():''; if(!x||!text) return; const btn=document.querySelector('[data-pwsend]'); if(btn) btn.disabled=true;
+  try{ po.comments[x.b.id]=(await FSX.portal('comments','POST',{batch:x.b.id,item:x.it.id,pid:x.pid,text})).comments; toast('Reply sent to '+x.who+'.'); const th=$('#pwThread'); if(th) th.innerHTML=pwThreadHtml(); }
+  catch(err){ toast('Could not send: '+err.message); if(btn) btn.disabled=false; }
+  if(view==='portal') renderPortal(); }
+document.addEventListener('timeupdate',e=>{ const v=e.target; if(v.id==='pwVid'&&pw.stop&&v.currentTime>=pw.t1){ v.pause(); pw.stop=false; } },true);
+document.addEventListener('click',e=>{ const g=s=>e.target.closest(s); let b;
+  if(b=g('[data-powatch]')){ e.preventDefault(); pwOpen(b.dataset.powatch); return; }
+  if(!pw.key) return;
+  if(g('[data-pwclose]')||e.target.id==='poWatchModal'){ pwClose(); return; }
+  if(g('[data-pwreplay]')){ pwPlay(); return; }
+  if(g('[data-pwon]')){ pw.stop=false; const v=$('#pwVid'); if(v&&v.paused){ const p=v.play(); if(p&&p.catch) p.catch(()=>{}); } return; }
+  if(g('[data-pwsend]')){ pwSend(); return; } });
+document.addEventListener('keydown',e=>{ if(!pw.key) return; if(e.key==='Escape'){ pwClose(); e.stopImmediatePropagation(); return; } if(e.key==='Enter'&&e.target.id==='pwIn'){ e.preventDefault(); pwSend(); } },true);
 function poCommentsHtml(){ const c=po.comments||{}, out=[];
   (po.share.batches||[]).forEach(b=>{ const list=c[b.id]||[]; if(!list.length) return; const threads={};
     list.forEach(x=>{ const k=x.item+'|'+x.pid; (threads[k]=threads[k]||[]).push(x); });
     Object.entries(threads).forEach(([k,msgs])=>{ const [item,pid]=k.split('|'), it=(b.items||[]).find(i=>i.id===item)||{}, who=(po.players.find(a=>a.id===pid)||{}).name||'Player', last=msgs[msgs.length-1];
-      out.push({at:last.at,html:`<div class="po-thread${last.by==='player'?' new':''}"><div class="po-th-head"><b>${esc(who)}</b><span class="hint">${esc(b.name)}${SEP}${esc(it.minute||'')} ${esc(it.label||'')}${SEP}${esc(it.match||'')}</span>${last.by==='player'?'<span class="tbadge">Waiting for you</span>':''}</div>
+      out.push({at:last.at,html:`<div class="po-thread${last.by==='player'?' new':''}"><div class="po-th-head"><b>${esc(who)}</b><span class="hint">${esc(b.name)}${SEP}${esc(it.minute||'')} ${esc(it.label||'')}${SEP}${esc(it.match||'')}</span>${last.by==='player'?'<span class="tbadge">Waiting for you</span>':''}<button class="btn sm" data-powatch="${esc(b.id)}|${esc(item)}|${esc(pid)}">${ICON.play} Watch and reply</button></div>
         ${msgs.map(x=>`<p class="po-msg ${x.by}"><b>${x.by==='coach'?'You':esc(x.name||who)}</b> ${esc(x.text)} <span class="hint">${esc(new Date(x.at).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}))}</span></p>`).join('')}
         <div class="po-reply"><input data-poreply="${esc(b.id)}|${esc(item)}|${esc(pid)}" placeholder="Reply to ${esc(who)}"><button class="btn sm primary" data-posend="${esc(b.id)}|${esc(item)}|${esc(pid)}">Send</button></div></div>`}); }); });
   return out.length?out.sort((a,b)=>b.at-a.at).map(x=>x.html).join(''):'<p class="hint">No comments yet. Players can comment on every clip you publish; each conversation is private between you and that player.</p>'; }
