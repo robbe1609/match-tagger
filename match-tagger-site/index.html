@@ -3842,8 +3842,8 @@ async function poLoad(force){
     po.players=needs?(await FSX.portal('players','POST',{players:want,disable})).players:have;
     po.share=await FSX.portal('share'); po.share.matches=po.share.matches||[]; po.share.batches=po.share.batches||[]; po.share.videos=po.share.videos||{};
     po.comments=(await FSX.portal('comments')).comments||{};
-    const n=poRefreshBatches(), meta=poBuildMeta(), metaCh=JSON.stringify(meta)!==JSON.stringify(po.share.meta||{});
-    if(n||metaCh){ po.share.meta=meta; po.share=await FSX.portal('share','PUT',po.share); if(n) toast('Updated '+n+' published clip'+(n===1?'':'s')+' with your latest notes and changes.'); }
+    const n=poRefreshBatches(), meta=poBuildMeta(), metaCh=JSON.stringify(meta)!==JSON.stringify(po.share.meta||{}), st=poBuildStats(), old=po.share.stats||{}, stCh=JSON.stringify(st)!==JSON.stringify({season:old.season,players:old.players});
+    if(n||metaCh||stCh){ po.share.meta=meta; po.share.stats=Object.assign(st,{at:Date.now()}); po.share=await FSX.portal('share','PUT',po.share); if(n) toast('Updated '+n+' published clip'+(n===1?'':'s')+' with your latest notes and changes.'); }
   }catch(e){ console.error(e); po.err=e.name==='OldWorker'?'old':e.message; }
   finally{ po.loading=false; } renderPortal(); }
 /* published clips are a snapshot: bring notes, labels, timing and players in line with the matches as they are now */
@@ -3855,9 +3855,14 @@ function poRefreshBatches(){ let n=0;
 function poMeta(m){ return withMatch(m,()=>{ const p=m.phases||{}, fullOf=id=>{ const x=id&&P(id); if(!x) return ''; const q=x.sq&&SQ(x.sq); return String((q&&q.name)||x.name||'').trim(); };
   const goals=sortedEvents().filter(e=>e.type==='goal'||e.type==='goal_against').map(e=>({t:+(+e.t).toFixed(1),us:e.type==='goal',min:minuteLabel(e.t),who:e.type==='goal'?(e.og?'Own goal':fullOf(e.pid)):'',ast:e.type==='goal'&&!e.og?fullOf(e.assist):''}));
   return {us:m.usShort||teamShort(),them:m.themShort||String(m.them||'OPP').slice(0,3).toUpperCase(),usName:m.us||teamName(),themName:m.them||'Opponent',home:!!m.home,half:+m.halfLen||45,ph:{h1s:p.h1s,h1e:p.h1e,h2s:p.h2s,h2e:p.h2e},goals}; }); }
+/* season numbers for each player's landing page (each player only receives her own) */
+function poBuildStats(){ const season=nowSeason(), agg=playerAgg(season), pt=playTime(season), players={};
+  squad().forEach(s=>{ const a=agg[s.id]; if(!a) return; const r=pt.per(s.id);
+    players[s.id]={apps:a.apps,starts:a.starts,min:Math.round(a.min),g:a.line.g||0,a:a.line.a||0,avail:Math.round(r.avail),pct:r.share==null?null:Math.round(r.share*100),n:r.rows.filter(x=>x.st!=='otherteam').length}; });
+  return {season:seasonText(season),players}; }
 function poBuildMeta(){ const mids=new Set((po.share.matches||[]).map(x=>x.id)); (po.share.batches||[]).forEach(b=>(b.items||[]).forEach(i=>mids.add(i.mid)));
   const meta={}; mids.forEach(id=>{ const m=store[id]; if(m&&m.timebase!=='live') meta[id]=poMeta(m); }); return meta; }
-async function poSaveShare(msg){ po.share.meta=poBuildMeta(); try{ po.share=await FSX.portal('share','PUT',po.share); if(msg) toast(msg); }catch(e){ toast('Could not save: '+e.message); } renderPortal(); }
+async function poSaveShare(msg){ po.share.meta=poBuildMeta(); po.share.stats=Object.assign(poBuildStats(),{at:Date.now()}); try{ po.share=await FSX.portal('share','PUT',po.share); if(msg) toast(msg); }catch(e){ toast('Could not save: '+e.message); } renderPortal(); }
 const poMatchVideo=m=>{ const v=typeof matchCloudVideo==='function'?matchCloudVideo(m):null; return v?v.key:null; };
 const poClipable=m=>!!poMatchVideo(m)&&m.timebase!=='live'&&!m.manualData;
 function poMatchEntry(m){ const s=goalsFA(m), d=isoDate(m.date); return {id:m.id,title:(m.home?'vs ':'at ')+(m.them||'Opponent'),date:d,comp:m.comp||'',type:mtLabel(mtypeOf(m)),score:isPlayed(m)?(m.home?s.f+'–'+s.a:s.a+'–'+s.f):'',video:poMatchVideo(m)}; }
