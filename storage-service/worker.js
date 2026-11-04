@@ -1,4 +1,4 @@
-/* Match Tagger – online storage service (version 3.2: player portal with match timelines and season stats)
+/* Match Tagger – online storage service (version 3.3: player portal with match timelines, season stats and player photos)
    A Cloudflare Worker that keeps your match videos and tags in your own R2 bucket.
    Needs two settings on the Worker:
      - an R2 bucket binding with the variable name  BUCKET
@@ -142,7 +142,11 @@ async function playerRoute(req, env, url) {
   if (a.must) return fail(403, 'Choose your own password first.');
   if (p === '/api/p/me') return json({ me: pub(a) });
   const share = await rjson(env, P_SHARE, {});
-  if (p === '/api/p/feed') return json(Object.assign({ me: pub(a) }, feedFor(a, share)));
+  if (p === '/api/p/feed') {   // her own photo (uploaded by the coach) comes as a short-lived link
+    const pk = 'Data/photos/' + a.id + '.jpg'; let photo = null;
+    try { if (/^[A-Za-z0-9_-]{1,40}$/.test(a.id) && await env.BUCKET.head(pk)) photo = (await signLink(env, url, pk)).url; } catch (e) {}
+    return json(Object.assign({ me: pub(a), photo }, feedFor(a, share)));
+  }
   if (p === '/api/p/video' && m === 'POST') { const key = videoAllowed(a, share, String(body.mid || '')); if (!key || !keyFrom(key)) return fail(404, 'This video is not available.'); return json(await signLink(env, url, key)); }
   if (p === '/api/p/comments') {
     const batch = String(url.searchParams.get('batch') || body.batch || ''); if (!/^[A-Za-z0-9_-]{1,40}$/.test(batch)) return fail(400, 'Bad batch');

@@ -3856,9 +3856,9 @@ function poMeta(m){ return withMatch(m,()=>{ const p=m.phases||{}, fullOf=id=>{ 
   const goals=sortedEvents().filter(e=>e.type==='goal'||e.type==='goal_against').map(e=>({t:+(+e.t).toFixed(1),us:e.type==='goal',min:minuteLabel(e.t),who:e.type==='goal'?(e.og?'Own goal':fullOf(e.pid)):'',ast:e.type==='goal'&&!e.og?fullOf(e.assist):''}));
   return {us:m.usShort||teamShort(),them:m.themShort||String(m.them||'OPP').slice(0,3).toUpperCase(),usName:m.us||teamName(),themName:m.them||'Opponent',home:!!m.home,half:+m.halfLen||45,ph:{h1s:p.h1s,h1e:p.h1e,h2s:p.h2s,h2e:p.h2e},goals}; }); }
 /* season numbers for each player's landing page (each player only receives her own) */
-function poBuildStats(){ const season=nowSeason(), agg=playerAgg(season), pt=playTime(season), players={};
-  squad().forEach(s=>{ const a=agg[s.id]; if(!a) return; const r=pt.per(s.id);
-    players[s.id]={apps:a.apps,starts:a.starts,min:Math.round(a.min),g:a.line.g||0,a:a.line.a||0,avail:Math.round(r.avail),pct:r.share==null?null:Math.round(r.share*100),n:r.rows.filter(x=>x.st!=='otherteam').length}; });
+function poBuildStats(){ const season=nowSeason(), agg=playerAgg(season), players={};
+  squad().forEach(s=>{ const a=agg[s.id]; if(!a) return;
+    players[s.id]={apps:a.apps,g:a.line.g||0,a:a.line.a||0}; });
   return {season:seasonText(season),players}; }
 function poBuildMeta(){ const mids=new Set((po.share.matches||[]).map(x=>x.id)); (po.share.batches||[]).forEach(b=>(b.items||[]).forEach(i=>mids.add(i.mid)));
   const meta={}; mids.forEach(id=>{ const m=store[id]; if(m&&m.timebase!=='live') meta[id]=poMeta(m); }); return meta; }
