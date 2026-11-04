@@ -2371,7 +2371,7 @@ function renderEvents(){
     <div class="ev-list">${list.length?list.map(e=>`<div class="ev" style="--c:${T(e.type).css}">
         <span class="min">${esc(minuteLabel(e.t))}</span>
         <button class="body" data-seekev="${e.id}" title="Jump to ${vfmt(e.t)}"><span class="what"><span class="dot"></span>${esc(T(e.type).label)}</span><span class="who">${esc(evWho(e))}${customTiming(e)?`<span class="tbadge">−${preOf(e)}/+${postOf(e)} s</span>`:''}</span>${e.note?`<span class="note">${esc(e.note)}</span>`:''}</button>
-        <span class="acts">${['sub','swap','formation'].includes(e.type)?'':`<button data-invev="${e.id}" aria-label="Players involved" title="Players involved${(e.inv||[]).length?': '+(e.inv||[]).length:''}" class="${(e.inv||[]).length?'on':''}">${IC.people}</button>`}<button data-timeev="${e.id}" aria-label="Clip timing" title="Clip timing: ${preOf(e)} s before, ${postOf(e)} s after">${ICON.clock}</button><button data-noteev="${e.id}" aria-label="Edit note">${ICON.note}</button><button data-delev="${e.id}" aria-label="Delete event">${ICON.del}</button></span>
+        <span class="acts">${['sub','swap','formation'].includes(e.type)?'':`<button data-invev="${e.id}" aria-label="Players involved" title="Players involved${(e.inv||[]).length?': '+(e.inv||[]).length:''}" class="${(e.inv||[]).length?'on':''}">${IC.people}</button>`}<button data-timeev="${e.id}" aria-label="Clip timing" title="Clip timing: ${preOf(e)} s before, ${postOf(e)} s after">${ICON.clock}</button><button data-noteev="${e.id}" aria-label="Edit note">${ICON.note}</button>${['swap','formation'].includes(e.type)?'':`<button data-exev="${e.id}" aria-label="Export this clip" title="Export this clip as a video file">${IC_DL}</button>`}<button data-delev="${e.id}" aria-label="Delete event">${ICON.del}</button></span>
         ${ui.timeEdit===e.id?`<div class="note-edit">${timingEditor(M.id,e)}<div class="row-actions"><button class="btn sm" data-tprev="${e.id}">${ICON.play.replace('<svg','<svg width="12" height="12"')} Preview clip</button><span class="hint" style="margin:0">Plays ${preOf(e)} s before to ${postOf(e)} s after the tag.</span></div></div>`:''}
         ${ui.invEdit===e.id?invEditor(e):''}
         ${ui.noteEdit===e.id?`<div class="note-edit"><input id="noteInput" value="${esc(e.note||'')}" placeholder="Add a note and press Enter"></div>`:''}
@@ -2883,6 +2883,19 @@ function blobToDataURL(b){ return new Promise((res,rej)=>{ const r=new FileReade
 function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=()=>rej(new Error('script')); document.head.appendChild(s); }); }
 async function ensureLib(){ if(!window.PptxGenJS||!window.JSZip) await loadScript('vendor/pptxgen.bundle.js'); return {PptxGenJS:window.PptxGenJS,JSZip:window.JSZip}; }
 
+const IC_DL='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>';
+/* one-click export of a single clip: straight from the original file when possible, else recorded, no title card */
+async function exportOne(eid){
+  if(ex.running){ toast('An export is already running.'); return; }
+  if(!hasVideo()){ toast('Load the match video first. Clips are cut from it.'); return; }
+  const e=M.events.find(x=>x.id===eid); if(!e) return;
+  toast('Preparing '+minuteLabel(e.t)+' '+T(e.type).label+'…');
+  const info=videoFile?await probeSource():null, orig=!!(info&&info.src);
+  if(!orig&&!pickMime()){ toast('This browser cannot record video. Use Export… and pick another format, or try Chrome.'); return; }
+  const keep={sel:ex.sel,fmt:ex.fmt,cards:ex.cards,quality:ex.quality};
+  ex.sel=new Set([eid]); ex.fmt='reel'; ex.cards=false; ex.quality=orig?'original':'recorded'; ex.one=e; ex.open=true; ex.step='options'; $('#exportModal').hidden=false;
+  try{ await runExport(); } finally { Object.assign(ex,keep); ex.one=null; }
+}
 async function runExport(){
   const v=V(), list=exSelected(), n=list.length, mime=pickMime(), fmt=ex.fmt; if(!n) return;
   const orig=ex.quality==='original'&&!!(srcInfo&&srcInfo.src&&srcInfo.file===videoFile);
@@ -2899,7 +2912,7 @@ async function runExport(){
     if(fmt==='pptx'||fmt==='stills'||fmt==='zip'){ exStep('Loading export tools…',0); await ensureLib(); }
     if(orig&&fmt==='reel'){
       exStep('Cutting '+n+' clip'+(n===1?'':'s')+' from the original file…',.5);
-      result=await cutBlob(mergeRanges(list.map(clipBounds)),false); filename=base+' highlights.mp4';
+      result=await cutBlob(mergeRanges(list.map(clipBounds)),false); filename=base+(ex.one?' '+clipFileName(ex.one,0,1).replace(/^0?1[- ]/,''):' highlights')+'.mp4';
     }
     if(orig&&fmt==='zip'){
       const zip=new window.JSZip();
@@ -2916,7 +2929,7 @@ async function runExport(){
         if(ex.cards) await holdCard(ctx,c,e,i,n,1600,sk); else await sk;
         await playSegment(ctx,c,e,b,overlay);
       }
-      rec.r.stop(); stream.getTracks().forEach(t=>t.stop()); result=await rec.done; filename=base+' highlights.'+extOf(mime);
+      rec.r.stop(); stream.getTracks().forEach(t=>t.stop()); result=await rec.done; filename=base+(ex.one?' '+clipFileName(ex.one,0,1).replace(/^0?1[- ]/,''):' highlights')+'.'+extOf(mime);
     }
     if(!orig&&fmt==='zip'){
       const zip=new window.JSZip(); const stream=c.captureStream(30);
@@ -6101,6 +6114,7 @@ document.addEventListener('click',e=>{
   if(b=g('[data-tdel]')){ const id=b.dataset.tdel, i=settings.custom.findIndex(x=>x.id===id); if(i<0) return; const [c]=settings.custom.splice(i,1); removeFromPanel(id); const keptItems=layout().items.filter(x=>x.kind==='tag'&&x.ref===id); layout().items=layout().items.filter(x=>!(x.kind==='tag'&&x.ref===id)); ui.layoutSel=null; saveSettings(); renderTagsModal(); renderTagging();
     toast('Deleted tag "'+(c.label||'Untitled tag')+'". Tagged events keep their label.',()=>{ settings.custom.splice(i,0,c); layout().items.push(...keptItems); saveSettings(); renderTagsModal(); renderTagging(); }); return; }
   if(b=g('[data-seekev]')){ const ev=M.events.find(x=>x.id===b.dataset.seekev); if(ev){ if(!hasVideo()) return toast('Load the match video first.'); stopClips(); seek(ev.t-leadOf(ev)); } return; }
+  if(b=g('[data-exev]')){ exportOne(b.dataset.exev); return; }
   if(b=g('[data-delev]')) return removeEvent(b.dataset.delev);
   if(b=g('[data-timeev]')){ ui.timeEdit=ui.timeEdit===b.dataset.timeev?null:b.dataset.timeev; renderEvents(); return; }
   if(b=g('[data-tprev]')){ const ev=M.events.find(x=>x.id===b.dataset.tprev); if(ev){ if(!hasVideo()) return toast('Load the match video first.'); ui.clip={list:[ev],i:0}; playClip(); } return; }

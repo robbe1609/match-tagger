@@ -225,6 +225,7 @@ With online storage, the site locks itself after **1 hour without activity** (no
 - **Keep the tab open while uploading.** The status at the top right shows the progress. If an upload stops (internet drop, closed tab), choose the same file again and it continues where it stopped.
 - **Live tagging:** works as before. After the match, click **Add video & sync** and upload or pick the video.
 - **Another computer:** open the site, choose **Use online storage** and log in. Everything is there. You stay logged in for 30 days per browser.
+- **One clip:** the download arrow next to a tag in the events list (bottom right of the tagger) saves just that clip as a video file, with the same timing as when you play it (goals start 15 s early).
 - **Exports:** clips and presentations download to your computer. Click **Also save online** to keep a copy in your storage (folder **Exports**).
 - **Space used / download / delete videos:** click **Saved online** at the top right. You see every video, its size and which match uses it, with **Download** and **Delete** buttons. In a match you also find **Download video** under **Setup**.
 - **Log out:** **Saved online** → **Log out**.
