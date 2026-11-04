@@ -1,4 +1,4 @@
-# Match Tagger · website with online storage
+# Match Tagger: website with online storage
 
 Your videos and tags live in your own online storage at Cloudflare. Upload a video once, then watch, tag and cut clips from any computer and any browser. No OneDrive app needed.
 
@@ -19,14 +19,14 @@ The folder setup (a Match Tagger folder in OneDrive) still works too. You choose
 
 ---
 
-## Setup · part 1 · Cloudflare (about 15 minutes)
+## Setup part 1: Cloudflare (about 15 minutes)
 
-### 1 · Create an account
+### 1. Create an account
 
 1. Go to **dash.cloudflare.com/sign-up**, sign up with your email and confirm the email.
 2. You do not need to add a website or domain. Skip that if Cloudflare asks.
 
-### 2 · Turn on R2 and create the storage bucket
+### 2. Turn on R2 and create the storage bucket
 
 1. In the left menu, open **R2 Object Storage** (it may sit under **Storage & Databases**).
 2. Click **Purchase R2 Plan** / **Get started** and add a payment method. You stay on the free tier until you go past 10 GB.
@@ -35,7 +35,7 @@ The folder setup (a Match Tagger folder in OneDrive) still works too. You choose
 5. **Location:** leave it on **Automatic**, or pick **Western Europe** as a location hint.
 6. Click **Create bucket**. Leave it **private**: do not turn on public access.
 
-### 3 · Create the storage service (a "Worker")
+### 3. Create the storage service (a "Worker")
 
 1. In the left menu, open **Workers & Pages** (under **Compute**).
 2. Click **Create** → **Create Worker** / **Start with Hello World!**.
@@ -46,7 +46,7 @@ The folder setup (a Match Tagger folder in OneDrive) still works too. You choose
 6. Open `storage-service/worker.js` from this zip in Notepad (Windows) or TextEdit (Mac), select everything, copy it, and paste it into the editor.
 7. Click **Deploy** (top right).
 
-### 4 · Connect the bucket to the Worker
+### 4. Connect the bucket to the Worker
 
 1. Go back to your Worker `match-tagger-storage` (click its name at the top, or via **Workers & Pages**).
 2. Open **Bindings** (or **Settings** → **Bindings**) → **Add binding** → **R2 bucket**.
@@ -54,7 +54,7 @@ The folder setup (a Match Tagger folder in OneDrive) still works too. You choose
 4. **R2 bucket:** `match-tagger`.
 5. Click **Add binding** / **Deploy**.
 
-### 5 · Set your password
+### 5. Set your password
 
 1. In your Worker, go to **Settings** → **Variables and Secrets** → **Add**.
 2. **Type:** **Secret**.
@@ -62,7 +62,7 @@ The folder setup (a Match Tagger folder in OneDrive) still works too. You choose
 4. **Value:** the password you want to log in with. Make it long, for example four random words. Anyone with this password can see and delete your videos.
 5. Click **Deploy**.
 
-### 6 · Check it
+### 6. Check it
 
 1. On your Worker's page, find its address. It looks like `match-tagger-storage.yourname.workers.dev`.
 2. Open that address in your browser. You should see:
@@ -73,7 +73,7 @@ Write down the address. You need it to log in.
 
 ---
 
-## Setup · part 2 · the website
+## Setup part 2: the website
 
 1. The website is published by **Cloudflare Pages** straight from the GitHub repository `match-tagger`. Every change pushed to `main` is online about a minute later, free (up to 500 updates a month).
 2. Pages settings, in case you ever set it up again (**Workers & Pages** → **Create application** → **Pages** → **Connect to Git**): production branch `main`, framework preset **None**, build command empty, build output directory `match-tagger-site`.
@@ -144,8 +144,8 @@ Every match is a **Competition**, **Cup** or **Friendly** match. Pick it in the 
 On a match page, under **Squad**, every squad player who is not selected gets a reason: **Coach's decision** (default), **Injured**, **Streepjes** or **Other, not selectable** (type the reason). You can set the same on the **Match data** page for matches entered by hand. If a player was marked injured at the last training, the list says so.
 
 - **Her 50% target only counts matches she was available for.** Injured, streepjes and other leave the match out; a coach's decision (or sitting on the bench) keeps it in.
-- **Players chart · Minutes:** each bar is the length of all the team's minutes and shows minutes played (blue), available but not played (light blue) and not available (striped: red injured, orange streepjes, grey other). The orange tick is her own 50% mark, the % is her share of her available minutes, and **Lowest % first** puts the players who need minutes on top. **Per available match** divides by the matches she was available for. The PDF export shows the same.
-- **Player page · Playing time:** her % of available minutes, above or below 50%, and a column per match filled to the minutes she played, with NS / INJ / STR / OTH when she was not selected. Click a column to open that match.
+- **Players chart, Minutes:** each bar is the length of all the team's minutes and shows minutes played (blue), available but not played (light blue) and not available (striped: red injured, orange streepjes, grey other). The orange tick is her own 50% mark, the % is her share of her available minutes, and **Lowest % first** puts the players who need minutes on top. **Per available match** divides by the matches she was available for. The PDF export shows the same.
+- **Player page, Playing time:** her % of available minutes, above or below 50%, and a column per match filled to the minutes she played, with NS / INJ / STR / OTH when she was not selected. Click a column to open that match.
 
 ## Several players in one play
 
@@ -153,17 +153,18 @@ A clip can belong to more than one player, so everyone involved in a press, a bu
 
 - **While tagging:** click the first player, then **+ More players** in the pop-up and tick the others (or Shift-click them on the pitch). Then choose the tag. The extra players stay selected for further tags of the same moment.
 - **Afterwards:** in the **Events** list, click the people icon of an event and tick the players involved.
-- The first player stays the main player: goals, assists and the other stats count only for her. The others get the clip on their player page as "· involved", with its own filter, and it is included when you export their clips.
+- The first player stays the main player: goals, assists and the other stats count only for her. The others get the clip on their player page as "(involved)", with its own filter, and it is included when you export their clips.
 
 ## Player portal (test phase)
 
-Players get their own login page where they watch the matches and clips you share, and comment on clips. It needs **version 3 of the storage service**:
+Players get their own login page where they watch the matches and clips you share, and comment on clips. It needs **version 3.1 of the storage service** (3.1 adds the match timelines):
 
 1. Cloudflare → **Workers & Pages** → **match-tagger-storage** → **Edit code**.
 2. Select all the code, delete it, paste the new `storage-service/worker.js` from GitHub, click **Deploy**. Your bucket, password and videos stay as they are.
 
 Then open **Portal** in the top menu.
 
+- **Names:** players show first name first everywhere (Celeste Geerseau). If one is the wrong way round, open her in **Players** → **Edit** → **Swap first and last name**. Usernames don't change.
 - **Logins:** every player in your squad (not "other team") gets an account automatically.
   - **Username:** first and last name without spaces, for example `LizDeBlock`. You can change it in the table.
   - **Starting password:** shirt number + username, for example `78LizDeBlock`. She must choose her own password at her first login.
@@ -180,6 +181,8 @@ Then open **Portal** in the top menu.
 
   Pick the clips (by match, tag or player) and **Publish batch**. **Edit** and **Unpublish** change it later.
 - **Notes:** the note you add to a tag in the tagger shows on the clip for the player (in the list and under the video). Published batches are a snapshot: notes and other changes you make later reach the players the next time you open **Portal**.
+- **Match timeline:** each match a player can open shows a timeline under the video: kick-off, half-time and full time, the goals (blue for us, red against, with the minute and scorer) and her own clips as coloured blocks. Below it the same moments as a list with the score after each goal. Tap a moment to jump there. Matches where you only shared her clips (not the full video) are listed too, marked "Your clips only"; there she can play her own clips only.
+- **Scoreboard:** the top right of the video shows the score and the match clock as the video plays, also when she watches a clip. It uses your kick-off, half-time and full-time marks from the tagger, so set those for every match you share. After you change a match, open **Portal** once so the players get the new timeline.
 - **Comments:** players comment on any clip; each conversation is private between you and that player. Reply under **Comments** on the Portal page; threads waiting for an answer are marked.
 
 ## Players chart
@@ -191,7 +194,7 @@ On **Players**, click **Chart** (next to Cards and Table).
 - **The dotted line** is the average of the players on the chart, so it moves when you hide or show players.
 - **Minutes** use each player's availability: see *Availability and playing time*.
 - **Export PDF** saves the chart as an A4 page with both lines and the legend. Long squads continue on a second page.
-- **Players · x of y:** pick who is on the chart. **All**, **None**, **Only players with minutes** and **Hide other team** are quick filters; click a name to add or remove her. Your choice is remembered in this browser.
+- **Players x of y:** pick who is on the chart. **All**, **None**, **Only players with minutes** and **Hide other team** are quick filters; click a name to add or remove her. Your choice is remembered in this browser.
 - The season picker at the top applies to the chart too.
 
 ## Tactics board
@@ -233,7 +236,7 @@ A full match of 3 GB takes about 20 minutes at an upload speed of 20 Mbps, and a
 
 ## Updating the storage service
 
-When a new version of `storage-service/worker.js` comes with an update (version 2 added downloads, version 3 the player portal):
+When a new version of `storage-service/worker.js` comes with an update (version 2 added downloads, version 3 the player portal, version 3.1 the match timelines):
 
 1. **Workers & Pages** → **match-tagger-storage** → **Edit code**.
 2. Select all the code in the editor, delete it, and paste the new `worker.js`.

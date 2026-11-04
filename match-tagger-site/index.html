@@ -225,6 +225,8 @@ body.resizing{cursor:col-resize;user-select:none}
 .tray-btns .tag{font-size:13px;padding:5px 10px 5px 8px}
 .tray textarea{width:100%;min-height:64px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);padding:8px}
 .hint{font-size:13px;color:var(--muted);margin:0}
+.sep{display:inline-block;width:1px;height:.85em;background:currentColor;opacity:.32;margin:0 .6em;vertical-align:-.08em}
+.mi{white-space:nowrap}.mi+.mi{border-left:1px solid currentColor;border-left-color:color-mix(in srgb,currentColor 32%,transparent);margin-left:.3em;padding-left:.55em}
 
 /* Events */
 .ev-tools{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
@@ -1068,6 +1070,7 @@ html.locked body>*:not(#gate):not(#toasts){visibility:hidden}
 .cal-ev.mt i{font-style:normal;font-weight:800;opacity:.65}
 .cal-ev.mt.mt-cup,.lg.mt.mt-cup{background:#8E5BD0;color:#FFFFFF}
 .cal-ev.mt.mt-friendly,.lg.mt.mt-friendly{background:#2EB8A6;color:#0B0F14}
+.mt-tag+.mi{margin-left:.5em}
 .mt-tag{display:inline-block;vertical-align:1px;font-family:var(--f-body);font-size:11px;font-weight:700;letter-spacing:.02em;text-transform:none;line-height:1;padding:3px 7px;border-radius:999px;background:#FFC000;color:#0B0F14;white-space:nowrap}
 .mt-tag.mt-cup{background:#8E5BD0;color:#FFFFFF}.mt-tag.mt-friendly{background:#2EB8A6;color:#0B0F14}
 .cal-ev.off{color:var(--muted);border:1px dashed var(--line)}
@@ -1506,7 +1509,7 @@ body.tb-dragging,body.tb-dragging *{cursor:grabbing!important;user-select:none!i
         <div class="phases" id="phases"></div>
       </div>
 
-      <span class="keys"><kbd>Space</kbd> play/pause · <kbd>←</kbd><kbd>→</kbd> 5 s (<kbd>Shift</kbd> 1 s) · <kbd>,</kbd><kbd>.</kbd> frame step · type a <b>shirt number</b> or a <b>tag key</b> to tag · <kbd>Esc</kbd> cancel · <kbd>F</kbd> fullscreen</span>
+      <span class="keys"><kbd>Space</kbd> play/pause<i class="sep" aria-hidden="true"></i><kbd>←</kbd><kbd>→</kbd> 5 s (<kbd>Shift</kbd> 1 s)<i class="sep" aria-hidden="true"></i><kbd>,</kbd><kbd>.</kbd> frame step<i class="sep" aria-hidden="true"></i>type a <b>shirt number</b> or a <b>tag key</b> to tag<i class="sep" aria-hidden="true"></i><kbd>Esc</kbd> cancel<i class="sep" aria-hidden="true"></i><kbd>F</kbd> fullscreen</span>
     </div>
 
     <div class="col side"><span class="side-grip" id="sideGrip" title="Drag to make the panel wider or narrower. Double-click to reset." aria-hidden="true"></span>
@@ -1724,6 +1727,9 @@ if(typeof module!=='undefined') module.exports=MP4Cut;
 (function(){
 "use strict";
 const $=s=>document.querySelector(s);
+/* separators: pieces of a meta line get a thin divider (CSS), never a dot */
+const SEP='<i class="sep" aria-hidden="true"></i>';
+const mj=parts=>parts.filter(x=>x!=null&&x!=='').map(x=>'<span class="mi">'+x+'</span>').join(' ');
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const newId=p=>(p||'')+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 
@@ -1842,6 +1848,7 @@ async function connectDb(){
     else if(!remoteSet||(settings.updatedAt||0)>(remoteSet.updatedAt||0)) setTimeout(pushSettings,0);
     settings.deleted=[...new Set([...(settings.deleted||[]),...localDeleted,...((remoteSet&&remoteSet.deleted)||[])])];
     try{ localStorage.setItem(SET_KEY,JSON.stringify(settings)); }catch(e){}
+    if(!nameOrderMigrate()&&remoteSet&&remoteSet.nameOrder!=='first') saveSettings();
     const gone=new Set(settings.deleted);
     for(const it of items.filter(x=>x.kind==='file'&&/\.json$/i.test(x.name))){
       try{ const m=normalize(JSON.parse(await (await it.handle.getFile()).text())); if(!m||!m.id) continue; remoteIds.add(m.id); if(gone.has(m.id)) continue;
@@ -1852,7 +1859,7 @@ async function connectDb(){
     col=true; lastSync=Date.now(); linkAll(); if(view==='match') renderLiveBar();
     if(changedCurrent){ if(store[M.id]) M=store[M.id]; renderAll(); } else renderDrawer();
     lsSave(); setSync('cloud'); flush();
-    refreshVideos(); plSync(); tbSync(); phSync(); if(view==='portal'){ po.players=null; po.err=''; setTimeout(()=>poLoad(true),300); }
+    refreshVideos(); plSync(); tbSync(); phSync(); if(syncLinkedNames()&&view!=='match') renderView(); if(view==='portal'){ po.players=null; po.err=''; setTimeout(()=>poLoad(true),300); }
   }catch(e){ console.error(e); if(e&&e.name==='AuthError'){ authLost(); return; } setSync('error'); toast(FSX.kind==='cloud'?'Could not reach your online storage. Your work is kept in this browser and saved online as soon as the connection is back.':'Could not open your Match Tagger folder. Your work is kept in this browser. Click the status at the top to reconnect.'); clearTimeout(ui.retryT); if(FSX.kind==='cloud') ui.retryT=setTimeout(connectDb,20000); }
 }
 const localMode=()=>{ try{ return localStorage.getItem('matchTagger.localMode')==='1'; }catch(e){ return false; } };
@@ -1933,7 +1940,7 @@ function finalScore(m){ let f=0,a=0; m.events.forEach(e=>{if(e.type==='goal')f++
 function renderHeader(){
   $('#title').textContent=matchName(M);
   const d=M.date?new Date(M.date+'T12:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'}):'';
-  $('#meta').textContent=[d,mtypeOf(M)!=='league'?mtLabel(mtypeOf(M)):'',M.comp,(M.home?'Home':'Away'),M.halfLen+' min halves'].filter(Boolean).join(' · ');
+  $('#meta').innerHTML=mj([d,mtypeOf(M)!=='league'?mtLabel(mtypeOf(M)):'',M.comp,(M.home?'Home':'Away'),M.halfLen+' min halves'].filter(Boolean).map(esc));
   $('#bugHome').textContent=(M.home?M.usShort:M.themShort)||'HOM';
   $('#bugAway').textContent=(M.home?M.themShort:M.usShort)||'AWY';
   $('#btnReport').dataset.arg=M.id; $('#btnFixture').dataset.arg=M.id; updBackupState();
@@ -2002,7 +2009,7 @@ function renderDrop(loading){
     if(videoIndexState==='error'){ od.innerHTML='<span class="or">Could not read the Videos folder</span><button class="btn sm" data-odrefresh>Try again</button>'; return; }
     if(!videoIndex.length){ od.innerHTML='<span class="or">No videos in '+esc(videoFolder())+' yet</span><button class="btn sm" data-odrefresh>Check again</button>'; return; }
     const g=m?guessVideo(m):null;
-    od.innerHTML=`<select id="odPick" aria-label="Video in your folder">${videoIndex.map(v=>`<option value="${esc(v.id)}"${g&&g.id===v.id?' selected':''}>${esc(v.name)}${v.folder?' · '+esc(v.folder):''}</option>`).join('')}</select><button class="btn" id="btnOdPlay">Play</button><span class="or" style="flex-basis:100%">or</span>`;
+    od.innerHTML=`<select id="odPick" aria-label="Video in your folder">${videoIndex.map(v=>`<option value="${esc(v.id)}"${g&&g.id===v.id?' selected':''}>${esc(v.name)}${v.folder?' ('+esc(v.folder)+')':''}</option>`).join('')}</select><button class="btn" id="btnOdPlay">Play</button><span class="or" style="flex-basis:100%">or</span>`;
     return;
   }
   od.innerHTML=''; { const lab=$('#videoFile').parentElement; if(lab) lab.lastChild.textContent='Choose a file on this computer'; }
@@ -2061,7 +2068,7 @@ function renderTimeline(){
 })();
 
 /* ---------- Phases ---------- */
-const PHASES=[['h1s','1st half · kick-off'],['h1e','1st half · end'],['h2s','2nd half · kick-off'],['h2e','2nd half · end']];
+const PHASES=[['h1s','Kick-off 1st half'],['h1e','End of 1st half'],['h2s','Kick-off 2nd half'],['h2e','End of 2nd half']];
 function renderPhases(){
   const p=M.phases; const nextKey=PHASES.map(x=>x[0]).find(k=>p[k]==null);
   $('#phases').innerHTML=PHASES.map(([k,l])=>`<div class="phase${p[k]!=null?' set':''}${k===nextKey?' next':''}">
@@ -2153,19 +2160,19 @@ function renderDock(){
   const useNow=tr&&tr.t!=null&&Math.abs(tr.t-t)>2?btn('now','Use current time','ghost'):'';
   let ctx='', acts='';
   if(ui.layoutEdit) ctx='<strong>Editing your panel.</strong> Add buttons from the list below.';
-  else if(ui.editLineup) ctx='<strong>Lineup</strong> · names, numbers and bench';
+  else if(ui.editLineup) ctx='<strong>Lineup</strong>'+SEP+'names, numbers and bench';
   else if(needsSync()) ctx='Sync the video with your live tags first.';
   else if(!canTag()) ctx='Load the match video, or start live tagging.';
   else if(ui.numBuf) ctx=`Shirt number <span class="num">${esc(ui.numBuf)}</span>…`;
   else if(!tr) ctx=layout().items.length?'Click a player to tag her, or a tag and then the player.':'Build your panel to start tagging.';
-  else if(tr.mode==='player'){ ctx=`<strong>${esc(pLabel(P(tr.pid)))}</strong>${(tr.more||[]).length?' + '+tr.more.map(id=>esc(firstName(P(id)))).join(', '):''}${at} · ${tr.multi?'click the other players involved, then a tag':'choose tags'}`; acts=useNow; }
-  else if(tr.mode==='armed'){ ctx=`<strong>${esc(T(tr.tag).label)}</strong>${at} · click the player`; acts=btn('noplayer','No player')+useNow+btn('cancel','Cancel','ghost'); }
-  else if(tr.mode==='scorer'){ ctx=`<strong>${esc(T('goal').label)}</strong>${at} · who scored? Click her`; acts=btn('og','Own goal by opponent')+btn('noscorer','Scorer unknown')+useNow+btn('cancel','Cancel','ghost'); }
-  else if(tr.mode==='assist'){ ctx=`<strong>${esc(T('goal').label)}</strong> · who gave the assist?`; }
+  else if(tr.mode==='player'){ ctx=`<strong>${esc(pLabel(P(tr.pid)))}</strong>${(tr.more||[]).length?' + '+tr.more.map(id=>esc(firstName(P(id)))).join(', '):''}${at}${SEP}${tr.multi?'click the other players involved, then a tag':'choose tags'}`; acts=useNow; }
+  else if(tr.mode==='armed'){ ctx=`<strong>${esc(T(tr.tag).label)}</strong>${at}${SEP}click the player`; acts=btn('noplayer','No player')+useNow+btn('cancel','Cancel','ghost'); }
+  else if(tr.mode==='scorer'){ ctx=`<strong>${esc(T('goal').label)}</strong>${at}${SEP}who scored? Click her`; acts=btn('og','Own goal by opponent')+btn('noscorer','Scorer unknown')+useNow+btn('cancel','Cancel','ghost'); }
+  else if(tr.mode==='assist'){ ctx=`<strong>${esc(T('goal').label)}</strong>${SEP}who gave the assist?`; }
   else if(tr.mode==='subIn'||tr.mode==='subPick'){ ctx=`<strong>Substitution</strong>${at}`; }
-  else if(tr.mode==='subOut'){ ctx=`<strong>${esc(pLabel(P(tr.inPid)))} on</strong>${at} · click the player going off`; acts=btn('cancel','Cancel','ghost'); }
+  else if(tr.mode==='subOut'){ ctx=`<strong>${esc(pLabel(P(tr.inPid)))} on</strong>${at}${SEP}click the player going off`; acts=btn('cancel','Cancel','ghost'); }
   else if(tr.mode==='swap'||tr.mode==='swapPick'){ ctx=`<strong>Swap positions</strong>${at}`; }
-  else if(tr.mode==='note'){ ctx=`<strong>${esc(T('note').label)}</strong>${at}${tr.pid?' · '+esc(pLabel(P(tr.pid))):''}`; acts=`<input class="dock-note" id="dockNote" placeholder="What happened? Press Enter to save">`+btn('savenote','Save','primary')+btn('cancel','Cancel','ghost'); }
+  else if(tr.mode==='note'){ ctx=`<strong>${esc(T('note').label)}</strong>${at}${tr.pid?SEP+esc(pLabel(P(tr.pid))):''}`; acts=`<input class="dock-note" id="dockNote" placeholder="What happened? Press Enter to save">`+btn('savenote','Save','primary')+btn('cancel','Cancel','ghost'); }
   const right=ui.layoutEdit?`<button class="btn sm primary" data-layout="done">Done</button>`:ui.editLineup?'':`<button class="btn sm ghost" id="btnEditLineup">Lineup</button><button class="btn sm ghost" data-layout="edit">Edit layout</button>`;
   const bl=boards(), cb=curBoard();
   const bsel=!ui.layoutEdit&&!ui.editLineup&&bl.length?`<label class="tp-board">Board<select id="boardSel" aria-label="Tagging board">${cb?'':'<option value="">Unsaved board</option>'}${bl.map(b=>`<option value="${b.id}"${cb&&cb.id===b.id?' selected':''}>${esc(b.name)}${cb&&cb.id===b.id&&boardDirty()?' (changed)':''}</option>`).join('')}</select></label>`:'';
@@ -2185,7 +2192,7 @@ function tagClick(k){
 }
 const trayInv=pid=>{ const tr=ui.tray; return tr&&tr.mode==='player'&&tr.pid===pid&&tr.more&&tr.more.length?tr.more.slice():undefined; };
 function commitPlayerTag(k,pid,t){
-  if(k==='goal'){ const inv=trayInv(pid), more=ui.tray&&ui.tray.mode==='player'&&ui.tray.pid===pid?ui.tray.more:undefined; const prev=ui.tray&&ui.tray.mode==='player'&&ui.tray.pid===pid?(ui.tray.added||[]):[]; ui.tray={mode:'assist',t,eventId:'',pid,added:prev.concat('goal'),more}; const e=addEvent({type:'goal',t,pid,inv},true); ui.tray.eventId=e.id; toast(T('goal').label+' · '+pLabel(P(pid))+' · '+minuteLabel(t),()=>removeEvent(e.id,true)); renderTagging(); return; }
+  if(k==='goal'){ const inv=trayInv(pid), more=ui.tray&&ui.tray.mode==='player'&&ui.tray.pid===pid?ui.tray.more:undefined; const prev=ui.tray&&ui.tray.mode==='player'&&ui.tray.pid===pid?(ui.tray.added||[]):[]; ui.tray={mode:'assist',t,eventId:'',pid,added:prev.concat('goal'),more}; const e=addEvent({type:'goal',t,pid,inv},true); ui.tray.eventId=e.id; toast(T('goal').label+': '+pLabel(P(pid))+', '+minuteLabel(t),()=>removeEvent(e.id,true)); renderTagging(); return; }
   const inv=trayInv(pid); ui.tray=null; addEvent({type:k,t,pid,inv});
 }
 let numTimer=null;
@@ -2297,7 +2304,7 @@ function addEvent(e,silent){
   const c=customOf(e.type); if(c){ M.tagDefs=M.tagDefs||{}; M.tagDefs[e.type]={label:c.label,color:c.color,kind:c.kind}; }
   M.events.push(e); M.events.sort((a,b)=>a.t-b.t); save();
   renderAfterEventChange();
-  if(!silent){ const who=evWho(e); toast(T(e.type).label+(who&&who!=='Team'?' · '+who:'')+' · '+minuteLabel(e.t),()=>removeEvent(e.id,true)); }
+  if(!silent){ const who=evWho(e); toast(T(e.type).label+(who&&who!=='Team'?': '+who:'')+', '+minuteLabel(e.t),()=>removeEvent(e.id,true)); }
   return e;
 }
 function removeEvent(id,quiet){
@@ -2317,8 +2324,8 @@ function filteredEvents(){
 function evWho(e){
   if(e.type==='swap') return pLabel(P(e.a))+' ⇄ '+pLabel(P(e.b));
   if(e.type==='formation') return 'Now playing '+e.formation;
-  if(e.type==='sub') return pLabel(P(e.in))+' on · '+pLabel(P(e.out))+' off';
-  if(e.type==='goal'){ if(e.og) return 'Own goal by opponent'; const iv=(e.inv||[]).map(id=>P(id)).filter(Boolean); return (e.pid?pLabel(P(e.pid)):'Scorer not set')+(e.assist?' · assist '+pLabel(P(e.assist)):'')+(iv.length?' · also '+iv.map(firstName).join(', '):''); }
+  if(e.type==='sub') return pLabel(P(e.in))+' on, '+pLabel(P(e.out))+' off';
+  if(e.type==='goal'){ if(e.og) return 'Own goal by opponent'; const iv=(e.inv||[]).map(id=>P(id)).filter(Boolean); return (e.pid?pLabel(P(e.pid)):'Scorer not set')+(e.assist?', assist '+pLabel(P(e.assist)):'')+(iv.length?', with '+iv.map(firstName).join(', '):''); }
   const inv=(e.inv||[]).map(id=>P(id)).filter(Boolean);
   if(e.pid) return pLabel(P(e.pid))+(inv.length?' + '+inv.map(firstName).join(', '):'');
   if(inv.length) return inv.map(pLabel).join(', ');
@@ -2370,7 +2377,7 @@ function startClips(){
   const list=filteredEvents(); if(!list.length) return;
   ui.clip={list,i:0}; playClip();
 }
-function playClip(){ const c=ui.clip; const e=c.list[c.i]; $('#clipbar').hidden=false; $('#clipLabel').textContent='Clip '+(c.i+1)+'/'+c.list.length+' · '+minuteLabel(e.t)+' '+T(e.type).label; seek(e.t-preOf(e)); V().play(); }
+function playClip(){ const c=ui.clip; const e=c.list[c.i]; $('#clipbar').hidden=false; $('#clipLabel').textContent='Clip '+(c.i+1)+'/'+c.list.length+': '+minuteLabel(e.t)+' '+T(e.type).label; seek(e.t-preOf(e)); V().play(); }
 function nextClip(){ const c=ui.clip; c.i++; if(c.i>=c.list.length){ stopClips(); V().pause(); toast('Playlist finished.'); } else playClip(); }
 function stopClips(){ ui.clip=null; $('#clipbar').hidden=true; }
 
@@ -2407,7 +2414,7 @@ function onPlayerClick(pid,onField,mod){
 }
 function setAssist(pid){
   const tr=ui.tray; if(!tr) return; const e=M.events.find(x=>x.id===tr.eventId);
-  if(e&&pid&&pid!==e.pid){ e.assist=pid; save(); toast('Assist · '+pLabel(P(pid))); }
+  if(e&&pid&&pid!==e.pid){ e.assist=pid; save(); toast('Assist: '+pLabel(P(pid))); }
   ui.tray=e&&e.pid?{mode:'player',pid:e.pid,t:tr.t,added:tr.added||['goal'],more:tr.more}:null; renderAfterEventChange();
 }
 function popTag(k){
@@ -2443,7 +2450,7 @@ function renderLineupEditor(){
     <div class="lu-rows">${starters.map(s=>s.p?`<div class="lu-row"><span class="role">${s.r}</span>
       <input type="number" min="1" max="99" aria-label="${s.r} shirt number" data-pnum="${s.p.id}" value="${esc(s.p.num)}">
       <input aria-label="${s.r} name" placeholder="Name" list="squadList" data-pname="${s.p.id}" value="${esc(s.p.name)}"><span class="lu-out"><button class="rm" data-tobench="${s.p.id}" title="Move to the bench" aria-label="Move ${esc(s.p.name||s.r)} to the bench">↓</button></span></div>`
-      :`<div class="lu-row"><span class="role">${s.r}</span><select class="lu-fill" data-fillslot="${s.i}" aria-label="Choose the ${s.r}"><option value="">${bench.length?'Choose a player…':'Add players to the bench first'}</option>${bench.map(p=>`<option value="${p.id}">${esc((p.num?p.num+' · ':'')+(p.name||'Unnamed'))}</option>`).join('')}</select><span></span></div>`).join('')}</div>
+      :`<div class="lu-row"><span class="role">${s.r}</span><select class="lu-fill" data-fillslot="${s.i}" aria-label="Choose the ${s.r}"><option value="">${bench.length?'Choose a player…':'Add players to the bench first'}</option>${bench.map(p=>`<option value="${p.id}">${esc((p.num?'#'+p.num+' ':'')+(p.name||'Unnamed'))}</option>`).join('')}</select><span></span></div>`).join('')}</div>
     <span class="section-label">Bench</span>
     <div class="lu-rows">${bench.map(p=>`<div class="lu-row"><span class="role">SUB</span>
       <input type="number" min="1" max="99" aria-label="Shirt number" data-pnum="${p.id}" value="${esc(p.num)}">
@@ -2482,7 +2489,7 @@ function renderStats(){
     <div class="tbl-wrap"><table><thead><tr><th>#</th><th class="name">Player</th><th title="Minutes played">Min</th>${cols.map(([,h])=>`<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>
       ${players.map(p=>`<tr><td>${esc(p.num)}</td><td class="name">${esc(p.name||roleOf(p)||'Sub')}</td><td>${mins&&mins[p.id]!=null?mins[p.id]:(mins?0:'–')}</td>${cols.map(([k])=>`<td class="${per[p.id][k]?'':'zero'}">${per[p.id][k]}</td>`).join('')}</tr>`).join('')}
     </tbody></table></div>
-    <p class="hint">Minutes are counted between the half markers, using substitutions and red cards. G goals · A assists · Sh shots · SoT on target · KP key passes · Dr dribbles · Rec recoveries · Tck tackles · Sv saves · TO turnovers · FW/FC fouls won/committed.</p>
+    <p class="hint">Minutes are counted between the half markers, using substitutions and red cards. G goals, A assists, Sh shots, SoT on target, KP key passes, Dr dribbles, Rec recoveries, Tck tackles, Sv saves, TO turnovers, FW/FC fouls won/committed.</p>
   </div>`;
 }
 
@@ -2538,12 +2545,12 @@ function renderSyncBox(){
   const b=$('#syncBox'); if(!b) return; b.hidden=!needsSync(); if(b.hidden) return;
   const st=ui.sync||(ui.sync={step:1}), a=syncAnchor(), h2=M.phases.h2s;
   if(!a){ b.innerHTML=`<h3>Live match without tags</h3><p>There is nothing to sync yet.</p><div class="row-actions"><button class="btn primary" data-syncgo="0">Use this video</button></div>`; return; }
-  if(st.step===1) b.innerHTML=`<div class="steps"><b>Step 1</b>${h2!=null?' · Step 2':''}</div><h3>Sync your live tags with this video</h3>
+  if(st.step===1) b.innerHTML=`<div class="steps"><b>Step 1</b>${h2!=null?SEP+'Step 2':''}</div><h3>Sync your live tags with this video</h3>
     <p>Play or scrub the video to <b>${esc(a.label)}</b>, then click the button. All tags move along.</p>
-    <div class="row-actions"><button class="btn primary" data-syncmark="1">It happens now · video <span id="syncNow">${vfmt(V().currentTime||0)}</span></button><button class="btn ghost" data-syncunload>Remove video</button></div>`;
-  else b.innerHTML=`<div class="steps">Step 1 ✓ · <b>Step 2</b></div><h3>And the 2nd half?</h3>
+    <div class="row-actions"><button class="btn primary" data-syncmark="1">It happens now${SEP}video <span id="syncNow">${vfmt(V().currentTime||0)}</span></button><button class="btn ghost" data-syncunload>Remove video</button></div>`;
+  else b.innerHTML=`<div class="steps">Step 1 ✓${SEP}<b>Step 2</b></div><h3>And the 2nd half?</h3>
     <p>If the recording ran through half-time, the 2nd half is already in place. If the camera stopped at half-time, scrub to the <b>2nd-half kick-off</b> and click the button.</p>
-    <div class="row-actions"><button class="btn primary" data-syncgo="same">Recording ran through</button><button class="btn" data-syncmark="2">2nd-half kick-off is now · video <span id="syncNow">${vfmt(V().currentTime||0)}</span></button><button class="btn ghost" data-syncback>Back</button></div>`;
+    <div class="row-actions"><button class="btn primary" data-syncgo="same">Recording ran through</button><button class="btn" data-syncmark="2">2nd-half kick-off is now${SEP}video <span id="syncNow">${vfmt(V().currentTime||0)}</span></button><button class="btn ghost" data-syncback>Back</button></div>`;
 }
 function applySync(o1,o2){
   const lp=Object.assign({},M.livePhases||M.phases), h2=lp.h2s;
@@ -2605,7 +2612,7 @@ function readBackupFile(f){
     renderImp(); };
   r.readAsText(f);
 }
-function impSub(m){ const n=m.events.filter(e=>!['swap','formation'].includes(e.type)).length; return [fmtDate(m.date),m.comp,n+' tag'+(n===1?'':'s'),isPlayed(m)?finalScore(m):''].filter(Boolean).join(' · '); }
+function impSub(m){ const n=m.events.filter(e=>!['swap','formation'].includes(e.type)).length; return [fmtDate(m.date),m.comp,n+' tag'+(n===1?'':'s'),isPlayed(m)?finalScore(m):''].filter(Boolean).join(', '); }
 function renderImp(){
   const mod=$('#bkModal'), sh=$('#bkSheet'); if(!imp){ mod.hidden=true; return; } mod.hidden=false;
   const head=`<div class="sheet-head"><div><h2 id="bkTitle">Open backup</h2><p>Restore tags from a backup file you saved earlier.</p></div><button class="btn sm ghost" data-imp="close" aria-label="Close">Close</button></div>`;
@@ -2615,7 +2622,7 @@ function renderImp(){
   }
   const d=imp.data, when=d.savedAt?new Date(d.savedAt):null, n=imp.rows.filter(r=>r.choice==='restore').length;
   const stTxt={new:'Not in the app yet',newer:'Backup is newer than the app',same:'Same as in the app',older:'The app has newer changes'};
-  sh.innerHTML=head+`<div class="bk-file"><div><b>${esc(imp.name)}</b><br><span>${when&&!isNaN(when)?'Saved '+esc(when.toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}))+' · ':''}${imp.rows.length} match${imp.rows.length===1?'':'es'}</span></div></div>
+  sh.innerHTML=head+`<div class="bk-file"><div><b>${esc(imp.name)}</b><br><span>${when&&!isNaN(when)?'Saved '+esc(when.toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}))+', ':''}${imp.rows.length} match${imp.rows.length===1?'':'es'}</span></div></div>
     <div class="bk-list">${imp.rows.map((r,i)=>`<div class="bk-row"><div><strong>${esc(matchName(r.m))}</strong><span class="sub">${esc(impSub(r.m))}</span><br><span class="st ${r.st}">${stTxt[r.st]}</span>${r.cur&&r.st!=='same'?'<br><span class="sub">In the app now: '+esc(impSub(r.cur))+'</span>':''}</div>
       <select data-impchoice="${i}" aria-label="What to do with ${esc(matchName(r.m))}">${r.cur?`<option value="restore"${r.choice==='restore'?' selected':''}>Replace with backup</option>`:`<option value="restore"${r.choice==='restore'?' selected':''}>Add to the app</option>`}<option value="skip"${r.choice==='skip'?' selected':''}>Skip</option></select></div>`).join('')}</div>
     ${imp.rows.some(r=>r.choice==='restore'&&r.st==='older')?`<p class="warn">Replacing a match where the app has newer changes undoes those changes.</p>`:''}
@@ -2667,7 +2674,7 @@ const FORMATS={
   reel:{title:'Highlight video',tag:'.mp4',desc:{original:'All clips back to back in one video. Each clip starts at the nearest keyframe, at most a second or two early.',recorded:'All clips back to back in one video, with a title card before each clip.'}},
   zip:{title:'Separate clip files',tag:'.zip',desc:{original:'Each clip as its own .mp4, cut to the exact second and numbered in match order.',recorded:'Each clip as its own video file, numbered in match order.'}},
   pptx:{title:'Presentation with clips',tag:'.pptx',desc:{original:'One slide per clip with the clip embedded. Plays in PowerPoint and Keynote.',recorded:'One slide per clip with the video embedded. Plays in PowerPoint and Keynote.'}},
-  stills:{title:'Presentation with stills',tag:'.pptx · small file',desc:{original:'One slide per clip with a still frame at the moment of the event.',recorded:'One slide per clip with a still frame at the moment of the event.'}}
+  stills:{title:'Presentation with stills',tag:'.pptx, small file',desc:{original:'One slide per clip with a still frame at the moment of the event.',recorded:'One slide per clip with a still frame at the moment of the event.'}}
 };
 const ex={open:false,quality:'original',fmt:'reel',bug:true,caption:true,cards:true,running:false,cancel:false};
 const SRC_ERR={not_mp4:'This video is not an MP4 or MOV file, so clips can only be re-recorded. Converting the match to .mp4 first gives you original quality.',fragmented:'This MP4 is stored in fragments, which the lossless cutter cannot read yet. Clips can only be re-recorded.',no_video:'No video track was found in this file.',error:'The video file could not be read for lossless cutting.'};
@@ -2681,7 +2688,7 @@ function filterDesc(){
   parts.push(ui.fType?(ui.fType==='shots'?'All shots':T(ui.fType).label):'All events');
   if(ui.fPlayer) parts.push(pLabel(P(ui.fPlayer)));
   if(ui.fHalf!=='all') parts.push(ui.fHalf==='1'?'1st half':'2nd half');
-  return parts.join(' · ');
+  return parts.join(', ');
 }
 function tagTiming(k){ const c=customOf(k), o=c||(settings.cfg&&settings.cfg[k])||{}; return {pre:o.pre!=null?+o.pre:null,post:o.post!=null?+o.post:null}; }
 function preOf(e){ if(e.pre!=null) return +e.pre; const t=tagTiming(e.type).pre; return t!=null?t:ui.pre; }
@@ -2711,7 +2718,7 @@ function openExport(){
 }
 function selModel(ctx){
   if(ctx==='ex') return {set:ex.sel, items:exCandidates().map(e=>({key:e.id,mid:M.id,ev:e,secs:preOf(e)+postOf(e),type:e.type,tlabel:T(e.type).label,group:({1:'1st half',2:'2nd half'})[halfOf(e.t)]||'Outside the halves',min:minuteLabel(e.t),label:T(e.type).label,css:T(e.type).css,who:e.type==='sub'||e.pid||e.og||e.assist?evWho(e):'',note:e.note||''}))};
-  return {set:pex.sel, items:pexCandidates().map(c=>withMatch(c.m,()=>({key:c.m.id+':'+c.e.id,mid:c.m.id,ev:c.e,secs:preOf(c.e)+postOf(c.e),type:clipKey(c),tlabel:c.role==='assist'?'Assists':T(c.e.type).label+(c.role==='involved'?' · involved':''),group:fmtDate(c.m.date,{day:'numeric',month:'short'})+' '+vsLabel(c.m),min:minuteLabel(c.e.t),label:clipTitle(c),css:c.role==='assist'?'var(--goal)':T(c.e.type).css,who:c.role==='assist'&&c.e.pid?'Goal by '+pLabel(P(c.e.pid)):'',note:c.e.note||''})))};
+  return {set:pex.sel, items:pexCandidates().map(c=>withMatch(c.m,()=>({key:c.m.id+':'+c.e.id,mid:c.m.id,ev:c.e,secs:preOf(c.e)+postOf(c.e),type:clipKey(c),tlabel:c.role==='assist'?'Assists':T(c.e.type).label+(c.role==='involved'?' (involved)':''),group:fmtDate(c.m.date,{day:'numeric',month:'short'})+' '+vsLabel(c.m),min:minuteLabel(c.e.t),label:clipTitle(c),css:c.role==='assist'?'var(--goal)':T(c.e.type).css,who:c.role==='assist'&&c.e.pid?'Goal by '+pLabel(P(c.e.pid)):'',note:c.e.note||''})))};
 }
 function renderSelect(ctx,el,title,sub){
   const {set,items}=selModel(ctx), prev=el.querySelector('.sel-list'), top=prev?prev.scrollTop:0;
@@ -2723,8 +2730,8 @@ function renderSelect(ctx,el,title,sub){
   el.innerHTML=`<div class="sheet-head"><div><h2>${esc(title)}</h2><p>${esc(sub)}</p></div><button class="btn sm ghost" data-selclose="${ctx}">Close</button></div>
     <div class="selbar"><button class="btn sm" data-selall="${ctx}">Select all</button><button class="btn sm" data-selnone="${ctx}">Select none</button><span class="hint">or pick by tag:</span>${types.map(chip).join('')}</div>
     <div class="sel-list">${groups.map(g=>{ const gi=items.filter(i=>i.group===g), gn=gi.filter(i=>set.has(i.key)).length;
-      return `<div class="clipgrp"><span>${esc(g)} · ${gn}/${gi.length}</span><button class="linkbtn" data-selgrp="${esc(g)}" data-ctx="${ctx}">${gn===gi.length?'Deselect all':'Select all'}</button></div>`+gi.map(i=>`<div class="sel-row${set.has(i.key)?'':' off'}" style="--c:${i.css}"><label class="sel-main"><input type="checkbox" data-selkey="${esc(i.key)}" data-ctx="${ctx}"${set.has(i.key)?' checked':''}><span class="min">${esc(i.min)}</span><span class="what"><span><i class="dot"></i>${esc(i.label)}</span>${i.who||i.note?`<small>${esc([i.who,i.note].filter(Boolean).join(' · '))}</small>`:''}</span></label><button class="sel-time${customTiming(i.ev)?' custom':''}" data-seltime="${esc(i.key)}" data-ctx="${ctx}" title="Change the timing of this clip">−${preOf(i.ev)} s · +${postOf(i.ev)} s</button>${ui.selTime===i.key?timingEditor(i.mid,i.ev):''}</div>`).join(''); }).join('')}</div>
-    <div class="sel-foot"><span class="hint"><b>${n}</b> of ${items.length} clip${items.length===1?'':'s'} selected · about ${fmtDur(items.filter(i=>set.has(i.key)).reduce((a,i)=>a+i.secs,0))} of video</span><button class="btn ghost" data-selclose="${ctx}">Cancel</button><button class="btn primary" data-selnext="${ctx}"${n?'':' disabled'}>Next: choose format</button></div>`;
+      return `<div class="clipgrp"><span>${esc(g)}${SEP}${gn}/${gi.length}</span><button class="linkbtn" data-selgrp="${esc(g)}" data-ctx="${ctx}">${gn===gi.length?'Deselect all':'Select all'}</button></div>`+gi.map(i=>`<div class="sel-row${set.has(i.key)?'':' off'}" style="--c:${i.css}"><label class="sel-main"><input type="checkbox" data-selkey="${esc(i.key)}" data-ctx="${ctx}"${set.has(i.key)?' checked':''}><span class="min">${esc(i.min)}</span><span class="what"><span><i class="dot"></i>${esc(i.label)}</span>${i.who||i.note?`<small>${mj([i.who,i.note].filter(Boolean).map(esc))}</small>`:''}</span></label><button class="sel-time${customTiming(i.ev)?' custom':''}" data-seltime="${esc(i.key)}" data-ctx="${ctx}" title="Change the timing of this clip">−${preOf(i.ev)} s / +${postOf(i.ev)} s</button>${ui.selTime===i.key?timingEditor(i.mid,i.ev):''}</div>`).join(''); }).join('')}</div>
+    <div class="sel-foot"><span class="hint"><b>${n}</b> of ${items.length} clip${items.length===1?'':'s'} selected${SEP}about ${fmtDur(items.filter(i=>set.has(i.key)).reduce((a,i)=>a+i.secs,0))} of video</span><button class="btn ghost" data-selclose="${ctx}">Cancel</button><button class="btn primary" data-selnext="${ctx}"${n?'':' disabled'}>Next: choose format</button></div>`;
   const nl=el.querySelector('.sel-list'); if(nl) nl.scrollTop=top;
 }
 function selRefresh(ctx){ if(ctx==='ex') renderExport(); else renderPex(); }
@@ -2732,7 +2739,7 @@ function selToggle(ctx,keys,on){ const set=ctx==='ex'?ex.sel:pex.sel; keys.forEa
 function closeExport(){ if(ex.running) return; ex.open=false; $('#exportModal').hidden=true; }
 function renderExport(){
   const m=$('#exportModal'); m.hidden=!ex.open; if(!ex.open) return;
-  if(ex.step==='select'&&!ex.running){ renderSelect('ex',$('#exportSheet'),'Select clips',matchName(M)+' · tick the moments you want to export'); return; }
+  if(ex.step==='select'&&!ex.running){ renderSelect('ex',$('#exportSheet'),'Select clips',matchName(M)+': tick the moments you want to export'); return; }
   const list=exSelected(), mime=pickMime(), sheet=$('#exportSheet');
   const probing=!!videoFile&&!srcInfo, origOK=!!(srcInfo&&srcInfo.src);
   if(!origOK&&!probing&&ex.quality==='original') ex.quality='recorded';
@@ -2750,9 +2757,9 @@ function renderExport(){
   if(ex.fmt==='stills') summary='<span>Grabs one frame per clip. Takes a few seconds.</span>';
   else if(orig) summary='<span>Copies the clips straight from your video file: same resolution, same bitrate, with sound. Takes seconds, not minutes.</span>';
   else summary=`<span>Recording plays the clips in real time: about <b>${fmtDur(recSecs)}</b>. Keep this tab open and visible until it finishes. Clips are exported without sound.</span>`;
-  sheet.innerHTML=`<div class="sheet-head"><div><h2 id="exTitle">Export clips</h2><p>${list.length} clip${list.length===1?'':'s'} selected · ${esc(selDesc(list))} · <button class="btn sm ghost" data-selback="ex" style="padding:0 4px">Change selection</button></p></div><button class="btn sm ghost" data-exclose>Close</button></div>
+  sheet.innerHTML=`<div class="sheet-head"><div><h2 id="exTitle">Export clips</h2><p>${list.length} clip${list.length===1?'':'s'} selected${SEP}${esc(selDesc(list))}${SEP}<button class="btn sm ghost" data-selback="ex" style="padding:0 4px">Change selection</button></p></div><button class="btn sm ghost" data-exclose>Close</button></div>
     <div class="fmt-list" role="radiogroup" aria-label="Quality">
-      <label class="fmt${origOK?'':' off'}"><input type="radio" name="exq" value="original"${orig?' checked':''}${origOK?'':' disabled'}><em>${probing?'Checking your file…':'Best quality · with sound'}</em><strong>Original video</strong><span>Clips cut straight from your file without re-encoding. No overlays.</span></label>
+      <label class="fmt${origOK?'':' off'}"><input type="radio" name="exq" value="original"${orig?' checked':''}${origOK?'':' disabled'}><em>${probing?'Checking your file…':'Best quality, with sound'}</em><strong>Original video</strong><span>Clips cut straight from your file without re-encoding. No overlays.</span></label>
       <label class="fmt"><input type="radio" name="exq" value="recorded"${orig?'':' checked'}><em>Re-recorded</em><strong>With scoreboard and captions</strong><span>Draws the scoreboard and a caption onto the clips. Lower quality, no sound.</span></label>
     </div>
     ${srcInfo&&srcInfo.error?`<p class="warn">${SRC_ERR[srcInfo.error]||SRC_ERR.error}</p>`:''}
@@ -2836,7 +2843,7 @@ function drawCard(ctx,c,e,i,n){
   ctx.fillStyle=T(e.type).dark; ctx.font=`700 ${46*k}px ${FONT_D}`; ctx.fillText(evLine(e).toUpperCase(),W/2,H/2+70*k);
   const who=e.type==='sub'||e.pid||e.og||e.assist?evWho(e):'';
   if(who){ ctx.fillStyle='rgba(255,255,255,.85)'; ctx.font=`600 ${30*k}px ${FONT_B}`; ctx.fillText(fitText(ctx,who,W-80*k),W/2,H/2+115*k); }
-  ctx.fillStyle='rgba(255,255,255,.5)'; ctx.font=`600 ${20*k}px ${FONT_B}`; ctx.fillText('Clip '+(i+1)+' of '+n+'  ·  '+matchName(M),W/2,H-40*k);
+  ctx.fillStyle='rgba(255,255,255,.5)'; ctx.font=`600 ${20*k}px ${FONT_B}`; ctx.fillText('Clip '+(i+1)+' of '+n+'  –  '+matchName(M),W/2,H-40*k);
 }
 
 /* recording primitives */
@@ -2883,14 +2890,14 @@ async function runExport(){
     if(orig&&fmt==='zip'){
       const zip=new window.JSZip();
       for(let i=0;i<n&&!ex.cancel;i++){ const e=list[i];
-        exStep('Cutting clip '+(i+1)+' of '+n+' · '+minuteLabel(e.t)+' '+T(e.type).label,i/n);
+        exStep('Cutting clip '+(i+1)+' of '+n+': '+minuteLabel(e.t)+' '+T(e.type).label,i/n);
         zip.file(clipFileName(e,i,n)+'.mp4',await cutBlob([clipBounds(e)],true)); await nextFrame(); }
       if(!ex.cancel){ exStep('Packing the .zip…',1); result=await zip.generateAsync({type:'blob'}); filename=base+' clips.zip'; }
     }
     if(!orig&&fmt==='reel'){
       const stream=c.captureStream(30); drawCard(ctx,c,list[0],0,n); const rec=makeRecorder(stream,mime);
       for(let i=0;i<n&&!ex.cancel;i++){ const e=list[i], [a,b]=clipBounds(e);
-        exStep('Recording clip '+(i+1)+' of '+n+' · '+minuteLabel(e.t)+' '+T(e.type).label,i/n);
+        exStep('Recording clip '+(i+1)+' of '+n+': '+minuteLabel(e.t)+' '+T(e.type).label,i/n);
         const sk=seekTo(a);
         if(ex.cards) await holdCard(ctx,c,e,i,n,1600,sk); else await sk;
         await playSegment(ctx,c,e,b,overlay);
@@ -2900,7 +2907,7 @@ async function runExport(){
     if(!orig&&fmt==='zip'){
       const zip=new window.JSZip(); const stream=c.captureStream(30);
       for(let i=0;i<n&&!ex.cancel;i++){ const e=list[i], [a,b]=clipBounds(e);
-        exStep('Recording clip '+(i+1)+' of '+n+' · '+minuteLabel(e.t)+' '+T(e.type).label,i/n);
+        exStep('Recording clip '+(i+1)+' of '+n+': '+minuteLabel(e.t)+' '+T(e.type).label,i/n);
         await seekTo(a); drawExFrame(ctx,c,e,overlay); await nextFrame();
         const rec=makeRecorder(stream,mime); await playSegment(ctx,c,e,b,overlay); rec.r.stop(); const blob=await rec.done;
         if(!ex.cancel) zip.file(clipFileName(e,i,n)+'.'+extOf(mime),blob);
@@ -2911,7 +2918,7 @@ async function runExport(){
     if(fmt==='pptx'||fmt==='stills'){
       const items=[]; const stream=fmt==='pptx'&&!orig?c.captureStream(30):null;
       for(let i=0;i<n&&!ex.cancel;i++){ const e=list[i], [a,b]=clipBounds(e);
-        exStep((fmt==='pptx'?(orig?'Cutting clip ':'Recording clip '):'Grabbing frame ')+(i+1)+' of '+n+' · '+minuteLabel(e.t)+' '+T(e.type).label,i/n);
+        exStep((fmt==='pptx'?(orig?'Cutting clip ':'Recording clip '):'Grabbing frame ')+(i+1)+' of '+n+': '+minuteLabel(e.t)+' '+T(e.type).label,i/n);
         await seekTo(e.t); await nextFrame(); drawExFrame(ctx,c,e,{bug:overlay.bug}); const poster=c.toDataURL('image/jpeg',.86);
         let video=null;
         if(fmt==='pptx'&&orig){ video=await blobToDataURL(await cutBlob([[a,b]],true)); }
@@ -2925,7 +2932,7 @@ async function runExport(){
   v.pause(); v.muted=prev.muted; v.playbackRate=prev.rate; seekTo(prev.t);
   ex.running=false;
   if(ex.cancel||!result){ ex.open=false; renderExport(); if(ex.cancel) toast('Export cancelled.'); return; }
-  exStep('Ready · '+(result.size/1048576).toFixed(1)+' MB',1);
+  exStep('Ready: '+(result.size/1048576).toFixed(1)+' MB',1);
   const ok=await offerFile(filename,result);
   ex.open=false; renderExport();
   if(ok===false) toast('Export finished but was not saved.');
@@ -2944,8 +2951,8 @@ async function buildDeck(items,c){
   s.addText('VIDEO REVIEW',{x:.8,y:1.7,w:11.5,h:.45,fontFace:FD,fontSize:16,bold:true,color:'5DB4F0',charSpacing:4});
   s.addText(matchName(M),{x:.8,y:2.15,w:11.5,h:1.3,fontFace:FD,fontSize:50,bold:true,color:'FFFFFF',fit:'shrink'});
   s.addText(finalScore(M),{x:.8,y:3.45,w:6,h:.9,fontFace:FD,fontSize:40,bold:true,color:'F2C14E'});
-  s.addText([dateTxt,M.comp].filter(Boolean).join('  ·  '),{x:.8,y:4.35,w:11.5,h:.5,fontFace:FB,fontSize:18,color:'C8D2DC'});
-  s.addText(items.length+' clips  ·  '+selDesc(items.map(it=>it.e)),{x:.8,y:6.4,w:11.5,h:.4,fontFace:FB,fontSize:14,color:'9AAAB9'});
+  s.addText([dateTxt,M.comp].filter(Boolean).join(', '),{x:.8,y:4.35,w:11.5,h:.5,fontFace:FB,fontSize:18,color:'C8D2DC'});
+  s.addText(items.length+' clips: '+selDesc(items.map(it=>it.e)),{x:.8,y:6.4,w:11.5,h:.4,fontFace:FB,fontSize:14,color:'9AAAB9'});
   // clip slides
   const ar=c.height/c.width; let mw=8.7, mh=mw*ar; if(mh>5.6){ mh=5.6; mw=mh/ar; }
   items.forEach((it,i)=>{ const e=it.e; const sl=pptx.addSlide(); sl.background={color:'FFFFFF'};
@@ -2960,11 +2967,11 @@ async function buildDeck(items,c){
     const lines=[];
     const who=e.type==='sub'||e.pid||e.og||e.assist?evWho(e):(/against/.test(e.type)?M.them:'');
     if(who) lines.push({text:who,options:{fontSize:18,bold:true,color:INK,breakLine:true}});
-    lines.push({text:(halfOf(e.t)==='1'?'1st half':halfOf(e.t)==='2'?'2nd half':'')+'  ·  video '+vfmt(e.t),options:{fontSize:12,color:MUTED,breakLine:true}});
+    lines.push({text:(halfOf(e.t)==='1'?'1st half':halfOf(e.t)==='2'?'2nd half':'')+', video '+vfmt(e.t),options:{fontSize:12,color:MUTED,breakLine:true}});
     if(e.note) lines.push({text:' ',options:{fontSize:8,breakLine:true}},{text:e.note,options:{fontSize:16,italic:true,color:INK}});
     sl.addText(lines,{x:rx,y:my+1.05,w:rw,h:3,fontFace:FB,valign:'top'});
     sl.addText('Space for coaching points',{x:rx,y:my+mh-1.1,w:rw,h:1.1,fontFace:FB,fontSize:12,color:'A0A9B2',valign:'top',line:{color:'D3DAE1',width:1,dashType:'dash'},margin:.12});
-    sl.addText(matchName(M)+(dateTxt?'  ·  '+dateTxt:''),{x:.5,y:7.0,w:9,h:.3,fontFace:FB,fontSize:10,color:MUTED});
+    sl.addText(matchName(M)+(dateTxt?', '+dateTxt:''),{x:.5,y:7.0,w:9,h:.3,fontFace:FB,fontSize:10,color:MUTED});
     sl.addNotes(minuteLabel(e.t)+' '+evLine(e)+(who?' — '+who:'')+(e.note?'\n'+e.note:''));
   });
   // summary
@@ -2993,9 +3000,24 @@ const byDateAsc=(a,b)=>-byDateDesc(a,b);
 function latestMatch(){ return Object.values(store).sort(byDateDesc)[0]; }
 function teamName(){ return (settings.team&&settings.team.name)||((latestMatch()||{}).us)||'Club YLA WU18'; }
 function teamShort(){ return (settings.team&&settings.team.short)||((latestMatch()||{}).usShort)||'YLA'; }
+/* same person whatever the word order ("Geerseau Celeste" = "Celeste Geerseau") */
+const nameKey=x=>fold(x).split(/\s+/).filter(Boolean).sort().join(' ');
+const sameName=(a,b)=>!!norm(a)&&nameKey(a)===nameKey(b);
+const userOf=x=>String(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Za-z0-9]/g,'');
+/* names were imported surname first; show first name first everywhere (once). Usernames stay as they were. */
+/* quiet = before the cloud merge: change this device only, keep the old timestamps so newer cloud data still wins */
+function nameOrderMigrate(quiet){
+  if(settings.nameOrder==='first') return false;
+  squad().forEach(s=>{ const w=String(s.name||'').trim().split(/\s+/).filter(Boolean); if(w.length<2) return;
+    const flipped=[w[w.length-1]].concat(w.slice(0,-1)).join(' '); if(!s.portalUser&&userOf(flipped)) s.portalUser=userOf(flipped); s.name=flipped; });
+  settings.nameOrder='first'; settings.nameOrderAt=Date.now();
+  if(quiet){ try{ localStorage.setItem(SET_KEY,JSON.stringify(settings)); }catch(e){} } else saveSettings(); syncLinkedNames(quiet); return true; }
+function syncLinkedNames(quiet){ let any=false; Object.values(store).forEach(m=>{ let ch=false; (m.players||[]).forEach(p=>{ const s=p.sq&&SQ(p.sq); if(s&&p.name!==s.name){ p.name=s.name; ch=true; } }); if(ch){ any=true; if(!quiet){ m.updatedAt=Date.now(); dirty.add(m.id); } } });
+  if(any&&quiet) return any;
+  if(any){ lsSave(); clearTimeout(saveTimer); saveTimer=setTimeout(flush,900); } return any; }
 function findOrCreateSq(name,num){
   const n=norm(name); if(!n) return null;
-  let s=squad().find(x=>norm(x.name)===n);
+  let s=squad().find(x=>norm(x.name)===n)||squad().find(x=>sameName(x.name,name));
   if(!s){ s={id:'s'+newId(),name:String(name).trim(),num:num?String(num):'',pos:''}; squad().push(s); saveSettings(); }
   else if(!s.num&&num){ s.num=String(num); saveSettings(); }
   return s;
@@ -3147,10 +3169,10 @@ const PITCH_SVG=`<svg class="hero-lines" viewBox="0 0 1050 680" fill="none" stro
 
 function matchRow(m,opts){
   opts=opts||{}; const d=m.date?new Date(m.date+'T12:00:00'):null;
-  const meta=[m.comp,m.home?'Home':'Away',m.manualData?'Entered by hand':m.events.length+' tags',m.manualData?'':(m.videoName?'Video: '+m.videoName:'No video yet')].filter(Boolean).join(' · ');
+  const meta=[m.comp,m.home?'Home':'Away',m.manualData?'Entered by hand':m.events.length+' tags',m.manualData?'':(m.videoName?'Video: '+m.videoName:'No video yet')].filter(Boolean);
   return `<div class="mrow">
     <div class="mdate"><b>${d?d.getDate():'–'}</b><span>${d?d.toLocaleDateString('en-GB',{month:'short'}):''}${d&&opts.year?' '+String(d.getFullYear()).slice(2):''}</span></div>
-    <div class="mmain"><button class="mtitle" data-go="report" data-arg="${m.id}">${esc(vsLabel(m))}</button><span class="msub">${mtTag(m)} ${esc(meta)}</span></div>
+    <div class="mmain"><button class="mtitle" data-go="report" data-arg="${m.id}">${esc(vsLabel(m))}</button><span class="msub">${mtTag(m)}${mj(meta.map(esc))}</span></div>
     <div class="mscore">${resChip(m)}<b class="tnum">${isPlayed(m)?finalScore(m):'–'}</b></div>
     <div class="macts"><button class="btn sm" data-go="fixture" data-arg="${m.id}">Match page</button><button class="btn sm" data-go="report" data-arg="${m.id}">Report</button>${opts.del?`<button class="btn sm" data-backupid="${m.id}" title="Save this match to a backup file">Backup</button>`:''}<button class="btn sm${opts.primaryOpen?' primary':''}" data-go="match" data-arg="${m.id}">Open tagger</button>${opts.del?(ui.confirmDel===m.id?`<span class="confirm"><button class="btn sm danger" data-delyes="${m.id}">Delete</button><button class="btn sm" data-delno>Keep</button></span>`:`<button class="btn sm ghost" data-del="${m.id}" aria-label="Delete match">Delete</button>`):''}</div>
   </div>`;
@@ -3167,13 +3189,13 @@ function renderHome(){
   const lead=[['Goals','g'],['Assists','a'],['Minutes','min'],['Ball recoveries','rec']];
   const lastCard=last?withMatch(last,()=>{ const s=goalsFA(last), hs=last.home?s.f:s.a, as=last.home?s.a:s.f;
     const hn=last.home?last.usShort:last.themShort, an=last.home?last.themShort:last.usShort;
-    return `<aside class="last"><span class="eyebrow">Last match · ${esc(fmtDate(last.date,{weekday:'short',day:'numeric',month:'short'}))}</span>
+    return `<aside class="last"><span class="eyebrow">Last match${SEP}${esc(fmtDate(last.date,{weekday:'short',day:'numeric',month:'short'}))}</span>
       <div class="board"><span class="tm">${esc(hn||'HOM')}</span><span class="sc tnum">${hs}<i>–</i>${as}</span><span class="tm r">${esc(an||'AWY')}</span></div>
-      <span class="scorers">${esc(last.comp||vsLabel(last))}${scorers(last)?' · Goals: '+esc(scorers(last)):''}</span>
+      <span class="scorers">${esc(last.comp||vsLabel(last))}${scorers(last)?SEP+'Goals: '+esc(scorers(last)):''}</span>
       <div class="row-actions"><button class="btn sm primary" data-go="report" data-arg="${last.id}">Match report</button><button class="btn sm" data-go="match" data-arg="${last.id}">Open tagger</button></div></aside>`; })
     :`<aside class="last"><span class="eyebrow">Get started</span><p class="last-empty">Create a match, load the video and start tagging. Player and team overviews fill in automatically.</p><div class="row-actions"><button class="btn primary" data-go="new">New match</button></div></aside>`;
   el.innerHTML=`<div class="hero">${PITCH_SVG}<div class="wrap hero-in">
-      <div class="hero-main"><span class="eyebrow">${esc(seasonText(season))} · Video analysis</span>
+      <div class="hero-main"><span class="eyebrow">${esc(seasonText(season))}${SEP}Video analysis</span>
         <h1 class="hero-title">${esc(teamName())}</h1>
         <div class="record">${[['Played',rec.p],['Won',rec.w],['Drawn',rec.d],['Lost',rec.l],['Goals for',rec.gf],['Against',rec.ga]].map(([l,v])=>`<div><b class="tnum">${v}</b><span>${l}</span></div>`).join('')}</div>
         <div class="formrow"><span class="eyebrow">Form</span>${form.length?form.map(m=>`<button class="res ${result(m)}" data-go="report" data-arg="${m.id}" title="${esc(vsLabel(m)+' '+finalScore(m))}">${result(m)}</button>`).join(''):'<span class="hero-muted">No results yet</span>'}</div>
@@ -3201,7 +3223,7 @@ function renderMatches(){
   const list=matchesIn(season).filter(m=>!upcoming.includes(m)&&(!q||norm([m.them,m.comp,m.us,m.date].join(' ')).includes(q))); if(oldestFirst()) list.reverse();
   const rec=recordOf(list.filter(isPlayed));
   el.innerHTML=`<div class="wrap page">
-    <header class="page-head"><div><span class="eyebrow">${esc(seasonText(season))}</span><h1>Analyses</h1><p>${list.length} match${list.length===1?'':'es'}${upcoming.length?` · <button class="tlink" data-go="calendar">${upcoming.length} upcoming in the calendar</button>`:''} · ${rec.w} won, ${rec.d} drawn, ${rec.l} lost</p></div>
+    <header class="page-head"><div><span class="eyebrow">${esc(seasonText(season))}</span><h1>Analyses</h1><p>${list.length} match${list.length===1?'':'es'}${upcoming.length?`${SEP}<button class="tlink" data-go="calendar">${upcoming.length} upcoming in the calendar</button>`:''}${SEP}${rec.w} won, ${rec.d} drawn, ${rec.l} lost</p></div>
       <div class="page-actions">${seasonSelect()}<input class="search" id="mSearch" type="search" placeholder="Search opponent or competition" value="${esc(ui.mq||'')}" aria-label="Search matches"><div class="seg" role="group" aria-label="Order"><button data-msort="desc" aria-pressed="${!oldestFirst()}">Newest first</button><button data-msort="asc" aria-pressed="${oldestFirst()}">Oldest first</button></div><button class="btn" data-openbackup>Open backup</button><button class="btn primary" data-go="new">New match</button></div></header>
     ${list.length?`<div class="mlist big">${list.map(m=>matchRow(m,{del:true,year:season==='all'})).join('')}</div>`:`<div class="empty-state"><strong>${Object.keys(store).length?'No matches found':'No analyses yet'}</strong><p>${Object.keys(store).length?'Try another season or search term.':'Create your first match to start analysing.'}</p><button class="btn primary" data-go="new">New match</button></div>`}
     <div class="row-actions foot"><span class="hint">Your folder saves everything automatically. A backup file is an extra copy of all matches, tags, lineups and players.</span><span style="flex:1"></span><button class="btn sm" id="btnBackup">Back up all matches</button><button class="btn sm" data-openbackup>Open backup</button></div>
@@ -3290,7 +3312,7 @@ function periodsChart(ms){
 function hbars(rows,unit){ const max=Math.max(1,...rows.map(r=>r.v)); return `<div class="hbars">${rows.map(r=>`<div class="hbar"><span class="lab"><i class="dot" style="background:${r.c}"></i><span>${esc(r.l)}</span></span><span class="trk"><span class="fill" style="width:${r.v/max*100}%"></span></span><span class="val tnum">${r.v}${unit||''}</span></div>`).join('')}</div>`; }
 
 /* ---------- Team ---------- */
-const TEAM_ROWS=[['Goals',['goal'],['goal_against']],['Shots',['goal','shot_on','shot_off'],['goal_against','shot_against']],['Shots on target',['goal','shot_on'],null],['Key passes · big chances against',['key_pass'],['chance_against']],['Corners',['corner_for'],['corner_against']],['Dribbles won',['dribble'],null],['Ball recoveries',['recovery'],null],['Tackles won',['tackle'],null],['Turnovers',['turnover'],null],['Fouls won',['foul_w'],null],['Fouls committed',['foul_c'],null],['Yellow cards',['yellow'],null],['Red cards',['red'],null]];
+const TEAM_ROWS=[['Goals',['goal'],['goal_against']],['Shots',['goal','shot_on','shot_off'],['goal_against','shot_against']],['Shots on target',['goal','shot_on'],null],['Key passes / big chances against',['key_pass'],['chance_against']],['Corners',['corner_for'],['corner_against']],['Dribbles won',['dribble'],null],['Ball recoveries',['recovery'],null],['Tackles won',['tackle'],null],['Turnovers',['turnover'],null],['Fouls won',['foul_w'],null],['Fouls committed',['foul_c'],null],['Yellow cards',['yellow'],null],['Red cards',['red'],null]];
 function renderTeam(){
   const el=$('#view-team'), season=curSeason(), ms=matchesIn(season).filter(isPlayed), asc=ms.slice().sort(byDateAsc), rec=recordOf(ms), n=ms.length||1;
   const cnt=types=>types?ms.reduce((s,m)=>s+m.events.filter(e=>types.includes(e.type)).length,0):null;
@@ -3335,12 +3357,12 @@ function renderPlayers(){
   const cols=[['num','#'],['name','Player'],['pos','Pos'],['apps','Apps'],['starts','Starts'],['min','Min'],['att','Train %','Training attendance: present, national team call-ups not counted']].concat(STAT_COLS.map(c=>[c[0],c[1],c[2]]),cust.map(k=>[k,tagInfo(k).label]));
   const pmode=['cards','table','chart'].includes(ui.pview)?ui.pview:'cards', cards=pmode==='cards';
   el.innerHTML=`<div class="wrap page">
-    <header class="page-head"><div><span class="eyebrow">${esc(teamName())} · ${esc(seasonText(season))}</span><h1>Players</h1><p>${pq?list.length+' of '+all.length+' players match “'+esc(ui.pq.trim())+'”':all.length+' player'+(all.length===1?'':'s')+' · stats update automatically from every tagged match.'}</p></div>
+    <header class="page-head"><div><span class="eyebrow">${esc(teamName())}${SEP}${esc(seasonText(season))}</span><h1>Players</h1><p>${pq?list.length+' of '+all.length+' players match “'+esc(ui.pq.trim())+'”':all.length+' player'+(all.length===1?'':'s')+'. Stats update automatically from every tagged match.'}</p></div>
       <div class="page-actions"><input class="search" id="pSearch" type="search" placeholder="Search name or number" value="${esc(ui.pq||'')}" aria-label="Search players by name or shirt number" autocomplete="off">${seasonSelect()}<div class="seg" role="group" aria-label="Layout"><button data-pview="cards" aria-pressed="${cards}">Cards</button><button data-pview="table" aria-pressed="${pmode==='table'}">Table</button><button data-pview="chart" aria-pressed="${pmode==='chart'}">Chart</button></div>${all.length?`<label class="btn" title="Choose several photos at once. Name each file after the shirt number (49.jpg) or the player (Debaermaeker Emma.jpg).">${IC.plus} Add photos<input type="file" id="phBulk" accept="image/*" multiple hidden></label>`:''}<button class="btn primary" id="btnAddPlayer" aria-expanded="${!!ui.addOpen}">Add player</button></div></header>
     ${ui.addOpen?`<form id="addPlayerForm" class="card"><div class="form three"><div class="field"><label for="apNum">Shirt number</label><input id="apNum" type="number" min="1" max="99"></div><div class="field"><label for="apName">Name</label><input id="apName" required placeholder="First and last name"></div><div class="field"><label for="apPos">Position</label><select id="apPos">${POSITIONS.map(p=>`<option value="${p}">${p||'–'}</option>`).join('')}</select></div></div><div class="row-actions"><button class="btn primary" type="submit">Add to squad</button><button class="btn ghost" type="button" id="btnAddCancel">Cancel</button></div></form>`:''}
     ${!list.length?(pq?`<div class="empty-state"><strong>No player matches “${esc(ui.pq.trim())}”</strong><p>Search by name or shirt number.</p><button class="btn" data-pclear>Clear search</button></div>`:`<div class="empty-state"><strong>No players yet</strong><p>Players appear here as soon as you name them in a match lineup, or add them yourself.</p></div>`):pmode==='chart'?pchHtml(list,agg,season,cust):cards?
       `<div class="pgrid">${list.map(s=>{ const a=agg[s.id], ph=s.photo?photoUrl(s):null; return `<button class="pcard${s.photo?' hasph':''}" data-go="player" data-arg="${s.id}">${s.photo?`<span class="pph${ph?' ready':''}" data-phid="${s.id}" style="${ph?`background-image:url('${ph}')`:''}" aria-hidden="true"></span>`:`<span class="bignum" aria-hidden="true">${esc(s.num||'')}</span>`}
-        <span class="ppos">${esc([s.num?'#'+s.num:'',s.pos,isOther(s,season==='all'?nowSeason():season)?'Other team':''].filter(Boolean).join(' · ')||'Squad')}</span><span class="pname">${esc(s.name)}</span>
+        <span class="ppos">${esc([s.num?'#'+s.num:'',s.pos,isOther(s,season==='all'?nowSeason():season)?'Other team':''].filter(Boolean).join(' ')||'Squad')}</span><span class="pname">${esc(s.name)}</span>
         <span class="pstats">${[['Apps',a.apps],['Min',a.min],['Goals',a.line.g],['Assists',a.line.a]].map(([l,v])=>`<span><b class="tnum">${v}</b><span>${l}</span></span>`).join('')}</span></button>`; }).join('')}</div>`
       :`<div class="tbl-wrap"><table class="sortable"><thead><tr>${cols.map(([k,h,t])=>`<th class="${k==='name'?'name':''}"><button data-psort="${esc(k)}" title="${esc(t||h)}">${esc(h)}${ps.k===k?(ps.d>0===(['num','name','pos'].includes(k))?' ↑':' ↓'):''}</button></th>`).join('')}</tr></thead><tbody>
         ${list.map(s=>{ const a=agg[s.id]; return `<tr>${cols.map(([k])=>{ if(k==='num') return `<td>${esc(s.num||'')}</td>`; if(k==='name') return `<td class="name"><button class="tlink" data-go="player" data-arg="${s.id}">${esc(s.name)}</button></td>`; if(k==='pos') return `<td>${esc(s.pos||'')}</td>`; if(k==='att'){ if(isOther(s,season==='all'?nowSeason():season)) return `<td class="zero" title="Marked as other team this season">other team</td>`; const r=attStats(s.id,season); return `<td class="${r.pct==null?'zero':''}" title="${r.sessions} session${r.sessions===1?'':'s'}">${r.pct==null?'–':r.pct+'%'}</td>`; } const v=['apps','starts','min'].includes(k)?a[k]:(a.line[k]||0); return `<td class="${v?'':'zero'}">${v}</td>`; }).join('')}</tr>`; }).join('')}
@@ -3378,7 +3400,7 @@ function nsSet(m,sid,r,note){ const sel=fxSel(m); sel.out=sel.out||{}; if(r==='c
 const inMatchSquad=(m,sid)=>m.players.some(p=>p.sq===sid)||((m.selection||{}).ids||[]).includes(sid);
 /* the most recent training attendance on or before a date (to hint at injuries) */
 function lastAttBefore(sid,ymd){ const ds=trainingDates().filter(d=>d<=ymd&&attOf(d)[sid]); const d=ds[ds.length-1]; return d?{d,v:attOf(d)[sid]}:null; }
-const PT_ST={start:'Started',sub:'Came on',unused:'On the bench, did not play',coach:"Not selected · coach's decision",injured:'Not selected · injured',streepjes:'Not selected · streepjes',other:'Not selected · other',otherteam:'Other team'};
+const PT_ST={start:'Started',sub:'Came on',unused:'On the bench, did not play',coach:"Not selected (coach's decision)",injured:'Not selected (injured)',streepjes:'Not selected (streepjes)',other:'Not selected (other)',otherteam:'Other team'};
 /* playing time per player over the played matches in a season (respects the Matches filter) */
 function playTime(season){
   const ms=matchesIn(season).filter(isPlayed).sort(byDateAsc).map(m=>{ const mins=minutesFor(m)||{}, len=matchLen(m)||0, bySq={};
@@ -3401,7 +3423,7 @@ function nsListHtml(m,ss){
   const out=squad().filter(x=>!picked.has(x.id)&&!isOther(x,ss)).sort((a,b)=>(+a.num||999)-(+b.num||999)||a.name.localeCompare(b.name));
   if(!out.length) return '';
   const d=isoDate(m.date);
-  return `<div class="ns-list"><div class="ns-head"><h3>Not selected · ${out.length}</h3><span class="hint">Injured, streepjes and other leave this match out of her 50% playing-time target. A coach's decision counts.</span></div>
+  return `<div class="ns-list"><div class="ns-head"><h3>Not selected <span class="count-pill">${out.length}</span></h3><span class="hint">Injured, streepjes and other leave this match out of her 50% playing-time target. A coach's decision counts.</span></div>
     ${out.map(x=>{ const o=nsOf(m,x.id), la=d?lastAttBefore(x.id,d):null;
       return `<div class="ns-row r-${o.r}"><span class="num">${esc(x.num||'–')}</span><span class="nm">${esc(x.name)}${la&&la.v==='injured'&&o.r!=='injured'?`<small class="ns-hint" title="Training ${esc(fmtDate(la.d,{day:'numeric',month:'short'}))}">injured at last training</small>`:''}</span>
         <select data-nsr="${x.id}" aria-label="Reason ${esc(x.name)} is not selected">${NS_REASONS.map(([k,l])=>`<option value="${k}"${o.r===k?' selected':''}>${esc(l)}</option>`).join('')}</select>
@@ -3416,19 +3438,19 @@ function playTimeCard(s,season){
   const pct=r.share==null?null:Math.round(r.share*100), ok=pct!=null&&pct>=50;
   const unTxt=NS_UNAVAIL.filter(k=>r.un[k]).map(k=>`${nsLabel(k).toLowerCase()} ${r.rows.filter(x=>x.st===k).length}×`).join(', ');
   const short=m=>String(m.themShort||m.them||'').slice(0,4).toUpperCase();
-  return `<section class="card pt-card"><div class="card-head"><h2>Playing time</h2><span class="hint">${esc(seasonText(season))}${mtScope()?' · '+esc(mtScope()):''}</span></div>
+  return `<section class="card pt-card"><div class="card-head"><h2>Playing time</h2><span class="hint">${esc(seasonText(season))}${mtScope()?SEP+esc(mtScope()):''}</span></div>
     <div class="pt-sum">
       <div class="pt-kpi ${pct==null?'':ok?'ok':'low'}"><b>${pct==null?'–':pct+'%'}</b><span>of her available minutes</span></div>
       <div class="pt-facts"><span><b>${r.played}</b> of <b>${r.avail}</b> available minutes played</span>
-        <span>Available for <b>${r.nAvail}</b> of ${rows.length} match${rows.length===1?'':'es'}${unTxt?' · not available: '+esc(unTxt):''}</span>
+        <span>Available for <b>${r.nAvail}</b> of ${rows.length} match${rows.length===1?'':'es'}${unTxt?SEP+'not available: '+esc(unTxt):''}</span>
         <span class="${pct==null?'':ok?'pt-ok':'pt-low'}">${pct==null?'Not available for any match yet':ok?'Above her 50% target':'Below her 50% target ('+Math.round(r.avail/2)+' min)'}</span></div>
-      <div class="pt-bar" title="${esc(r.played+' played · '+Math.max(0,r.avail-r.played)+' available, not played'+(r.total>r.avail?' · '+(r.total-r.avail)+' not available':''))}">
+      <div class="pt-bar" title="${esc(r.played+' played, '+Math.max(0,r.avail-r.played)+' available but not played'+(r.total>r.avail?', '+(r.total-r.avail)+' not available':''))}">
         <i class="seg played" style="flex-basis:${r.total?r.played/r.total*100:0}%"></i><i class="seg free" style="flex-basis:${r.total?Math.max(0,r.avail-r.played)/r.total*100:0}%"></i>${NS_UNAVAIL.map(k=>r.un[k]?`<i class="seg un ${k}" style="flex-basis:${r.un[k]/r.total*100}%"></i>`:'').join('')}
         ${r.avail?`<i class="pt-t50" style="left:${r.avail/2/r.total*100}%"></i>`:''}</div></div>
     <div class="pt-strip" role="list">${rows.map(x=>{ const h=x.len?Math.min(100,x.min/x.len*100):0, lab=NS_UNAVAIL.includes(x.st)||x.st==='coach'?{coach:'NS',injured:'INJ',streepjes:'STR',other:'OTH'}[x.st]:x.st==='unused'?'0′':x.min+'′';
-      return `<button class="pt-col st-${x.st}${h>=72?' full':''}" role="listitem" data-go="report" data-arg="${x.m.id}" title="${esc(fmtDate(isoDate(x.m.date),{day:'numeric',month:'short'})+' '+vsLabel(x.m)+' · '+PT_ST[x.st]+(x.note?' ('+x.note+')':'')+(x.min?' · '+x.min+' of '+x.len+' min':''))}">
+      return `<button class="pt-col st-${x.st}${h>=72?' full':''}" role="listitem" data-go="report" data-arg="${x.m.id}" title="${esc(fmtDate(isoDate(x.m.date),{day:'numeric',month:'short'})+' '+vsLabel(x.m)+': '+PT_ST[x.st]+(x.note?' ('+x.note+')':'')+(x.min?', '+x.min+' of '+x.len+' min':''))}">
         <span class="pt-box"><i style="height:${h}%"></i><em>${esc(lab)}</em></span><span class="pt-d">${esc(fmtDate(isoDate(x.m.date),{day:'numeric',month:'numeric'}))}</span><span class="pt-o">${esc(short(x.m))}</span></button>`; }).join('')}</div>
-    <div class="pch-legend pt-legend"><span><i class="lg-sq st-start"></i>Started</span><span><i class="lg-sq st-sub"></i>Came on</span><span><i class="lg-sq st-unused"></i>Bench, 0 min</span><span><i class="lg-sq st-coach"></i>NS · coach's decision</span><span><i class="lg-sq st-injured"></i>INJ · injured</span><span><i class="lg-sq st-streepjes"></i>STR · streepjes</span><span><i class="lg-sq st-other"></i>OTH · other, not selectable</span></div>
+    <div class="pch-legend pt-legend"><span><i class="lg-sq st-start"></i>Started</span><span><i class="lg-sq st-sub"></i>Came on</span><span><i class="lg-sq st-unused"></i>Bench, 0 min</span><span><i class="lg-sq st-coach"></i>NS: coach's decision</span><span><i class="lg-sq st-injured"></i>INJ: injured</span><span><i class="lg-sq st-streepjes"></i>STR: streepjes</span><span><i class="lg-sq st-other"></i>OTH: other, not selectable</span></div>
     <p class="hint">Each column is a match, filled up to the minutes she played. Injured, streepjes and other leave a match out of her 50% target; a coach's decision does not. Set the reason on the match page under Squad.</p></section>`; }
 /* chart rows for minutes: one bar the length of all the team's minutes, split into played / available / not available */
 function pchMinutes(shown,season,fmt){
@@ -3447,7 +3469,7 @@ function pchCtl(list,hide,sx,metrics,modes,nRows){
       <label class="sel">Show <select id="pchMetric">${metrics.map(([k,l])=>`<option value="${esc(k)}"${k===pch.metric?' selected':''}>${esc(l)}</option>`).join('')}</select></label>
       ${modes.length>1?`<div class="seg" role="group" aria-label="Value">${modes.map(([k,l])=>`<button data-pchmode="${k}" aria-pressed="${pch.mode===k}">${l}</button>`).join('')}</div>`:''}
       <div class="seg" role="group" aria-label="Order"><button data-pchsort="value" aria-pressed="${pch.sort!=='num'&&pch.sort!=='share'}">Highest first</button>${pch.metric==='min'?`<button data-pchsort="share" aria-pressed="${pch.sort==='share'}">Lowest % first</button>`:''}<button data-pchsort="num" aria-pressed="${pch.sort==='num'}">By number</button></div>
-      <button class="btn${pch.open?' primary':''}" data-pchpick aria-expanded="${pch.open}">Players · ${nSel} of ${list.length}</button>
+      <button class="btn${pch.open?' primary':''}" data-pchpick aria-expanded="${pch.open}">Players (${nSel} of ${list.length})</button>
       <span class="spacer"></span><button class="btn primary" data-pchpdf ${nRows?'':'disabled'}>Export PDF</button>
     </div>
     ${pch.open?`<div class="pch-pick">
@@ -3459,12 +3481,12 @@ function pchMinHtml(list,shown,season,metrics,modes,hide,sx){
   const ticks=[]; for(let t=0;t<=nice.max+1e-9;t+=nice.step) ticks.push(t);
   const modeTxt=match?' per available match':'';
   pch.last={kind:'min',label:'Minutes played',modeTxt,season,rows,avg,nice,ticks,fmt,tick:t=>Math.round(t).toLocaleString('en-GB'),below,match};
-  const tip=x=>{ const r=x.r; return `#${x.s.num||'–'} ${x.s.name} · ${r.played} min played of ${r.avail} available (${x.share==null?'–':x.share+'%'})`+(r.total>r.avail?` · not available ${r.total-r.avail} min (${NS_UNAVAIL.filter(k=>r.un[k]).map(k=>nsLabel(k).toLowerCase()+' '+r.un[k]).join(', ')})`:'')+` · 50% target ${Math.round(r.avail/2)} min`; };
+  const tip=x=>{ const r=x.r; return `#${x.s.num||'–'} ${x.s.name}: ${r.played} min played of ${r.avail} available (${x.share==null?'–':x.share+'%'})`+(r.total>r.avail?`, not available ${r.total-r.avail} min (${NS_UNAVAIL.filter(k=>r.un[k]).map(k=>nsLabel(k).toLowerCase()+' '+r.un[k]).join(', ')})`:'')+`, 50% target ${Math.round(r.avail/2)} min`; };
   const bar=x=>{ const r=x.r;
     if(match) return `<span class="pch-fill" style="width:${x.v==null?0:pct(x.v)}%"></span>${x.half!=null?`<i class="pch-t50" style="left:${pct(x.half)}%"></i>`:''}`;
     const T=r.total||1; return `<span class="pch-stack" style="width:${pct(r.total)}%"><i class="seg played" style="flex-basis:${r.played/T*100}%"></i><i class="seg free" style="flex-basis:${Math.max(0,r.avail-r.played)/T*100}%"></i>${NS_UNAVAIL.map(k=>r.un[k]?`<i class="seg un ${k}" style="flex-basis:${r.un[k]/T*100}%"></i>`:'').join('')}</span>${r.avail?`<i class="pch-t50" style="left:${pct(r.avail/2)}%"></i>`:''}`; };
   return `<section class="card pch">${pchCtl(list,hide,sx,metrics,modes,rows.length)}
-    <div class="card-head"><h2>Minutes played${esc(modeTxt)}</h2><span class="hint">${esc(seasonText(season))}${mtScope()?' · '+esc(mtScope()):''}${avg!=null?` · average <b class="pch-avgtxt">${fmt(avg)}</b>`:''} · <b class="pch-halftxt">${below}</b> below 50% of their available minutes</span></div>
+    <div class="card-head"><h2>Minutes played${esc(modeTxt)}</h2><span class="hint">${esc(seasonText(season))}${mtScope()?SEP+esc(mtScope()):''}${avg!=null?`${SEP}average <b class="pch-avgtxt">${fmt(avg)}</b>`:''}${SEP}<b class="pch-halftxt">${below}</b> below 50% of their available minutes</span></div>
     ${!rows.length?`<div class="empty-state"><strong>No players selected</strong><p>Choose which players to show.</p><button class="btn" data-pchall>Show all players</button></div>`:`
     <div class="pch-chart" style="--avg:${avg!=null?pct(avg):0}%;--grid:${nice.step/nice.max*100}%" role="img" aria-label="Minutes played per player against the minutes each was available">
       ${avg!=null?`<div class="pch-row pch-top" aria-hidden="true"><span></span><div class="pch-track"><span class="pch-avglbl${pct(avg)>78?' r':''}">Average ${fmt(avg)}</span><i class="pch-avg"></i></div><span></span></div>`:''}
@@ -3498,9 +3520,9 @@ function pchHtml(list,agg,season,cust){
   const modeTxt=pch.mode==='match'?' per match':pch.mode==='p90'?' per 90 minutes':'';
   const halfTxt=half!=null?(pch.mode==='match'?`50% of a match (${fmt(half)})`:`50% of available minutes (${fmt(half)} of ${fmt(av.total)}, ${av.n} match${av.n===1?'':'es'})`):'';
   pch.last={label,modeTxt,season,rows,avg,half,halfTxt,share,nice,ticks,fmt,tick,below:half!=null?rows.filter(r=>r.v!=null&&r.v<half).length:0};
-  const tipOf=r=>{ const s=r.s, a=r.a; return `#${s.num||'–'} ${s.name} · ${label}${modeTxt}: ${fmt(r.v)}${share(r.v)!=null?' ('+share(r.v)+'% of available minutes)':''} · ${a.apps} app${a.apps===1?'':'s'}, ${a.starts} start${a.starts===1?'':'s'}, ${a.min} min`; };
+  const tipOf=r=>{ const s=r.s, a=r.a; return `#${s.num||'–'} ${s.name}: ${label}${modeTxt}: ${fmt(r.v)}${share(r.v)!=null?' ('+share(r.v)+'% of available minutes)':''}, ${a.apps} app${a.apps===1?'':'s'}, ${a.starts} start${a.starts===1?'':'s'}, ${a.min} min`; };
   return `<section class="card pch">${pchCtl(list,hide,sx,metrics,modes,rows.length)}
-    <div class="card-head"><h2>${esc(label)}${esc(modeTxt)}</h2><span class="hint">${esc(seasonText(season))}${mtScope()?' · '+esc(mtScope()):''}${avg!=null?` · average <b class="pch-avgtxt">${fmt(avg)}</b> over ${vals.length} player${vals.length===1?'':'s'}`:''}${half!=null?` · <b class="pch-halftxt">${pch.last.below}</b> below 50% of available minutes`:''}${pch.mode==='p90'?' · players with minutes only':pch.mode==='match'?' · players with appearances only':''}</span></div>
+    <div class="card-head"><h2>${esc(label)}${esc(modeTxt)}</h2><span class="hint">${esc(seasonText(season))}${mtScope()?SEP+esc(mtScope()):''}${avg!=null?`${SEP}average <b class="pch-avgtxt">${fmt(avg)}</b> over ${vals.length} player${vals.length===1?'':'s'}`:''}${half!=null?`${SEP}<b class="pch-halftxt">${pch.last.below}</b> below 50% of available minutes`:''}${pch.mode==='p90'?SEP+'players with minutes only':pch.mode==='match'?SEP+'players with appearances only':''}</span></div>
     ${!rows.length?`<div class="empty-state"><strong>No players selected</strong><p>Choose which players to show.</p><button class="btn" data-pchall>Show all players</button></div>`:`
     <div class="pch-chart" style="--avg:${avg!=null?pct(avg):0}%;--half:${half!=null?pct(half):0}%;--grid:${nice.step/nice.max*100}%" role="img" aria-label="${esc(label+modeTxt+' per player, average '+fmt(avg))}">
       ${avg!=null?`<div class="pch-row pch-top" aria-hidden="true"><span></span><div class="pch-track"><span class="pch-avglbl${pct(avg)>78?' r':''}${half!=null&&Math.abs(pct(avg)-pct(half))<14&&avg<half?' r':''}">Average ${fmt(avg)}</span><i class="pch-avg"></i>${half!=null?`<span class="pch-halflbl${pct(half)>78||(Math.abs(pct(avg)-pct(half))<14&&half<avg)?' r':''}">50% ${fmt(half)}</span><i class="pch-half"></i>`:''}</div><span></span></div>`:''}
@@ -3529,14 +3551,14 @@ async function pchPdf(){
     const doc=new window.jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4'}), pw=210, ph=297, mg=14;
     const ink=[11,15,20], mut=[86,97,109], line=[211,218,225], acc=[0,120,191], warn=[199,112,42];
     const nameW=58, valW=22, x0=mg+nameW, x1=pw-mg-valW, bw=x1-x0, rowH=7.2, X=v=>x0+bw*Math.max(0,Math.min(1,v/c.nice.max));
-    const title=c.label+c.modeTxt, sub=teamName()+' · '+seasonText(c.season)+(mtScope()?' · '+mtScope():'')+' · '+c.rows.length+' player'+(c.rows.length===1?'':'s')+' · '+new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+    const title=c.label+c.modeTxt, sub=teamName()+', '+seasonText(c.season)+(mtScope()?', '+mtScope():'')+', '+c.rows.length+' player'+(c.rows.length===1?'':'s')+', '+new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
     const per=Math.floor((ph-mg-60-22)/rowH), pages=Math.ceil(c.rows.length/per);
     for(let pg=0;pg<pages;pg++){
       if(pg) doc.addPage();
       doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.setTextColor(...ink); doc.text(title,mg,mg+7);
       doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(...mut); doc.text(sub,mg,mg+13);
       let sy=mg+19; doc.setFontSize(10); doc.setTextColor(...ink);
-      const stats=[c.avg!=null?'Average: '+c.fmt(c.avg):'', c.half!=null?c.halfTxt+' · '+c.below+' player'+(c.below===1?'':'s')+' below':'', c.kind==='min'?c.below+' player'+(c.below===1?'':'s')+' below 50% of their available minutes (injured, streepjes and other non-selectable matches left out)':''].filter(Boolean);
+      const stats=[c.avg!=null?'Average: '+c.fmt(c.avg):'', c.half!=null?c.halfTxt+', '+c.below+' player'+(c.below===1?'':'s')+' below':'', c.kind==='min'?c.below+' player'+(c.below===1?'':'s')+' below 50% of their available minutes (injured, streepjes and other non-selectable matches left out)':''].filter(Boolean);
       stats.forEach(t=>{ doc.text(t,mg,sy); sy+=5; });
       doc.setDrawColor(...ink); doc.setLineWidth(.5); doc.setLineDashPattern([],0); doc.line(mg,sy,pw-mg,sy);
       const rows=c.rows.slice(pg*per,(pg+1)*per), top=sy+12, bottom=top+rows.length*rowH;
@@ -3571,9 +3593,9 @@ async function pchPdf(){
       if(c.avg!=null){ doc.setDrawColor(...ink); doc.setLineWidth(.5); doc.setLineCap('round'); doc.setLineDashPattern([0.01,1.1],0); doc.line(lx,ly-3,lx,ly+.6); doc.setLineDashPattern([],0); doc.setLineCap('butt'); doc.text('Average of the players shown',lx+2.5,ly); lx+=8+doc.getTextWidth('Average of the players shown'); }
       if(c.kind==='min'){ const sw=(col,t)=>{ doc.setFillColor(...col); doc.rect(lx,ly-2.6,5,3.2,'F'); doc.text(t,lx+6.5,ly); lx+=10+doc.getTextWidth(t); };
         if(!c.match){ sw([214,231,245],'Available, not played'); sw([244,212,205],'Injured'); sw([251,226,200],'Streepjes'); sw([222,226,231],'Other'); }
-        ly+=5.5; lx=mg; doc.setFillColor(...warn); doc.rect(lx+2,ly-3.2,.8,4.2,'F'); doc.text('50% of her available minutes; orange values are below it · % = share of her available minutes',lx+5,ly); }
+        ly+=5.5; lx=mg; doc.setFillColor(...warn); doc.rect(lx+2,ly-3.2,.8,4.2,'F'); doc.text('50% of her available minutes; orange values are below it. % = share of her available minutes',lx+5,ly); }
       if(c.half!=null){ doc.setDrawColor(...warn); doc.setLineDashPattern([1.2,.9],0); doc.line(lx,ly-3,lx,ly+.6); doc.setLineDashPattern([],0); doc.text('50% line; values in orange are below it',lx+2.5,ly); lx+=8+doc.getTextWidth('50% line; values in orange are below it'); doc.text('% in the bar = share of '+(c.modeTxt?'a full match':'all available minutes'),lx,ly); }
-      doc.setFontSize(8); doc.setTextColor(140,150,160); doc.text('Match Tagger · Players chart'+(pages>1?' · page '+(pg+1)+' of '+pages:''),mg,ph-7);
+      doc.setFontSize(8); doc.setTextColor(140,150,160); doc.text('Match Tagger – Players chart'+(pages>1?', page '+(pg+1)+' of '+pages:''),mg,ph-7);
     }
     await offerFile(fileSafe(title+' '+(c.season==='all'?'all seasons':c.season))+'.pdf',doc.output('blob'));
   }catch(e){ console.error(e); toast('Could not make the PDF: '+e.message); }
@@ -3715,7 +3737,7 @@ function renderEntry(){
   const ss=seasonOf(d||new Date().toISOString().slice(0,10));
   const roster=squad().slice().sort((x,y)=>(isOther(x,ss)-isOther(y,ss))||(+x.num||999)-(+y.num||999)||x.name.localeCompare(y.name));
   const nStart=Object.values(mn.lineup).filter(v=>v==='start').length, nBench=Object.values(mn.lineup).filter(v=>v==='bench').length;
-  const day=roster.filter(x=>mn.lineup[x.id]), opt=(sel,list,extra)=>`<option value="">–</option>${extra||''}${list.map(x=>`<option value="${x.id}"${sel===x.id?' selected':''}>${esc((x.num?x.num+' · ':'')+x.name)}</option>`).join('')}`;
+  const day=roster.filter(x=>mn.lineup[x.id]), opt=(sel,list,extra)=>`<option value="">–</option>${extra||''}${list.map(x=>`<option value="${x.id}"${sel===x.id?' selected':''}>${esc((x.num?'#'+x.num+' ':'')+x.name)}</option>`).join('')}`;
   const benchList=day.filter(x=>mn.lineup[x.id]==='bench');
   const mins=withMatch(w,()=>minutesFor(w))||{}, minOf=sid=>{ const p=w.players.find(x=>x.sq===sid); return p&&mins[p.id]!=null?mins[p.id]:0; };
   const key=r=>{ const p=b.parsed[r.id]; return !p||p.bad?9e9:p.ht?5000:p.half===1?p.idx:10000+p.idx; };
@@ -3730,12 +3752,12 @@ function renderEntry(){
       ${w?`<p class="mn-warn">${w.map(esc).join(' ')}</p>`:''}</div>`; };
   el.innerHTML=`<div class="wrap page mn-page">
     <header class="page-head"><div><button class="back" style="display:block;margin-bottom:6px" data-go="fixture" data-arg="${m.id}">← Match page</button>
-      <span class="eyebrow">${mtTag(m)} ${esc([d?fmtDate(d,{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'No date',m.comp].filter(Boolean).join(' · '))}</span>
+      <span class="eyebrow">${mtTag(m)} ${mj([d?fmtDate(d,{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'No date',m.comp].filter(Boolean).map(esc))}</span>
       <h1>${esc(m.home?(m.usShort||teamShort())+' '+hs+'–'+as+' '+(m.them||'Opponent'):(m.them||'Opponent')+' '+hs+'–'+as+' '+(m.usShort||teamShort()))}</h1>
-      <p>Match data entered by hand · ${nStart} starter${nStart===1?'':'s'}, ${nBench} on the bench · ${mn.rows.length} event${mn.rows.length===1?'':'s'}</p></div>
+      <p>Match data entered by hand${SEP}${nStart} starter${nStart===1?'':'s'}, ${nBench} on the bench${SEP}${mn.rows.length} event${mn.rows.length===1?'':'s'}</p></div>
       <div class="page-actions"><button class="btn" data-go="report" data-arg="${m.id}">Match report</button><button class="btn primary" data-go="report" data-arg="${m.id}">Done</button></div></header>
     <div class="mn-grid">
-      <section class="card"><div class="card-head"><h2>Line-up</h2><span class="hint${nStart&&nStart!==11?' mn-alert':''}">${nStart}/11 starters · ${nBench} bench</span></div>
+      <section class="card"><div class="card-head"><h2>Line-up</h2><span class="hint${nStart&&nStart!==11?' mn-alert':''}">${nStart}/11 starters, ${nBench} bench</span></div>
         ${roster.length?`<div class="mn-roster">${roster.map(x=>{ const v=mn.lineup[x.id]||''; return `<div class="mn-pl ${v}"><span class="num">${esc(x.num||'–')}</span><span class="nm">${esc(x.name)}${isOther(x,ss)?'<small>other team</small>':''}</span>
           <span class="seg" role="group" aria-label="${esc(x.name)}"><button data-mnlu="${x.id}" data-v="start" aria-pressed="${v==='start'}">Start</button><button data-mnlu="${x.id}" data-v="bench" aria-pressed="${v==='bench'}">Bench</button><button data-mnlu="${x.id}" data-v="" aria-pressed="${!v}" aria-label="Not in the squad">–</button></span>${v?`<b class="mn-mins" title="Minutes played">${minOf(x.id)}'</b>`:'<span></span>'}
           ${!v&&!isOther(x,ss)&&Object.keys(mn.lineup).length?(()=>{ const o=nsOf(m,x.id); return `<span class="mn-ns"><select data-nsr="${x.id}" aria-label="Reason ${esc(x.name)} is not selected">${NS_REASONS.map(([k,l])=>`<option value="${k}"${o.r===k?' selected':''}>Not selected: ${esc(l.charAt(0).toLowerCase()+l.slice(1))}</option>`).join('')}</select>${o.r==='other'?`<input data-nsn="${x.id}" value="${esc(o.note||'')}" placeholder="Reason">`:''}</span>`; })():''}</div>`; }).join('')}</div>`
@@ -3776,9 +3798,8 @@ document.addEventListener('keydown',e=>{ if(view==='entry'&&e.key==='Enter'&&e.t
    Player accounts, which matches players can watch, clip batches and comments. Everything lives in the storage
    service (version 3) under Portal/, which only the coach login can change. Passwords are never visible here. */
 const po={players:null, share:null, comments:null, err:'', loading:false, edit:null, armed:null, open:{}};
-function poUsername(s){ if(s.portalUser) return s.portalUser; const w=String(s.name||'').trim().split(/\s+/).filter(Boolean); if(!w.length) return '';
-  return [w[w.length-1]].concat(w.slice(0,-1)).join('').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9]/g,''); }
-function poDisplay(s){ const w=String(s.name||'').trim().split(/\s+/).filter(Boolean); return w.length>1?[w[w.length-1]].concat(w.slice(0,-1)).join(' '):String(s.name||''); }
+function poUsername(s){ return s.portalUser||userOf(s.name); }
+const poDisplay=s=>String(s.name||'').trim();
 const poLink=()=>location.origin+location.pathname.replace(/[^/]*$/,'')+'player.html?s='+encodeURIComponent(/^https:/.test(FSX.api||'')?FSX.host:(FSX.api||''));
 function poRoster(){ const ss=nowSeason(); return squad().filter(s=>!isOther(s,ss)&&String(s.name||'').trim()).sort((a,b)=>(+a.num||999)-(+b.num||999)||a.name.localeCompare(b.name)); }
 function poWanted(){ const used={}, out=[];
@@ -3794,7 +3815,8 @@ async function poLoad(force){
     po.players=needs?(await FSX.portal('players','POST',{players:want,disable})).players:have;
     po.share=await FSX.portal('share'); po.share.matches=po.share.matches||[]; po.share.batches=po.share.batches||[]; po.share.videos=po.share.videos||{};
     po.comments=(await FSX.portal('comments')).comments||{};
-    const n=poRefreshBatches(); if(n){ po.share=await FSX.portal('share','PUT',po.share); toast('Updated '+n+' published clip'+(n===1?'':'s')+' with your latest notes and changes.'); }
+    const n=poRefreshBatches(), meta=poBuildMeta(), metaCh=JSON.stringify(meta)!==JSON.stringify(po.share.meta||{});
+    if(n||metaCh){ po.share.meta=meta; po.share=await FSX.portal('share','PUT',po.share); if(n) toast('Updated '+n+' published clip'+(n===1?'':'s')+' with your latest notes and changes.'); }
   }catch(e){ console.error(e); po.err=e.name==='OldWorker'?'old':e.message; }
   finally{ po.loading=false; } renderPortal(); }
 /* published clips are a snapshot: bring notes, labels, timing and players in line with the matches as they are now */
@@ -3802,7 +3824,13 @@ function poRefreshBatches(){ let n=0;
   (po.share.batches||[]).forEach(b=>{ b.items=(b.items||[]).map(it=>{ const m=store[it.mid], ev=m&&m.events.find(e=>it.id===m.id+'-'+e.id); if(!ev||!poClipable(m)) return it;
     const fresh=poClipItem(m,ev); if(['note','label','minute','who','t0','t1','color'].some(k=>String(fresh[k]||'')!==String(it[k]||''))||String(fresh.players)!==String(it.players)){ n++; return fresh; } return it; }); });
   return n; }
-async function poSaveShare(msg){ try{ po.share=await FSX.portal('share','PUT',po.share); if(msg) toast(msg); }catch(e){ toast('Could not save: '+e.message); } renderPortal(); }
+/* what the player page needs to draw a match timeline and scoreboard */
+function poMeta(m){ return withMatch(m,()=>{ const p=m.phases||{};
+  const goals=sortedEvents().filter(e=>e.type==='goal'||e.type==='goal_against').map(e=>({t:+(+e.t).toFixed(1),us:e.type==='goal',min:minuteLabel(e.t),who:e.type==='goal'?(e.og?'Own goal':(e.pid&&P(e.pid)?firstName(P(e.pid)):'')):''}));
+  return {us:m.usShort||teamShort(),them:m.themShort||String(m.them||'OPP').slice(0,3).toUpperCase(),usName:m.us||teamName(),themName:m.them||'Opponent',home:!!m.home,half:+m.halfLen||45,ph:{h1s:p.h1s,h1e:p.h1e,h2s:p.h2s,h2e:p.h2e},goals}; }); }
+function poBuildMeta(){ const mids=new Set((po.share.matches||[]).map(x=>x.id)); (po.share.batches||[]).forEach(b=>(b.items||[]).forEach(i=>mids.add(i.mid)));
+  const meta={}; mids.forEach(id=>{ const m=store[id]; if(m&&m.timebase!=='live') meta[id]=poMeta(m); }); return meta; }
+async function poSaveShare(msg){ po.share.meta=poBuildMeta(); try{ po.share=await FSX.portal('share','PUT',po.share); if(msg) toast(msg); }catch(e){ toast('Could not save: '+e.message); } renderPortal(); }
 const poMatchVideo=m=>{ const v=typeof matchCloudVideo==='function'?matchCloudVideo(m):null; return v?v.key:null; };
 const poClipable=m=>!!poMatchVideo(m)&&m.timebase!=='live'&&!m.manualData;
 function poMatchEntry(m){ const s=goalsFA(m), d=isoDate(m.date); return {id:m.id,title:(m.home?'vs ':'at ')+(m.them||'Opponent'),date:d,comp:m.comp||'',type:mtLabel(mtypeOf(m)),score:isPlayed(m)?(m.home?s.f+'–'+s.a:s.a+'–'+s.f):'',video:poMatchVideo(m)}; }
@@ -3824,10 +3852,10 @@ function renderPortal(){
       <td>${a.lastLogin?esc(fmtDate(new Date(a.lastLogin).toISOString().slice(0,10),{day:'numeric',month:'short'})):'<span class="hint">never</span>'}</td>
       <td class="po-acts">${inv?`<button class="btn sm" data-pocopy="${a.id}">Copy invite</button>`:''}<button class="btn sm ghost" data-poreset="${a.id}">${po.armed===a.id?'Reset? Click again':'Reset password'}</button></td></tr>`; };
   const batchRow=b=>{ const nC=Object.values(po.comments[b.id]||[]).length, rec=b.to==='involved'?'Each player: her own clips':b.to==='all'?'Whole team':(b.to||[]).map(id=>(po.players.find(a=>a.id===id)||{}).name||'').filter(Boolean).join(', ');
-    return `<div class="po-batch"><div><b>${esc(b.name)}</b><span class="hint">${esc(fmtDate(b.date,{day:'numeric',month:'short'}))} · ${b.items.length} clip${b.items.length===1?'':'s'} · ${esc(rec)}${nC?' · '+nC+' comment'+(nC===1?'':'s'):''}</span></div>
+    return `<div class="po-batch"><div><b>${esc(b.name)}</b><span class="hint">${esc(fmtDate(b.date,{day:'numeric',month:'short'}))}${SEP}${b.items.length} clip${b.items.length===1?'':'s'}${SEP}${esc(rec)}${nC?SEP+nC+' comment'+(nC===1?'':'s'):''}</span></div>
       <span class="po-acts"><button class="btn sm" data-poedit="${b.id}">Edit</button><button class="btn sm ghost danger" data-podel="${b.id}">${po.armed==='del'+b.id?'Unpublish? Click again':'Unpublish'}</button></span></div>`; };
   el.innerHTML=`<div class="wrap page po-page">${head}
-    <section class="card"><div class="card-head"><h2>Logins</h2><span class="hint">Username: first and last name without spaces · starting password: shirt number + username</span></div>
+    <section class="card"><div class="card-head"><h2>Logins</h2><span class="hint">Username: first and last name without spaces. Starting password: shirt number + username</span></div>
       <div class="tbl-wrap"><table class="po-tbl"><thead><tr><th>#</th><th class="name">Player</th><th>Username</th><th>Password</th><th>Last login</th><th></th></tr></thead><tbody>${po.players.slice().sort((x,y)=>(x.id==='test')-(y.id==='test')||(+x.num||999)-(+y.num||999)).map(accRow).join('')}</tbody></table></div>
       <p class="hint">Passwords are stored scrambled: nobody can see them, you included. <b>Reset password</b> puts it back to the starting password (for example 78LizDeBlock); she chooses a new one at her next login. Players marked as other team have no login. The test account (username <b>test</b>, starting password <b>test</b>) sees everything you share.</p></section>
     <section class="card"><div class="card-head"><h2>Matches players can watch</h2><span class="hint">Full match videos from your online storage</span></div>
@@ -3835,7 +3863,7 @@ function renderPortal(){
       <p class="hint">Ticked matches are visible to the whole team. Clips you publish below work even if the full match is not ticked.</p></section>
     <section class="card"><div class="card-head"><h2>Clip batches</h2>${po.edit?'':'<button class="btn primary sm" data-ponew>New batch</button>'}</div>
       ${po.edit?poEditorHtml():''}
-      ${sh.batches.length?`<div class="po-batches">${sh.batches.slice().sort((a,b)=>(b.created||0)-(a.created||0)).map(batchRow).join('')}</div>`:po.edit?'':'<p class="hint">No batches yet. A batch is a set of clips you release at once, for example "Week 44 · pressing".</p>'}</section>
+      ${sh.batches.length?`<div class="po-batches">${sh.batches.slice().sort((a,b)=>(b.created||0)-(a.created||0)).map(batchRow).join('')}</div>`:po.edit?'':'<p class="hint">No batches yet. A batch is a set of clips you release at once, for example "Week 44: pressing".</p>'}</section>
     <section class="card"><div class="card-head"><h2>Comments</h2><button class="btn sm ghost" data-poreload>Refresh</button></div>${poCommentsHtml()}</section>
   </div>`;
 }
@@ -3845,14 +3873,14 @@ function poEditorHtml(){ const ed=po.edit, sel=new Set(ed.sel), ms=Object.values
   const tags=m?[...new Set(m.events.filter(e=>!['swap','formation','sub'].includes(e.type)).map(e=>e.type))]:[];
   const players=po.players.filter(a=>a.id!=='test');
   return `<div class="po-edit">
-    <div class="form fx-form"><div class="field"><label for="poName">Name</label><input id="poName" value="${esc(ed.name)}" placeholder="Week 44 · pressing"></div>
+    <div class="form fx-form"><div class="field"><label for="poName">Name</label><input id="poName" value="${esc(ed.name)}" placeholder="Week 44: pressing"></div>
       <div class="field"><label for="poNote">Message for the players (optional)</label><input id="poNote" value="${esc(ed.note||'')}" placeholder="Watch these before Thursday's training"></div></div>
     <div class="po-row"><span class="tb-lbl">Who gets it</span><span class="seg" role="group">${[['involved','Each player: her own clips'],['all','Whole team'],['pick','Choose players']].map(([k,l])=>`<button data-poto="${k}" aria-pressed="${ed.to===k}">${l}</button>`).join('')}</span></div>
     ${ed.to==='pick'?`<div class="pch-chips">${players.map(a=>`<button class="pch-chip" data-popick="${a.id}" aria-pressed="${ed.pick.includes(a.id)}"><b>${esc(a.num||'–')}</b>${esc(a.name)}</button>`).join('')}</div>`:''}
     ${ed.to==='involved'?'<p class="hint">Every clip goes to the players tagged in it (main player, assist and players involved). Each player only sees her own clips.</p>':''}
     <div class="po-row"><label class="sel">Match <select id="poMatch">${ms.map(x=>`<option value="${x.id}"${m&&x.id===m.id?' selected':''}>${esc(fmtDate(isoDate(x.date),{day:'numeric',month:'short'})+' '+vsLabel(x))}</option>`).join('')}</select></label>
       <label class="sel">Tag <select id="poTag"><option value="">All tags</option>${tags.map(k=>`<option value="${esc(k)}"${ed.tag===k?' selected':''}>${esc(withMatch(m,()=>T(k).label))}</option>`).join('')}</select></label>
-      <label class="sel">Player <select id="poPl"><option value="">All players</option>${players.map(a=>`<option value="${a.id}"${ed.pl===a.id?' selected':''}>${esc((a.num?a.num+' · ':'')+a.name)}</option>`).join('')}</select></label>
+      <label class="sel">Player <select id="poPl"><option value="">All players</option>${players.map(a=>`<option value="${a.id}"${ed.pl===a.id?' selected':''}>${esc((a.num?'#'+a.num+' ':'')+a.name)}</option>`).join('')}</select></label>
       <button class="btn sm" data-poall>Select all shown</button><button class="btn sm ghost" data-ponone>Clear shown</button></div>
     ${ms.length?'':'<p class="hint">Clips need a match whose video is in your online storage (and, for live-tagged matches, synced).</p>'}
     <div class="po-evs">${evs.length?evs.map(e=>{ const k=m.id+'-'+e.id; return `<label class="po-ev${sel.has(k)?' on':''}"><input type="checkbox" data-poev="${k}"${sel.has(k)?' checked':''}><span class="min">${esc(withMatch(m,()=>minuteLabel(e.t)))}</span><span class="dot" style="background:${withMatch(m,()=>T(e.type).css)}"></span><b>${esc(withMatch(m,()=>T(e.type).label))}</b><span class="hint">${esc(withMatch(m,()=>evWho(e)))}</span></label>`; }).join(''):'<p class="hint">No clips with these filters.</p>'}</div>
@@ -3861,7 +3889,7 @@ function poCommentsHtml(){ const c=po.comments||{}, out=[];
   (po.share.batches||[]).forEach(b=>{ const list=c[b.id]||[]; if(!list.length) return; const threads={};
     list.forEach(x=>{ const k=x.item+'|'+x.pid; (threads[k]=threads[k]||[]).push(x); });
     Object.entries(threads).forEach(([k,msgs])=>{ const [item,pid]=k.split('|'), it=(b.items||[]).find(i=>i.id===item)||{}, who=(po.players.find(a=>a.id===pid)||{}).name||'Player', last=msgs[msgs.length-1];
-      out.push({at:last.at,html:`<div class="po-thread${last.by==='player'?' new':''}"><div class="po-th-head"><b>${esc(who)}</b><span class="hint">${esc(b.name)} · ${esc(it.minute||'')} ${esc(it.label||'')} · ${esc(it.match||'')}</span>${last.by==='player'?'<span class="tbadge">Waiting for you</span>':''}</div>
+      out.push({at:last.at,html:`<div class="po-thread${last.by==='player'?' new':''}"><div class="po-th-head"><b>${esc(who)}</b><span class="hint">${esc(b.name)}${SEP}${esc(it.minute||'')} ${esc(it.label||'')}${SEP}${esc(it.match||'')}</span>${last.by==='player'?'<span class="tbadge">Waiting for you</span>':''}</div>
         ${msgs.map(x=>`<p class="po-msg ${x.by}"><b>${x.by==='coach'?'You':esc(x.name||who)}</b> ${esc(x.text)} <span class="hint">${esc(new Date(x.at).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}))}</span></p>`).join('')}
         <div class="po-reply"><input data-poreply="${esc(b.id)}|${esc(item)}|${esc(pid)}" placeholder="Reply to ${esc(who)}"><button class="btn sm primary" data-posend="${esc(b.id)}|${esc(item)}|${esc(pid)}">Send</button></div></div>`}); }); });
   return out.length?out.sort((a,b)=>b.at-a.at).map(x=>x.html).join(''):'<p class="hint">No comments yet. Players can comment on every clip you publish; each conversation is private between you and that player.</p>'; }
@@ -3874,7 +3902,7 @@ document.addEventListener('click',async e=>{
     try{ await navigator.clipboard.writeText(txt); toast(a?'Invite for '+a.name+' copied: paste it in WhatsApp.':'Player link copied.'); }catch(err){ prompt('Copy this:',txt); } return; }
   if(b=g('[data-poreset]')){ const id=b.dataset.poreset; if(po.armed!==id){ po.armed=id; renderPortal(); setTimeout(()=>{ if(po.armed===id){ po.armed=null; renderPortal(); } },4000); return; }
     po.armed=null; try{ const r=await FSX.portal('reset','POST',{id}); po.players=po.players.map(a=>a.id===id?r.player:a); toast('Password of '+r.player.name+' is back to the starting password. She picks a new one at her next login.'); }catch(err){ toast('Could not reset: '+err.message); } renderPortal(); return; }
-  if(g('[data-ponew]')){ po.edit={id:null,name:'Clips · '+fmtDate(new Date().toISOString().slice(0,10),{day:'numeric',month:'short'}),note:'',to:'involved',pick:[],sel:[],mid:'',tag:'',pl:''}; renderPortal(); return; }
+  if(g('[data-ponew]')){ po.edit={id:null,name:'Clips '+fmtDate(new Date().toISOString().slice(0,10),{day:'numeric',month:'short'}),note:'',to:'involved',pick:[],sel:[],mid:'',tag:'',pl:''}; renderPortal(); return; }
   if(b=g('[data-poedit]')){ const x=po.share.batches.find(y=>y.id===b.dataset.poedit); if(!x) return; po.edit={id:x.id,name:x.name,note:x.note||'',to:Array.isArray(x.to)?'pick':x.to,pick:Array.isArray(x.to)?x.to.slice():[],sel:x.items.map(i=>i.id),mid:(x.items[0]||{}).mid||'',tag:'',pl:'',created:x.created}; renderPortal(); return; }
   if(g('[data-pocancel]')){ po.edit=null; renderPortal(); return; }
   if(b=g('[data-poto]')){ po.edit.to=b.dataset.poto; renderPortal(); return; }
@@ -3929,8 +3957,8 @@ function playerClips(sid,season){
   return out;
 }
 const clipKey=c=>c.role==='assist'?'assist':c.role==='involved'?'inv:'+c.e.type:c.e.type;
-const clipKeyLabel=k=>k==='assist'?'Assists':/^inv:/.test(k)?tagInfo(k.slice(4)).label+' · involved':tagInfo(k).label;
-function clipTitle(c){ return c.role==='assist'?'Assist':withMatch(c.m,()=>T(c.e.type).label)+(c.role==='involved'?' · involved':''); }
+const clipKeyLabel=k=>k==='assist'?'Assists':/^inv:/.test(k)?tagInfo(k.slice(4)).label+' (involved)':tagInfo(k).label;
+function clipTitle(c){ return c.role==='assist'?'Assist':withMatch(c.m,()=>T(c.e.type).label)+(c.role==='involved'?' (involved)':''); }
 function renderPlayer(){
   const el=$('#view-player'), s=SQ(viewArg); if(!s){ go('players'); return; }
   const season=curSeason(), agg=playerAgg(season), a=agg[s.id], L=a.line;
@@ -3951,10 +3979,10 @@ function renderPlayer(){
     <button class="back" data-go="players">← All players</button>
     <header class="phead">${(()=>{ const ph=s.photo?photoUrl(s):''; return s.photo?`<label class="pphoto" data-phdrop="${s.id}" title="Change photo (or drop a new one here)"><span class="pph${ph?' ready':''}" data-phid="${s.id}" style="${ph?`background-image:url('${ph}')`:''}"></span><span class="pphnum">${esc(s.num||'–')}</span><input type="file" accept="image/*" data-phfor="${s.id}" hidden></label>`
       :`<label class="shirtnum addph" data-phdrop="${s.id}" title="Add a photo (or drop one here)">${esc(s.num||'–')}<span class="phadd">${IC.plus} Photo</span><input type="file" accept="image/*" data-phfor="${s.id}" hidden></label>`; })()}
-      <div><span class="eyebrow">${esc([s.pos,teamName(),seasonText(season)].filter(Boolean).join(' · '))}</span><h1>${esc(s.name)}</h1></div>
-      <div class="page-actions">${seasonSelect()}${(()=>{ const sx=season==='all'?nowSeason():season, on=isOther(s,sx); return `<button class="btn${on?' primary':''}" data-potherteam="${s.id}" data-season="${sx}" aria-pressed="${on}" title="Players from another group are left out of training attendance for this season">${on?'Other team · '+esc(sx):'Mark as other team'}</button>`; })()}<button class="btn" id="btnEditPlayer" aria-expanded="${!!ui.editP}">Edit player</button></div></header>
+      <div><span class="eyebrow">${mj([s.pos,teamName(),seasonText(season)].filter(Boolean).map(esc))}</span><h1>${esc(s.name)}</h1></div>
+      <div class="page-actions">${seasonSelect()}${(()=>{ const sx=season==='all'?nowSeason():season, on=isOther(s,sx); return `<button class="btn${on?' primary':''}" data-potherteam="${s.id}" data-season="${sx}" aria-pressed="${on}" title="Players from another group are left out of training attendance for this season">${on?'Other team '+esc(sx):'Mark as other team'}</button>`; })()}<button class="btn" id="btnEditPlayer" aria-expanded="${!!ui.editP}">Edit player</button></div></header>
     ${ui.editP?`<form id="editPlayerForm" class="card"><div class="form three"><div class="field"><label for="epNum">Shirt number</label><input id="epNum" type="number" min="1" max="99" value="${esc(s.num)}"></div><div class="field"><label for="epName">Name</label><input id="epName" required value="${esc(s.name)}"></div><div class="field"><label for="epPos">Position</label><select id="epPos">${POSITIONS.map(p=>`<option value="${p}"${p===(s.pos||'')?' selected':''}>${p||'–'}</option>`).join('')}</select></div></div>
-      <p class="hint">Renaming also updates her name in every match lineup.</p><div class="row-actions"><button class="btn primary" type="submit">Save</button><button class="btn ghost" type="button" id="btnEditCancel">Cancel</button>${s.photo?`<button class="btn sm ghost" type="button" data-phrm="${s.id}">Remove photo</button>`:''}<span style="flex:1"></span>${ui.confirmRmP?`<span class="confirm">Remove from the squad?<button class="btn sm danger" type="button" id="btnRmYes">Remove</button><button class="btn sm" type="button" id="btnRmNo">Keep</button></span>`:`<button class="btn sm ghost danger" type="button" id="btnRmP">Remove from squad</button>`}</div></form>`:''}
+      <p class="hint">Renaming also updates her name in every match lineup. Name the wrong way round? <button class="tlink" type="button" data-swapname="${s.id}">Swap first and last name</button></p><div class="row-actions"><button class="btn primary" type="submit">Save</button><button class="btn ghost" type="button" id="btnEditCancel">Cancel</button>${s.photo?`<button class="btn sm ghost" type="button" data-phrm="${s.id}">Remove photo</button>`:''}<span style="flex:1"></span>${ui.confirmRmP?`<span class="confirm">Remove from the squad?<button class="btn sm danger" type="button" id="btnRmYes">Remove</button><button class="btn sm" type="button" id="btnRmNo">Keep</button></span>`:`<button class="btn sm ghost danger" type="button" id="btnRmP">Remove from squad</button>`}</div></form>`:''}
     <div class="kpis">${[['Appearances',a.apps,a.starts+' starts'],['Minutes',a.min,a.apps?Math.round(a.min/a.apps)+' per match':''],['Goals',L.g,per90(L.g)+' per 90'],['Assists',L.a,per90(L.a)+' per 90'],['Shots',L.sh,L.on+' on target'],['Key passes',L.kp,per90(L.kp)+' per 90'],['Ball recoveries',L.rec,per90(L.rec)+' per 90'],['Turnovers',L.to,per90(L.to)+' per 90']].map(([l,v,sub])=>`<div class="kpi"><span>${l}</span><b class="tnum">${v}</b><small>${esc(sub)}</small></div>`).join('')}</div>
     <section class="card"><div class="card-head"><h2>Clips</h2><span class="hint">${allClips.length} tagged moment${allClips.length===1?'':'s'}</span></div>
       ${allClips.length?`<div class="ev-tools">
@@ -3962,7 +3990,7 @@ function renderPlayer(){
         <select id="pvMatch" aria-label="Filter clips by match"><option value="">All matches</option>${[...new Map(allClips.map(c=>[c.m.id,c.m])).values()].map(m=>`<option value="${m.id}"${pv.fmatch===m.id?' selected':''}>${esc(fmtDate(m.date,{day:'numeric',month:'short'})+' '+vsLabel(m))}</option>`).join('')}</select>
         <label><input type="checkbox" id="pvAuto"${pv.auto?' checked':''}> Play clips back to back</label>
         <span style="flex:1"></span><button class="btn sm primary" id="btnPexOpen">Export clips…</button></div>
-      <div class="vidstatus">${needed.map(m=>sessionFiles[m.id]?`<span class="vs ok">✓ ${esc(fmtDate(m.date,{day:'numeric',month:'short'})+' '+vsLabel(m))}</span>`:`<label class="vs miss"><input type="file" accept="video/*" data-filefor="${m.id}" hidden>Load video · ${esc(fmtDate(m.date,{day:'numeric',month:'short'})+' '+vsLabel(m))}</label>`).join('')}
+      <div class="vidstatus">${needed.map(m=>sessionFiles[m.id]?`<span class="vs ok">✓ ${esc(fmtDate(m.date,{day:'numeric',month:'short'})+' '+vsLabel(m))}</span>`:`<label class="vs miss"><input type="file" accept="video/*" data-filefor="${m.id}" hidden>Load video: ${esc(fmtDate(m.date,{day:'numeric',month:'short'})+' '+vsLabel(m))}</label>`).join('')}
         ${missing.length>1?`<label class="btn sm"><input type="file" accept="video/*" multiple id="pvFiles" hidden>Load ${missing.length} videos at once…</label>`:''}</div>
       <div class="clipview"><div class="pvstage"><span id="pvSlot"></span><div class="pvcap" id="pvCap" hidden></div><div class="pvempty" id="pvEmpty"></div></div>
         <div class="cliplist" id="pvList"></div></div>`:`<p class="hint">No clips for ${esc(s.name)} in ${esc(seasonText(season).toLowerCase())} yet. Tag her actions in a match and they appear here.</p>`}
@@ -3987,7 +4015,7 @@ function renderPvState(){
     html+=`<button class="clip${i===pv.i?' on':''}" data-pclip="${i}"><span class="min tnum">${esc(withMatch(c.m,()=>minuteLabel(c.e.t)))}</span><span class="what"><i class="dot" style="background:${color}"></i>${esc(lab)}${c.e.note?`<small>${esc(c.e.note)}</small>`:''}</span><span class="go" data-watch="${c.m.id}:${c.e.id}" title="Open in the tagger">Tagger</span></button>`; });
   list.innerHTML=html||'<div class="empty">No clips match these filters.</div>';
   const c=pv.list[pv.i], cap=$('#pvCap'), em=$('#pvEmpty');
-  if(c){ cap.hidden=false; cap.innerHTML=`<b>${esc(withMatch(c.m,()=>minuteLabel(c.e.t)))}</b><span>${esc(clipTitle(c))} · ${esc(vsLabel(c.m))}</span>`; } else cap.hidden=true;
+  if(c){ cap.hidden=false; cap.innerHTML=`<b>${esc(withMatch(c.m,()=>minuteLabel(c.e.t)))}</b><span>${esc(clipTitle(c))}${SEP}${esc(vsLabel(c.m))}</span>`; } else cap.hidden=true;
   if(!c){ em.hidden=false; em.innerHTML=`<strong>Pick a clip</strong><p>${pv.list.some(x=>sessionFiles[x.m.id])?'Choose a moment on the right to play it.':(col?'None of these match videos were found in '+esc(videoFolder())+'. Add them there, or load them from this computer above.':'Load the match videos above, then choose a moment on the right.')}</p>`; }
   else if(!sessionFiles[c.m.id]){ em.hidden=false; em.innerHTML=`<strong>Video not loaded</strong><p>Choose the video of ${esc(vsLabel(c.m))}${c.m.videoName?' ("'+esc(c.m.videoName)+'")':''} to play this clip.</p><label class="btn"><input type="file" accept="video/*" data-filefor="${c.m.id}" hidden>Choose video</label>`; }
   else em.hidden=true;
@@ -4011,6 +4039,9 @@ function attachFiles(files,forId){
   if(pvVideoEl&&pvVideoEl.dataset.mid&&!sessionFiles[pvVideoEl.dataset.mid]) delete pvVideoEl.dataset.mid;
   renderView(); if(pv.i>=0&&pv.list[pv.i]&&sessionFiles[pv.list[pv.i].m.id]) playPv(pv.i);
 }
+document.addEventListener('click',e=>{ const b=e.target.closest('[data-swapname]'); if(!b) return; const s=SQ(b.dataset.swapname); if(!s) return;
+  const w=String(s.name).trim().split(/\s+/); if(w.length<2) return; const name=w.slice(1).concat(w[0]).join(' ');
+  s.name=name; s.portalUser=userOf(name); saveSettings(); syncLinkedNames(); renderView(); toast('Now '+name+'. Her username is '+s.portalUser+'.'); });
 function savePlayerEdit(){
   const s=SQ(viewArg); if(!s) return; const name=$('#epName').value.trim(); if(!name) return;
   if(squad().some(x=>x!==s&&norm(x.name)===norm(name))){ toast('Another player is already called '+name+'.'); return; }
@@ -4047,11 +4078,11 @@ const pexKey=c=>c.m.id+':'+c.e.id;
 function pexSelected(){ return pexCandidates().filter(c=>pex.sel&&pex.sel.has(pexKey(c))); }
 function renderPex(){
   const m=$('#pexModal'); m.hidden=!pex.open; if(!pex.open) return; const s=SQ(viewArg);
-  if(pex.step==='select'&&!pex.running){ renderSelect('pex',$('#pexSheet'),'Select clips',(s?s.name:'')+' · '+seasonText(curSeason())+' · tick the moments you want to export'); return; }
+  if(pex.step==='select'&&!pex.running){ renderSelect('pex',$('#pexSheet'),'Select clips',(s?s.name:'')+', '+seasonText(curSeason())+': tick the moments you want to export'); return; }
   const chosen=pexSelected(), withFile=chosen.filter(c=>sessionFiles[c.m.id]), miss=chosen.length-withFile.length;
-  const F={zip:['Separate clip files','.zip','Every clip as its own .mp4 in original quality, with sound.'],pptx:['Presentation with clips','.pptx','One slide per clip with the clip embedded, plus her season stats.'],stills:['Presentation with stills','.pptx · small file','One slide per clip with a still frame of the moment.']};
+  const F={zip:['Separate clip files','.zip','Every clip as its own .mp4 in original quality, with sound.'],pptx:['Presentation with clips','.pptx','One slide per clip with the clip embedded, plus her season stats.'],stills:['Presentation with stills','.pptx, small file','One slide per clip with a still frame of the moment.']};
   $('#pexSheet').innerHTML=pex.running?`<div class="sheet-head"><div><h2 id="pexTitle">${F[pex.fmt][0]}</h2><p id="pexStep">Preparing…</p></div></div><div class="bar"><i id="pexBar"></i></div><div class="row-actions"><button class="btn" id="btnPexCancel">Cancel export</button></div>`
-  :`<div class="sheet-head"><div><h2 id="pexTitle">Export clips · ${esc(s?s.name:'')}</h2><p>${chosen.length} clip${chosen.length===1?'':'s'} selected · <button class="btn sm ghost" data-selback="pex" style="padding:0 4px">Change selection</button></p></div><button class="btn sm ghost" id="btnPexClose">Close</button></div>
+  :`<div class="sheet-head"><div><h2 id="pexTitle">Export clips: ${esc(s?s.name:'')}</h2><p>${chosen.length} clip${chosen.length===1?'':'s'} selected${SEP}<button class="btn sm ghost" data-selback="pex" style="padding:0 4px">Change selection</button></p></div><button class="btn sm ghost" id="btnPexClose">Close</button></div>
     <div class="fmt-list" role="radiogroup" aria-label="Export format">${Object.entries(F).map(([k,f])=>`<label class="fmt"><input type="radio" name="pexfmt" value="${k}"${pex.fmt===k?' checked':''}><em>${f[1]}</em><strong>${f[0]}</strong><span>${f[2]}</span></label>`).join('')}</div>
     <div class="opts"><span class="hint" style="margin:0;flex-basis:100%">Clips with their own timing keep it.</span><label>Default seconds before <input type="number" id="pexPre" min="0" max="60" value="${ui.pre}"></label><label>after <input type="number" id="pexPost" min="1" max="60" value="${ui.post}"></label></div>
     ${miss?`<p class="warn">${miss} clip${miss>1?'s':''} will be skipped because the match video is not loaded. Load the videos on her page first to include them.</p>`:''}
@@ -4092,12 +4123,12 @@ async function buildPlayerDeck(items,s){
   sl.addText(s.num||'',{x:8.6,y:.6,w:4.2,h:4,fontFace:FD,fontSize:240,bold:true,color:'0F2233',align:'right'});
   sl.addText('PLAYER CLIP REVIEW',{x:.8,y:1.9,w:11,h:.45,fontFace:FD,fontSize:16,bold:true,color:'5DB4F0',charSpacing:4});
   sl.addText(s.name,{x:.8,y:2.35,w:11,h:1.3,fontFace:FD,fontSize:54,bold:true,color:'FFFFFF',fit:'shrink'});
-  sl.addText([s.num?'#'+s.num:'',s.pos,teamName()].filter(Boolean).join('  ·  '),{x:.8,y:3.65,w:11,h:.5,fontFace:FB,fontSize:18,color:'C8D2DC'});
-  sl.addText(items.length+' clips  ·  '+(pv.ftag?(pv.ftag==='assist'?'Assists':tagInfo(pv.ftag).label):'All tags')+'  ·  '+seasonText(season),{x:.8,y:6.4,w:11,h:.4,fontFace:FB,fontSize:14,color:'9AAAB9'});
+  sl.addText([s.num?'#'+s.num:'',s.pos,teamName()].filter(Boolean).join(', '),{x:.8,y:3.65,w:11,h:.5,fontFace:FB,fontSize:18,color:'C8D2DC'});
+  sl.addText(items.length+' clips, '+(pv.ftag?(pv.ftag==='assist'?'Assists':tagInfo(pv.ftag).label):'All tags')+', '+seasonText(season),{x:.8,y:6.4,w:11,h:.4,fontFace:FB,fontSize:14,color:'9AAAB9'});
   items.forEach((it,i)=>{ const c=it.c, m=c.m; withMatch(m,()=>{
     const hex=(c.role==='assist'?'#D9A21B':T(c.e.type).hex).slice(1), s2=pptx.addSlide(); s2.background={color:'FFFFFF'};
     s2.addShape(pptx.ShapeType.rect,{x:0,y:0,w:13.33,h:.12,fill:{color:hex},line:{color:hex}});
-    s2.addText(('Clip '+(i+1)+' of '+items.length+'  ·  '+fmtDate(m.date)+'  ·  '+vsLabel(m)).toUpperCase(),{x:.5,y:.35,w:12.3,h:.35,fontFace:FD,fontSize:13,bold:true,color:MUTED,charSpacing:2});
+    s2.addText(('Clip '+(i+1)+' of '+items.length+', '+fmtDate(m.date)+', '+vsLabel(m)).toUpperCase(),{x:.5,y:.35,w:12.3,h:.35,fontFace:FD,fontSize:13,bold:true,color:MUTED,charSpacing:2});
     s2.addText(clipTitle(c),{x:.5,y:.68,w:12.3,h:.7,fontFace:FD,fontSize:32,bold:true,color:INK});
     const ar=it.ar||.5625; let mw=8.7, mh=mw*ar; if(mh>5.6){ mh=5.6; mw=mh/ar; } const my=1.5;
     if(it.video) s2.addMedia(Object.assign({type:'video',data:it.video,extn:'mp4',x:.5,y:my,w:mw,h:mh},it.poster?{cover:it.poster}:{}));
@@ -4106,15 +4137,15 @@ async function buildPlayerDeck(items,s){
     const rx=.5+mw+.4, rw=13.33-rx-.5;
     s2.addText(minuteLabel(c.e.t),{x:rx,y:my-.1,w:rw,h:1.1,fontFace:FD,fontSize:60,bold:true,color:hex});
     const lines=[]; if(c.role==='assist') lines.push({text:'Assist for '+(c.e.pid?pLabel(P(c.e.pid)):'goal'),options:{fontSize:18,bold:true,color:INK,breakLine:true}});
-    lines.push({text:(halfOf(c.e.t)==='1'?'1st half':halfOf(c.e.t)==='2'?'2nd half':'')+'  ·  final score '+finalScore(m),options:{fontSize:12,color:MUTED,breakLine:true}});
+    lines.push({text:(halfOf(c.e.t)==='1'?'1st half':halfOf(c.e.t)==='2'?'2nd half':'')+', final score '+finalScore(m),options:{fontSize:12,color:MUTED,breakLine:true}});
     if(c.e.note) lines.push({text:' ',options:{fontSize:8,breakLine:true}},{text:c.e.note,options:{fontSize:16,italic:true,color:INK}});
     s2.addText(lines,{x:rx,y:my+1.05,w:rw,h:3,fontFace:FB,valign:'top'});
     s2.addText('Space for coaching points',{x:rx,y:my+mh-1.1,w:rw,h:1.1,fontFace:FB,fontSize:12,color:'A0A9B2',valign:'top',line:{color:'D3DAE1',width:1,dashType:'dash'},margin:.12});
-    s2.addText(s.name+'  ·  '+teamName(),{x:.5,y:7.0,w:9,h:.3,fontFace:FB,fontSize:10,color:MUTED});
+    s2.addText(s.name+', '+teamName(),{x:.5,y:7.0,w:9,h:.3,fontFace:FB,fontSize:10,color:MUTED});
     s2.addNotes(minuteLabel(c.e.t)+' '+clipTitle(c)+' '+vsLabel(m)+(c.e.note?'\n'+c.e.note:'')); }); });
   sl=pptx.addSlide(); sl.background={color:'FFFFFF'};
   sl.addText((seasonText(season)).toUpperCase(),{x:.5,y:.4,w:12,h:.4,fontFace:FD,fontSize:14,bold:true,color:MUTED,charSpacing:3});
-  sl.addText(s.name+' · season stats',{x:.5,y:.75,w:12.3,h:.7,fontFace:FD,fontSize:32,bold:true,color:INK});
+  sl.addText(s.name+': season stats',{x:.5,y:.75,w:12.3,h:.7,fontFace:FD,fontSize:32,bold:true,color:INK});
   const hdr=t=>({text:t,options:{bold:true,color:'FFFFFF',fill:{color:GREEN},fontFace:FD,fontSize:16}});
   const rows=[[hdr('Stat'),hdr('Total'),hdr('Per 90')]].concat([['Appearances',a.apps,''],['Minutes',a.min,''],['Goals',a.line.g],['Assists',a.line.a],['Shots (on target)',a.line.sh+' ('+a.line.on+')',''],['Key passes',a.line.kp],['Dribbles won',a.line.dr],['Ball recoveries',a.line.rec],['Tackles won',a.line.tk],['Turnovers',a.line.to]].map(r=>[r[0],String(r[1]),r[2]===undefined?(a.min>=90?(r[1]/a.min*90).toFixed(2):'–'):r[2]].map((x,j)=>({text:String(x),options:{align:j?'center':'left',fontFace:FB,fontSize:15,color:INK}}))));
   sl.addTable(rows,{x:.5,y:1.7,w:8,colW:[4,2,2],border:{type:'solid',pt:1,color:'D3DAE1'},rowH:.42});
@@ -4131,7 +4162,7 @@ function timelineSvg(m){
     for(let t=0;t<=2*L;t+=L/3){ s+=`<line class="grid" x1="${x(t)}" x2="${x(t)}" y1="${ax-3}" y2="${ax+3}"/><text x="${x(t)}" y="${H-6}" text-anchor="middle">${Math.round(t)}'</text>`; }
     const dens=new Array(Math.ceil(2*L/5)).fill(0); m.events.forEach(e=>{ if(['goal','goal_against','sub','yellow','red','swap','formation','note'].includes(e.type)||T(e.type).kind==='team') return; const mn=matchMin(e.t); if(mn==null) return; dens[Math.min(dens.length-1,Math.floor(mn/5))]++; });
     const dm=Math.max(1,...dens); dens.forEach((v,i)=>{ if(!v) return; const h=v/dm*18; s+=`<rect class="dens" x="${x(i*5)+1}" y="${ax-2-h}" width="${x(5)-x(0)-2}" height="${h}" rx="1.5"><title>${i*5}–${i*5+5}': ${v} tags</title></rect>`; });
-    sortedEvents().forEach(e=>{ const mn=matchMin(e.t); if(mn==null) return; const cx=x(mn), tip=esc(minuteLabel(e.t)+' '+T(e.type).label+(e.pid||e.in?' · '+evWho(e):''));
+    sortedEvents().forEach(e=>{ const mn=matchMin(e.t); if(mn==null) return; const cx=x(mn), tip=esc(minuteLabel(e.t)+' '+T(e.type).label+(e.pid||e.in?': '+evWho(e):''));
       if(e.type==='goal') s+=`<g><title>${tip}</title><circle class="us" cx="${cx}" cy="${yU}" r="9"/><text class="gl" x="${cx}" y="${yU+4}" text-anchor="middle">G</text></g>`;
       else if(e.type==='goal_against') s+=`<g><title>${tip}</title><circle class="them" cx="${cx}" cy="${yT}" r="9"/><text class="gl" x="${cx}" y="${yT+4}" text-anchor="middle">G</text></g>`;
       else if(e.type==='yellow'||e.type==='red') s+=`<rect class="${e.type==='red'?'card-r':'card-y'}" x="${cx-4}" y="${yU+12}" width="8" height="11" rx="1.5"><title>${tip}</title></rect>`;
@@ -4154,7 +4185,7 @@ function renderReport(){
     const goalsList=type=>sortedEvents().filter(e=>e.type===type).map(e=>`<li><b>${esc(minuteLabel(e.t))}</b> ${type==='goal'?esc(e.og?'Own goal':e.pid?(P(e.pid).name||'#'+P(e.pid).num):'Goal')+(e.assist?' <span>('+esc(P(e.assist).name||'#'+P(e.assist).num)+')</span>':''):'Goal'}</li>`).join('');
     const usList=`<ul>${goalsList('goal')}</ul>`, themList=`<ul>${goalsList('goal_against')}</ul>`;
     const n=t=>m.events.filter(e=>t.includes(e.type)).length;
-    const cmp=[['Goals',n(['goal']),n(['goal_against'])],['Shots',n(['goal','shot_on','shot_off']),n(['goal_against','shot_against'])],['Key passes · big chances',n(['key_pass']),n(['chance_against'])],['Corners',n(['corner_for']),n(['corner_against'])]];
+    const cmp=[['Goals',n(['goal']),n(['goal_against'])],['Shots',n(['goal','shot_on','shot_off']),n(['goal_against','shot_against'])],['Key passes / big chances',n(['key_pass']),n(['chance_against'])],['Corners',n(['corner_for']),n(['corner_against'])]];
     const inv=involvementFor(m), mins=minutesFor(m), F=FORMATIONS[m.formation];
     const starters=m.players.filter(p=>inv[p.id].started).sort((a,b)=>a.slot-b.slot), subsOn=m.players.filter(p=>inv[p.id].cameOn);
     const subInfo=id=>{ const e=m.events.find(x=>x.type==='sub'&&(x.out===id||x.in===id)); return e?minuteLabel(e.t):''; };
@@ -4163,7 +4194,7 @@ function renderReport(){
     const groups=[['1st half',evs.filter(e=>halfOf(e.t)==='1')],['2nd half',evs.filter(e=>halfOf(e.t)==='2')],['Outside the halves',evs.filter(e=>halfOf(e.t)==='x')]].filter(g=>g[1].length);
     el.innerHTML=`<div class="wrap page">
       <button class="back" data-go="matches">← All analyses</button>
-      <header class="page-head"><div><span class="eyebrow">${mtTag(m)} Match report · ${esc(fmtDate(m.date,{weekday:'long',day:'numeric',month:'long',year:'numeric'}))}${m.comp?' · '+esc(m.comp):''}</span><h1>${esc(vsLabel(m))}</h1></div>
+      <header class="page-head"><div><span class="eyebrow">${mtTag(m)} Match report${SEP}${esc(fmtDate(m.date,{weekday:'long',day:'numeric',month:'long',year:'numeric'}))}${m.comp?SEP+esc(m.comp):''}</span><h1>${esc(vsLabel(m))}</h1></div>
         <div class="page-actions">${m.manualData?`<button class="btn primary" data-go="entry" data-arg="${m.id}">Edit match data</button>`:`<button class="btn primary" data-go="match" data-arg="${m.id}">Open in tagger</button>`}<button class="btn" id="btnRepCsv">Export CSV</button></div></header>
       <div class="rboard"><div class="side"><span class="tm">${esc(m.home?m.us:m.them)}</span>${m.home?usList:themList}</div>
         <div class="mid"><span class="sc tnum">${hs}<i>–</i>${as}</span>${ht?`<span class="ht">Half-time ${esc(ht)}</span>`:''}${isPlayed(m)?'':'<span class="ht">Not tagged yet</span>'}</div>
@@ -4177,7 +4208,7 @@ function renderReport(){
           ${subsOn.map(p=>`<li class="sub"><span class="n">${esc(p.num)}</span><span class="r">SUB</span><span class="nm">${nameBtn(p)}</span><span class="mi">↑ ${esc(subInfo(p.id))}${mins&&mins[p.id]!=null?' <b>'+mins[p.id]+'\'</b>':''}</span></li>`).join('')}</ol></section>
       </div>
       <section class="card"><div class="card-head"><h2>Players</h2></div>${reportPlayerTable(m)}</section>
-      <section class="card"><div class="card-head"><h2>All tagged moments</h2><span class="hint">${m.events.length} tags${m.videoName?' · video: '+esc(m.videoName):''}</span></div>
+      <section class="card"><div class="card-head"><h2>All tagged moments</h2><span class="hint">${m.events.length} tags${m.videoName?SEP+'video: '+esc(m.videoName):''}</span></div>
         ${groups.length?groups.map(([g,list])=>`<div class="mo-grp"><span class="section-label">${g}</span><div class="ev-list flat">${list.map(e=>`<div class="ev" style="--c:${T(e.type).css}"><span class="min">${esc(minuteLabel(e.t))}</span><div class="body"><span class="what"><span class="dot"></span>${esc(T(e.type).label)}</span><span class="who">${esc(evWho(e))}</span>${e.note?`<span class="note">${esc(e.note)}</span>`:''}</div><span class="acts"><button class="btn sm ghost" data-watch="${m.id}:${e.id}">Watch</button></span></div>`).join('')}</div></div>`).join(''):'<p class="hint">No tags yet. Open the tagger to start.</p>'}
       </section>
     </div>`;
@@ -4270,7 +4301,7 @@ function boardsHtml(){
     <div class="board-save">${cur?`<button class="btn sm primary" data-bsave${dirty?'':' disabled'}>Save "${esc(cur.name)}"</button>`:''}
       <input id="boardName" placeholder="${cur?'Name for a copy':'Name, e.g. Match analysis'}" aria-label="Board name"><button class="btn sm${cur?'':' primary'}" data-bsaveas>${cur?'Save as new':'Save board'}</button></div>
     ${list.length?`<div class="board-list">${list.map(b=>`<div class="board-row${cur&&cur.id===b.id?' cur':''}">
-      ${ui.bRename===b.id?`<input id="bRen" data-brenid="${b.id}" value="${esc(b.name)}" aria-label="New name">`:`<span class="nm">${esc(b.name)}<small>${(b.items||[]).length} buttons · saved ${esc(new Date(b.savedAt||Date.now()).toLocaleDateString('en-GB',{day:'numeric',month:'short'}))}</small></span>`}
+      ${ui.bRename===b.id?`<input id="bRen" data-brenid="${b.id}" value="${esc(b.name)}" aria-label="New name">`:`<span class="nm">${esc(b.name)}<small>${(b.items||[]).length} buttons, saved ${esc(new Date(b.savedAt||Date.now()).toLocaleDateString('en-GB',{day:'numeric',month:'short'}))}</small></span>`}
       <span class="acts">${ui.bRename===b.id?`<button class="btn sm primary" data-brenok="${b.id}">Save name</button>`:ui.bDel===b.id?`<span class="confirm">Delete?<button class="btn sm danger" data-bdelyes="${b.id}">Delete</button><button class="btn sm" data-bdelno>Keep</button></span>`:`<button class="btn sm${cur&&cur.id===b.id?'':' primary'}" data-bload="${b.id}">${cur&&cur.id===b.id?'Reload':'Load'}</button><button class="btn sm ghost" data-bren="${b.id}">Rename</button><button class="btn sm ghost" data-bfile="${b.id}" title="Download as a file to share">File</button><button class="btn sm ghost danger" data-bdel="${b.id}" aria-label="Delete ${esc(b.name)}">×</button>`}</span></div>`).join('')}</div>`:''}
     <div class="row-actions"><button class="btn sm ghost" data-bimport>Import board file</button><span class="hint" style="margin:0">Share a board with your staff as a file.</span></div></div>`;
 }
@@ -4306,14 +4337,14 @@ function cvItemHtml(it,ctx){
   if(it.kind==='tag'){
     if(!(EV[it.ref]||customOf(it.ref))) return '';
     const d=T(it.ref), key=keyOf(it.ref), tr=ctx.tr, armed=tr&&((tr.mode==='armed'&&tr.tag===it.ref)||(tr.mode==='scorer'&&it.ref==='goal')||(tr.mode==='note'&&it.ref==='note'));
-    return `<button class="cv-it tag cv-tag${armed?' armed':''}${pick}" data-it="${it.id}"${ed?'':` data-tagk="${esc(it.ref)}"`} style="--c:${d.css};${pos}" title="${esc(d.label)}${d.kind==='team'?' · team tag':''}"><span class="dot"></span><span class="lbl">${esc(d.label)}</span>${key?`<kbd>${esc(key.toUpperCase())}</kbd>`:''}${tools}</button>`;
+    return `<button class="cv-it tag cv-tag${armed?' armed':''}${pick}" data-it="${it.id}"${ed?'':` data-tagk="${esc(it.ref)}"`} style="--c:${d.css};${pos}" title="${esc(d.label)}${d.kind==='team'?' (team tag)':''}"><span class="dot"></span><span class="lbl">${esc(d.label)}</span>${key?`<kbd>${esc(key.toUpperCase())}</kbd>`:''}${tools}</button>`;
   }
   if(it.kind==='player'){
     const {tr,pickOn,pickBench,scorerId,lu}=ctx, pid=lu.slotMap[it.ref], p=P(pid), role=FORMATIONS[lu.formation].roles[it.ref]||'';
     let cls=''; if(p&&!ed){ const off=lu.sentOff.has(pid), sel=tr&&(tr.pid===pid||tr.outPid===pid||(tr.more||[]).includes(pid)), pickable=pickOn&&!off&&pid!==scorerId&&!(tr.mode==='swap'&&pid===tr.pid);
       cls=(sel?' sel':'')+(pickable?' pickable':'')+((pickBench||(pickOn&&!pickable&&!sel))?' dim':'')+(off?' off':''); }
     if(it.w<4) cls+=' narrow';
-    return `<button class="cv-it cv-pl${cls}${pick}" data-it="${it.id}"${!ed&&p?` data-pl="${pid}" data-on="1" data-anchor="${it.id}"`:''}${!p&&!ed?' disabled':''} style="${pos}" title="${esc(p?pLabel(p)+' · '+role:'Nobody in this position')}"><span class="n">${esc(p?p.num||'?':'–')}</span><span class="nm">${esc(p?firstName(p):'Empty')}</span><small>${esc(role)}</small>${tools}</button>`;
+    return `<button class="cv-it cv-pl${cls}${pick}" data-it="${it.id}"${!ed&&p?` data-pl="${pid}" data-on="1" data-anchor="${it.id}"`:''}${!p&&!ed?' disabled':''} style="${pos}" title="${esc(p?pLabel(p)+', '+role:'Nobody in this position')}"><span class="n">${esc(p?p.num||'?':'–')}</span><span class="nm">${esc(p?firstName(p):'Empty')}</span><small>${esc(role)}</small>${tools}</button>`;
   }
   if(it.kind==='field') return `<div class="cv-it cv-field${pick}" data-it="${it.id}" style="${pos}">${pitchHtml(ctx,{w:it.w/COLS*cvWidth()-6,h:h*ROWH-6})}${tools}</div>`;
   if(it.kind==='label') return `<div class="cv-it cv-lbl${pick}" data-it="${it.id}" style="${pos}"><span>${esc(it.ref||'Label')}</span>${tools}</div>`;
@@ -4338,15 +4369,15 @@ function popHtml(ctx){
     body=inv+`<div class="pop-tags">${main.map(tb).join('')}</div>${more.length?(ui.popMore?`<span class="section-label">More tags</span><div class="pop-tags">${more.map(tb).join('')}</div>`:`<button class="linkbtn" data-popmore>+ More tags</button>`):''}`;
     acts=`<button class="btn sm" data-tray="subIn">Substitute off…</button><button class="btn sm" data-tray="swap">Swap position…</button><button class="btn sm" data-tray="pnote">Note…</button><span style="flex:1"></span><button class="btn sm${added.length?' primary':' ghost'}" data-tray="cancel">${added.length?'Done':'Close'}</button>`;
   } else if(tr.mode==='assist'){ const e=M.events.find(x=>x.id===tr.eventId);
-    head=`<strong>${esc(T('goal').label)} · ${esc(e&&e.pid?firstName(P(e.pid)):'')}</strong> · who gave the assist?`;
+    head=`<strong>${esc(T('goal').label)} ${esc(e&&e.pid?firstName(P(e.pid)):'')}</strong>${SEP}who gave the assist?`;
     body=`<div class="pop-list">${onField.filter(id=>!e||id!==e.pid).map(id=>pbtn(id,'data-popassist')).join('')}</div>`;
     acts=`<span style="flex:1"></span><button class="btn sm primary" data-popassist="none">No assist</button>`;
-  } else if(tr.mode==='subIn'){ head=`<strong>${esc(pLabel(P(tr.outPid)))} off</strong>${at} · who comes on?`;
+  } else if(tr.mode==='subIn'){ head=`<strong>${esc(pLabel(P(tr.outPid)))} off</strong>${at}${SEP}who comes on?`;
     body=bench.length?`<div class="pop-list">${bench.map(p=>pbtn(p.id,'data-popsub')).join('')}</div>`:'<p class="hint">No players on the bench. Add them under Lineup.</p>'; acts=cancel;
-  } else if(tr.mode==='swap'){ head=`<strong>${esc(pLabel(P(tr.pid)))}</strong>${at} · swap positions with`;
+  } else if(tr.mode==='swap'){ head=`<strong>${esc(pLabel(P(tr.pid)))}</strong>${at}${SEP}swap positions with`;
     body=`<div class="pop-list">${onField.filter(id=>id!==tr.pid).map(id=>pbtn(id,'data-popswap')).join('')}</div>`; acts=cancel;
-  } else if(tr.mode==='subPick'){ head=`<strong>Substitution</strong>${at} · who goes off?`; body=`<div class="pop-list">${onField.map(id=>pbtn(id,'data-popout')).join('')}</div>`; acts=cancel;
-  } else if(tr.mode==='swapPick'){ head=`<strong>Swap positions</strong>${at} · pick the first player`; body=`<div class="pop-list">${onField.map(id=>pbtn(id,'data-popfirst')).join('')}</div>`; acts=cancel; }
+  } else if(tr.mode==='subPick'){ head=`<strong>Substitution</strong>${at}${SEP}who goes off?`; body=`<div class="pop-list">${onField.map(id=>pbtn(id,'data-popout')).join('')}</div>`; acts=cancel;
+  } else if(tr.mode==='swapPick'){ head=`<strong>Swap positions</strong>${at}${SEP}pick the first player`; body=`<div class="pop-list">${onField.map(id=>pbtn(id,'data-popfirst')).join('')}</div>`; acts=cancel; }
   return `<div class="pop" id="pop" role="dialog" aria-label="Tag options"><div class="pop-head">${head}<button class="x" data-tray="cancel" aria-label="Close">×</button></div>${body}<div class="pop-acts">${acts}</div></div>`;
 }
 function positionPop(){
@@ -4474,7 +4505,7 @@ document.addEventListener('pointerup',e=>{
 window.addEventListener('resize',()=>{ clearTimeout(ui.cvRT); ui.cvRT=setTimeout(()=>{ if(view==='match'&&!ui.editLineup) renderLineup(); },150); });
 
 /* ===================================================================
-   CALENDAR · WEEK PLANNER · MATCH PAGES (squad selection)
+   CALENDAR, WEEK PLANNER, MATCH PAGES (squad selection)
    Month calendar (trainings, days off, matches) -> week plans (staff, gym,
    warm-up, kern forms) -> match pages (info, squad, video, tagger).
    Saved in this browser and, when connected, in Data/planner/ of your
@@ -4493,7 +4524,7 @@ function plToday(){ const n=new Date(); return new Date(Date.UTC(n.getFullYear()
 const PL_MON=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const PL_DOW=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const PL_DAYS=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-function plWeekLabel(mon){ const a=plParse(mon), b=plAdd(a,6), w=plIsoWeek(a); return 'Week '+w.week+' · '+a.getUTCDate()+' '+PL_MON[a.getUTCMonth()].slice(0,3)+' – '+b.getUTCDate()+' '+PL_MON[b.getUTCMonth()].slice(0,3)+' '+b.getUTCFullYear(); }
+function plWeekLabel(mon){ const a=plParse(mon), b=plAdd(a,6), w=plIsoWeek(a); return 'Week '+w.week+', '+a.getUTCDate()+' '+PL_MON[a.getUTCMonth()].slice(0,3)+' – '+b.getUTCDate()+' '+PL_MON[b.getUTCMonth()].slice(0,3)+' '+b.getUTCFullYear(); }
 const plUid=()=>Math.random().toString(36).slice(2,9);
 const plBlk=(title,type,min,staff)=>({id:plUid(),title:title||'',type:type||'',min:min==null?'':min,staff:staff||[],notes:''});
 const plOff=()=>Object.assign({on:false},plBlk());
@@ -4643,11 +4674,11 @@ function plIcs(scope){
   const dt=(ymd,hm)=>ymd.replace(/-/g,'')+'T'+String(hm||'00:00').replace(':','')+'00';
   const plusMin=(ymd,hm,mins)=>{ const [h,mi]=String(hm||'00:00').split(':').map(Number); const t=new Date(Date.UTC(+ymd.slice(0,4),+ymd.slice(5,7)-1,+ymd.slice(8,10),h,mi+mins)); return plYmd(t).replace(/-/g,'')+'T'+plPad(t.getUTCHours())+plPad(t.getUTCMinutes())+'00'; };
   Object.entries(plCal.days).filter(([d,e])=>inScope(d)&&e.type==='training'&&e.start).forEach(([d,e])=>{
-    lines.push('BEGIN:VEVENT','UID:tr-'+d+'@matchtagger','DTSTAMP:'+stamp,'DTSTART:'+dt(d,e.start),'DTEND:'+(e.end?dt(d,e.end):plusMin(d,e.start,90)),'SUMMARY:'+icsEsc('Training'+(e.place?' · '+e.place:'')),e.place?'LOCATION:'+icsEsc(e.place):'','END:VEVENT'); });
+    lines.push('BEGIN:VEVENT','UID:tr-'+d+'@matchtagger','DTSTAMP:'+stamp,'DTSTART:'+dt(d,e.start),'DTEND:'+(e.end?dt(d,e.end):plusMin(d,e.start,90)),'SUMMARY:'+icsEsc('Training'+(e.place?', '+e.place:'')),e.place?'LOCATION:'+icsEsc(e.place):'','END:VEVENT'); });
   Object.values(store).filter(m=>m.date&&inScope(isoDate(m.date))).forEach(m=>{ const d=isoDate(m.date);
     const ev=['BEGIN:VEVENT','UID:match-'+m.id+'@matchtagger','DTSTAMP:'+stamp];
     if(m.kickoff){ ev.push('DTSTART:'+dt(d,m.kickoff),'DTEND:'+plusMin(d,m.kickoff,(m.halfLen||45)*2+15)); } else ev.push('DTSTART;VALUE=DATE:'+d.replace(/-/g,''));
-    ev.push('SUMMARY:'+icsEsc(matchName(m)+(m.comp?' · '+m.comp:'')), m.place?'LOCATION:'+icsEsc(m.place):'', 'END:VEVENT'); lines.push(...ev); });
+    ev.push('SUMMARY:'+icsEsc(matchName(m)+(m.comp?', '+m.comp:'')), m.place?'LOCATION:'+icsEsc(m.place):'', 'END:VEVENT'); lines.push(...ev); });
   lines.push('END:VCALENDAR');
   const name=fileSafe(teamName()+' '+(scope==='all'?'calendar':plCalModel(plUi.month).title))+'.ics';
   return offerFile(name,new Blob([lines.filter(Boolean).join('\r\n')],{type:'text/calendar'}));
@@ -4688,14 +4719,14 @@ function renderCalendar(){
   const cell=d=>{
     const dow=(plParse(d.date).getUTCDay()+6)%7;
     const items=d.items.map(it=>it.kind==='match'
-      ?`<button class="cal-ev mt mt-${it.mtype}" data-go="fixture" data-arg="${it.id}" title="${esc(it.mlabel)} · open the match page"><b>${esc(it.time||(it.mtype==='league'?'Match':it.mlabel))}</b> ${esc(it.opponent)} <i>${it.venue==='H'?'H':'A'}</i></button>`
+      ?`<button class="cal-ev mt mt-${it.mtype}" data-go="fixture" data-arg="${it.id}" title="${esc(it.mlabel)}: open the match page"><b>${esc(it.time||(it.mtype==='league'?'Match':it.mlabel))}</b> ${esc(it.opponent)} <i>${it.venue==='H'?'H':'A'}</i></button>`
       :it.kind==='training'?`<span class="cal-ev tr"><b>${esc(it.time||'Training')}</b>${attTaken(d.date)?`<em class="cal-att" title="Present / marked">✓ ${attBadge(d.date)}</em>`:''}${it.place?' '+esc(it.place):''}</span>`
-      :`<span class="cal-ev off">${esc(cal.offLabel)}${it.reason?' · '+esc(it.reason):''}</span>`).join('');
+      :`<span class="cal-ev off">${esc(cal.offLabel)}${it.reason?': '+esc(it.reason):''}</span>`).join('');
     return `<div class="cal-day${d.inMonth?'':' out'}${d.date===today?' today':''}${dow>4?' we':''}${plUi.daySel===d.date?' sel':''}" data-calday="${d.date}" role="button" tabindex="0" aria-label="${esc(fmtDate(d.date,{weekday:'long',day:'numeric',month:'long'}))}"><span class="cal-dn">${d.dayNum}</span>${items}</div>`;
   };
   el.innerHTML=`<div class="wrap page">
-    <header class="page-head"><div><span class="eyebrow">${esc(teamName())} · Calendar</span><h1>${esc(cal.title)}</h1>
-      <p><b>${tr}</b> training${tr===1?'':'s'} · <b>${mt}</b> match${mt===1?'':'es'} · <b>${off}</b> without training${open?` · ${open} weekday${open===1?'':'s'} still empty`:''}</p></div>
+    <header class="page-head"><div><span class="eyebrow">${esc(teamName())}${SEP}Calendar</span><h1>${esc(cal.title)}</h1>
+      <p><b>${tr}</b> training${tr===1?'':'s'}${SEP}<b>${mt}</b> match${mt===1?'':'es'}${SEP}<b>${off}</b> without training${open?`${SEP}${open} weekday${open===1?'':'s'} still empty`:''}</p></div>
       <div class="page-actions"><div class="seg" role="group" aria-label="Month"><button data-calnav="-1" aria-label="Previous month">‹</button><button data-calnav="0">Today</button><button data-calnav="1" aria-label="Next month">›</button></div>
         <select class="cal-monthpick" id="calMon" aria-label="Month">${PL_MON.map((n,i)=>`<option value="${plPad(i+1)}"${i+1===mm?' selected':''}>${n}</option>`).join('')}</select><select class="cal-monthpick" id="calYear" aria-label="Year">${plYears(yy).map(y=>`<option${y===yy?' selected':''}>${y}</option>`).join('')}</select>
         <button class="btn" data-calexport aria-expanded="${plUi.exportOpen}">Export</button>
@@ -4704,11 +4735,11 @@ function renderCalendar(){
     ${plUi.exportOpen?`<div class="card cal-export"><div class="card-head"><h2>Export ${esc(cal.title)}</h2><button class="btn sm ghost" data-calexport>Close</button></div>
       <div class="cal-exrow"><span class="hint">Slide style</span><div class="seg" role="group" aria-label="Slide style"><button data-caltheme="dark" aria-pressed="${plCal.theme!=='light'}">Dark</button><button data-caltheme="light" aria-pressed="${plCal.theme==='light'}">Light (print)</button></div>
         <button class="btn primary" data-calex="pdf">PDF</button><button class="btn" data-calex="pptx">PowerPoint</button>
-        <span class="cal-sep"></span><button class="btn" data-calics="month">Calendar file (.ics) · this month</button><button class="btn" data-calics="all">.ics · everything</button>
-        <span class="cal-sep"></span><button class="btn" data-attcsv="month">Attendance (.csv) · this month</button><button class="btn" data-attcsv="all">· this season</button></div>
+        <span class="cal-sep"></span><button class="btn" data-calics="month">Calendar file (.ics), this month</button><button class="btn" data-calics="all">.ics, everything</button>
+        <span class="cal-sep"></span><button class="btn" data-attcsv="month">Attendance (.csv), this month</button><button class="btn" data-attcsv="all">Attendance (.csv), this season</button></div>
       <p class="hint">The PDF and PowerPoint show this month as one slide, like the week planner. The calendar file adds trainings and matches to Google, Outlook or Apple Calendar. The attendance file opens in Excel: one row per player, one column per training.</p>
       <div class="pl-slidewrap cal-prev"><div class="pl-slide" id="calSlide"></div></div></div>`:''}
-    <div class="cal-legend"><span><i class="lg tr"></i>Training</span>${MTYPES.map(([k,l])=>`<span><i class="lg mt mt-${k}"></i>${l}</span>`).join('')}<span><i class="lg off"></i>${esc(cal.offLabel)}</span><span class="hint">Click a day to plan it · click a match to open it · click a week number to plan that week</span></div>
+    <div class="cal-legend"><span><i class="lg tr"></i>Training</span>${MTYPES.map(([k,l])=>`<span><i class="lg mt mt-${k}"></i>${l}</span>`).join('')}<span><i class="lg off"></i>${esc(cal.offLabel)}</span><span class="hint">Click a day to plan it, a match to open it, or a week number to plan that week</span></div>
     <div class="cal-grid" role="grid">
       <div class="cal-h wk">Wk</div>${PL_DOW.map((d,i)=>`<div class="cal-h${i>4?' we':''}">${d}</div>`).join('')}
       ${cal.weeks.map(w=>`<button class="cal-wk${plWeeks[plKey(w.mon)]?' planned':''}" data-go="week" data-arg="${plKey(w.mon)}" title="${plWeeks[plKey(w.mon)]?'Open the week plan':'Plan this week'}"><b>${w.week}</b><span>${plWeeks[plKey(w.mon)]?'Plan':'+ Plan'}</span></button>${w.days.map(cell).join('')}`).join('')}
@@ -4733,7 +4764,7 @@ function renderCalendar(){
 function fxRow(m){
   const d=isoDate(m.date), sel=((m.selection||{}).ids||[]).length, vid=m.videoName?'Video linked':'No video yet';
   return `<div class="mrow"><div class="mdate"><b>${d?+d.slice(8,10):'–'}</b><span>${d?PL_MON[+d.slice(5,7)-1].slice(0,3):''}</span></div>
-    <div class="mmain"><button class="mtitle" data-go="fixture" data-arg="${m.id}">${esc(vsLabel(m))}</button><span class="msub">${mtTag(m)} ${esc([m.kickoff,m.comp,m.home?'Home':'Away',sel?sel+' selected':'No squad yet',vid].filter(Boolean).join(' · '))}</span></div>
+    <div class="mmain"><button class="mtitle" data-go="fixture" data-arg="${m.id}">${esc(vsLabel(m))}</button><span class="msub">${mtTag(m)} ${mj([m.kickoff,m.comp,m.home?'Home':'Away',sel?sel+' selected':'No squad yet',vid].filter(Boolean).map(esc))}</span></div>
     <div class="macts"><button class="btn sm" data-go="fixture" data-arg="${m.id}">Open</button></div></div>`;
 }
 /* day editor (small dialog) */
@@ -4789,14 +4820,14 @@ function renderWeek(){
   [...set].sort().forEach(v=>opts.push(`<option value="${plKey(v)}"${v===mon?' selected':''}>${plWeeks[plKey(v)]&&plWeeks[plKey(v)].updatedAt?'● ':''}${esc(plWeekLabel(v))}${v===plYmd(base)?' (this week)':''}</option>`));
   if(plUi.wtab==='session'&&plUi.sessionDay==null) plUi.wtab='plan';
   el.innerHTML=`<div class="wrap page">
-    <header class="page-head"><div><span class="eyebrow">Week planner${saved?'':' · not saved yet'}</span><h1>${esc(plWeekLabel(mon).split(' · ')[0])}</h1>
-      <p>${esc(plWeekLabel(mon).split(' · ')[1])}${ms.length?' · '+ms.map(m=>`<button class="tlink" data-go="fixture" data-arg="${m.id}">${esc(PL_DOW[(plParse(isoDate(m.date)).getUTCDay()+6)%7]+' '+(m.kickoff||'')+' vs '+m.them+' ('+(m.home?'H':'A')+')')}</button>`).join(' · '):''}</p></div>
+    <header class="page-head"><div><span class="eyebrow">Week planner${saved?'':SEP+'not saved yet'}</span><h1>${esc(plWeekLabel(mon).split(', ')[0])}</h1>
+      <p>${esc(plWeekLabel(mon).split(', ')[1])}${ms.length?SEP+ms.map(m=>`<button class="tlink" data-go="fixture" data-arg="${m.id}">${esc(PL_DOW[(plParse(isoDate(m.date)).getUTCDay()+6)%7]+' '+(m.kickoff||'')+' vs '+m.them+' ('+(m.home?'H':'A')+')')}</button>`).join(SEP):''}</p></div>
       <div class="page-actions"><div class="seg" role="group" aria-label="Week"><button data-wknav="-1" aria-label="Previous week">‹</button><button data-wknav="0">This week</button><button data-wknav="1" aria-label="Next week">›</button></div>
         <select id="wkSel" aria-label="Choose week">${opts.join('')}</select><button class="btn" data-go="calendar" data-calto="${mon.slice(0,7)}">Month calendar</button></div></header>
     ${saved?'':`<p class="notice">${plLatestWeek(key)?'This week starts as a copy of your last plan (same forms and staff, notes cleared). It is saved as soon as you change something.':'This week starts from an empty template. It is saved as soon as you change something.'} Training days, times and locations come from the month calendar.</p>`}
     <div class="wk-layout">
       <section class="wk-editor">
-        <div class="wk-tabs" role="tablist">${[['plan','Week plan'],['details','Training details']].map(([k,l])=>`<button role="tab" aria-selected="${plUi.wtab===k}" data-wktab="${k}">${l}</button>`).join('')}${plUi.sessionDay!=null&&st.days[plUi.sessionDay]?`<button role="tab" aria-selected="${plUi.wtab==='session'}" data-wktab="session">${esc(st.days[plUi.sessionDay].name)} · session</button><button class="wk-tabx" data-wkact="closeSession" aria-label="Close session tab">×</button>`:''}</div>
+        <div class="wk-tabs" role="tablist">${[['plan','Week plan'],['details','Training details']].map(([k,l])=>`<button role="tab" aria-selected="${plUi.wtab===k}" data-wktab="${k}">${l}</button>`).join('')}${plUi.sessionDay!=null&&st.days[plUi.sessionDay]?`<button role="tab" aria-selected="${plUi.wtab==='session'}" data-wktab="session">${esc(st.days[plUi.sessionDay].name)} session</button><button class="wk-tabx" data-wkact="closeSession" aria-label="Close session tab">×</button>`:''}</div>
         <div id="wkEditor">${plUi.wtab==='details'?wkDetails(st):plUi.wtab==='session'?wkSession(st):wkPlan(st)}</div>
       </section>
       <aside class="wk-preview card">
@@ -4812,7 +4843,7 @@ function renderWeek(){
 }
 function wkStaffPick(st,path,b){
   const present=st.staff.filter(s=>s.present), absent=st.staff.filter(s=>!s.present&&(b.staff||[]).includes(s.id));
-  return `<div class="wk-staffpick"><span class="lbl">Staff</span>${present.length?'':'<span class="hint">Mark staff present above first</span>'}${present.map(s=>`<button class="wk-chip mini" aria-pressed="${(b.staff||[]).includes(s.id)}" data-wkact="pick" data-path="${path}" data-sid="${s.id}"><i></i>${esc(s.name)}</button>`).join('')}${absent.map(s=>`<button class="wk-chip mini absent" title="Absent this week. Click to unassign." data-wkact="pick" data-path="${path}" data-sid="${s.id}">${esc(s.name)} · absent</button>`).join('')}</div>`;
+  return `<div class="wk-staffpick"><span class="lbl">Staff</span>${present.length?'':'<span class="hint">Mark staff present above first</span>'}${present.map(s=>`<button class="wk-chip mini" aria-pressed="${(b.staff||[]).includes(s.id)}" data-wkact="pick" data-path="${path}" data-sid="${s.id}"><i></i>${esc(s.name)}</button>`).join('')}${absent.map(s=>`<button class="wk-chip mini absent" title="Absent this week. Click to unassign." data-wkact="pick" data-path="${path}" data-sid="${s.id}">${esc(s.name)} (absent)</button>`).join('')}</div>`;
 }
 function wkBlock(st,path,b,kind,tools){
   const f=(k,label,extra='')=>`<div class="field"><label>${label}</label><input data-wkbind="${path}.${k}" value="${esc(b[k])}" ${extra}></div>`;
@@ -4835,13 +4866,13 @@ function wkPlan(st){
     const budget=d.active?`<span class="wk-budget${len&&planned>len?' over':''}" title="Gym + warm-up + kern minutes vs session length">${planned}’${len?' / '+len+'’':''}</span>`:`<span class="wk-budget">${d.hidden?'Not on slide':esc(st.meta.noTrainingLabel||'No training')}</span>`;
     h+=`<div class="wk-day${d.active?'':' off'}" data-expanded="${open}">
       <div class="wk-dayhead" data-wkact="toggleDay" data-i="${i}"><button class="pl-switch" role="switch" aria-checked="${d.active}" aria-label="${esc(d.name)} has training" data-wkact="activeDay" data-i="${i}"></button>
-        <span class="nm">${esc(d.name)} <small>${date.getUTCDate()}/${date.getUTCMonth()+1}</small></span><span class="sub">${esc(d.active?[d.time,d.place].filter(Boolean).join(' · '):(d.reason||''))}${dm.length?` <em>· Match ${esc(dm.map(m=>(m.kickoff||'')+' vs '+m.them).join(', '))}</em>`:''}</span>${d.active&&attTaken(plYmd(date))?`<span class="cal-att" title="Attendance: present or late / marked">✓ ${attBadge(plYmd(date))}</span>`:''}${budget}<span class="caret">›</span></div>`;
+        <span class="nm">${esc(d.name)} <small>${date.getUTCDate()}/${date.getUTCMonth()+1}</small></span><span class="sub">${d.active?mj([d.time,d.place].filter(Boolean).map(esc)):esc(d.reason||'')}${dm.length?` <em>Match ${esc(dm.map(m=>(m.kickoff||'')+' vs '+m.them).join(', '))}</em>`:''}</span>${d.active&&attTaken(plYmd(date))?`<span class="cal-att" title="Attendance: present or late / marked">✓ ${attBadge(plYmd(date))}</span>`:''}${budget}<span class="caret">›</span></div>`;
     if(open&&!d.active) h+=`<div class="wk-daybody">${wkNoTraining(st,i)}</div>`;
     else if(open){ const p='days.'+i;
-      h+=`<div class="wk-daybody"><div class="wk-ctx"><span class="hint">Times and locations come from the month calendar.</span><button class="btn sm" data-wkact="openSession" data-i="${i}">Edit time &amp; location</button><button class="btn sm" data-go="training" data-arg="${plYmd(date)}">${attTaken(plYmd(date))?'Attendance · '+attBadge(plYmd(date)):'Take attendance'}</button></div>
-        <div class="wk-lane"><div class="wk-lanehead"><span class="wk-tag gym">${esc(st.meta.gymLabel||'Gym')}</span><span class="hint">Counts toward session time · no detail box</span><button class="pl-switch" role="switch" aria-checked="${!!d.gym.on}" aria-label="Gym on ${esc(d.name)}" data-wkact="toggleOn" data-path="${p}.gym"></button></div>${d.gym.on?wkBlock(st,p+'.gym',d.gym,'gym'):''}</div>
+      h+=`<div class="wk-daybody"><div class="wk-ctx"><span class="hint">Times and locations come from the month calendar.</span><button class="btn sm" data-wkact="openSession" data-i="${i}">Edit time &amp; location</button><button class="btn sm" data-go="training" data-arg="${plYmd(date)}">${attTaken(plYmd(date))?'Attendance '+attBadge(plYmd(date)):'Take attendance'}</button></div>
+        <div class="wk-lane"><div class="wk-lanehead"><span class="wk-tag gym">${esc(st.meta.gymLabel||'Gym')}</span><span class="hint">Counts toward session time, no detail box</span><button class="pl-switch" role="switch" aria-checked="${!!d.gym.on}" aria-label="Gym on ${esc(d.name)}" data-wkact="toggleOn" data-path="${p}.gym"></button></div>${d.gym.on?wkBlock(st,p+'.gym',d.gym,'gym'):''}</div>
         <div class="wk-lane"><div class="wk-lanehead"><span class="wk-tag warm">${esc(st.meta.warmLabel||'Warm-up')}</span><span class="hint"></span><button class="pl-switch" role="switch" aria-checked="${!!d.warmup.on}" aria-label="Warm-up on ${esc(d.name)}" data-wkact="toggleOn" data-path="${p}.warmup"></button></div>${d.warmup.on?wkBlock(st,p+'.warmup',d.warmup,'warm'):''}</div>
-        <div class="wk-lane"><div class="wk-lanehead"><span class="wk-tag kern">${esc(st.meta.kernLabel||'Kern')}</span><span class="hint">${d.kern.length} form${d.kern.length===1?'':'s'} · blocks resize to fit</span></div>
+        <div class="wk-lane"><div class="wk-lanehead"><span class="wk-tag kern">${esc(st.meta.kernLabel||'Kern')}</span><span class="hint">${d.kern.length} form${d.kern.length===1?'':'s'}, blocks resize to fit</span></div>
           ${d.kern.map((b,j)=>wkBlock(st,`${p}.kern.${j}`,b,'kern',`<button class="wk-ib" aria-label="Move up" data-wkact="mv" data-i="${i}" data-j="${j}" data-d="-1" ${j===0?'disabled':''}>↑</button><button class="wk-ib" aria-label="Move down" data-wkact="mv" data-i="${i}" data-j="${j}" data-d="1" ${j===d.kern.length-1?'disabled':''}>↓</button><button class="wk-ib" aria-label="Duplicate" data-wkact="dupK" data-i="${i}" data-j="${j}">⧉</button><button class="wk-ib del" aria-label="Remove form" data-wkact="rmK" data-i="${i}" data-j="${j}">✕</button>`)).join('')}
           <div><button class="btn sm" data-wkact="addK" data-i="${i}">+ Add form</button></div></div></div>`; }
     h+='</div>';
@@ -4855,13 +4886,13 @@ function wkNoTraining(st,i){ const d=st.days[i];
 function wkDetails(st){
   const days=st.days.map((d,i)=>({d,i})).filter(x=>x.d.active&&vormen(x.d).length);
   if(!days.length) return '<div class="card"><p class="hint">Add a warm-up or kern form to a training day in the Week plan tab. Each form then gets its own box here.</p></div>';
-  return '<p class="hint">Each form (gym excluded) gets its own box on the training slide. Type the organisation, rules or coaching points; line breaks are kept.</p>'+days.map(({d,i})=>`<div class="card wk-detail"><h3>${esc(d.name)} <small>${esc([d.time,d.place].filter(Boolean).join(' · '))}</small></h3>
+  return '<p class="hint">Each form (gym excluded) gets its own box on the training slide. Type the organisation, rules or coaching points; line breaks are kept.</p>'+days.map(({d,i})=>`<div class="card wk-detail"><h3>${esc(d.name)} <small>${mj([d.time,d.place].filter(Boolean).map(esc))}</small></h3>
     ${vormen(d).map((v,n)=>{ const path=v.kind==='warm'?`days.${i}.warmup`:`days.${i}.kern.${d.kern.indexOf(v.b)}`, sl=staffLabel(v.b,st.staff);
       return `<div class="wk-vorm ${v.kind}"><div class="wk-vh"><span class="n">${n+1}</span><b>${esc(v.b.title||'Untitled')}</b><span>${esc(line2(v.b))}</span>${sl?`<em>${esc(sl)}</em>`:''}</div><textarea data-wkbind="${path}.notes" data-day="${i}" placeholder="Organisation, rules, coaching points…">${esc(v.b.notes||'')}</textarea></div>`; }).join('')}</div>`).join('');
 }
 function wkSession(st){
   const i=plUi.sessionDay, d=st.days[i], tm=plSplit(d.time), date=plAdd(plParse(st.meta.weekStart),i);
-  return `<div class="card"><div class="card-head"><h2>Training session · ${date.getUTCDate()}/${date.getUTCMonth()+1}</h2></div>
+  return `<div class="card"><div class="card-head"><h2>Training session ${date.getUTCDate()}/${date.getUTCMonth()+1}</h2></div>
     <div class="wk-daypick">${st.days.map((x,k)=>`<button class="${x.active?'':'off'}" aria-current="${k===i}" data-wkact="openSession" data-i="${k}">${esc(x.name)}</button>`).join('')}</div>
     <div class="wk-inline"><button class="pl-switch" role="switch" aria-checked="${d.active}" aria-label="${esc(d.name)} has training" data-wkact="activeDay" data-i="${i}"></button>${d.active?'Training on this day':'No training on this day'}</div>
     ${d.active?'':wkNoTraining(st,i)}
@@ -4878,7 +4909,7 @@ function wkPreview(){
   plDraw(main,shapesFor(st,cur,true),true); main.parentElement.style.background='#'+C.bg;
   $('#wkSlideTitle').textContent=cur.kind==='week'?'Week overview':cur.label+' training';
   const absent=st.days.some(d=>d.active&&[d.gym,d.warmup,...d.kern].some(b=>b&&b.on!==false&&hasAbsent(b,st.staff)));
-  $('#wkSlideHint').textContent=(plUi.slide+1)+' of '+list.length+(absent?' · red outline = absent staff assigned':'');
+  $('#wkSlideHint').textContent=(plUi.slide+1)+' of '+list.length+(absent?'. Red outline: absent staff assigned':'');
   const th=$('#wkThumbs'); th.innerHTML=list.map((s,k)=>`<button class="wk-thumb" aria-current="${k===plUi.slide}" data-wkslide="${k}"><span class="pl-slidewrap mini"><span class="pl-slide"></span></span><span class="cap">${esc(s.kind==='week'?'Week':s.label)}</span></button>`).join('');
   th.querySelectorAll('.wk-thumb').forEach((t,k)=>{ const sl=t.querySelector('.pl-slide'); plDraw(sl,shapesFor(st,list[k],false)); t.querySelector('.pl-slidewrap').style.background='#'+C.bg; });
   plFit();
@@ -4917,8 +4948,8 @@ function renderFixture(){
   const vid=m.videoPath&&typeof videoIndex!=='undefined'?videoIndex.find(v=>v.id===m.videoPath):null;
   const pad=n=>String(n);
   el.innerHTML=`<div class="wrap page">
-    <header class="page-head"><div><button class="back" style="display:block;margin-bottom:6px" data-go="calendar" data-calto="${(d||'').slice(0,7)}">← Calendar</button><span class="eyebrow">${mtTag(m)} ${esc([d?fmtDate(d,{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'No date',m.kickoff?'Kick-off '+m.kickoff:'',m.comp].filter(Boolean).join(' · '))}</span>
-      <h1>${esc(vsLabel(m))}</h1><p>${esc([m.home?'Home':'Away',m.place,isPlayed(m)?'Played · '+finalScore(m):''].filter(Boolean).join(' · '))}</p></div>
+    <header class="page-head"><div><button class="back" style="display:block;margin-bottom:6px" data-go="calendar" data-calto="${(d||'').slice(0,7)}">← Calendar</button><span class="eyebrow">${mtTag(m)} ${mj([d?fmtDate(d,{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'No date',m.kickoff?'Kick-off '+m.kickoff:'',m.comp].filter(Boolean).map(esc))}</span>
+      <h1>${esc(vsLabel(m))}</h1><p>${mj([m.home?'Home':'Away',m.place,isPlayed(m)?'Played '+finalScore(m):''].filter(Boolean).map(esc))}</p></div>
       <div class="page-actions"><button class="btn" data-fxedit aria-expanded="${plUi.fxEdit}">Edit details</button>${isPlayed(m)?`<button class="btn" data-go="report" data-arg="${m.id}">Match report</button>`:''}${mnEditable(m)&&(m.manualData||!m.videoName)?`<button class="btn${m.manualData?' primary':''}" data-go="entry" data-arg="${m.id}">${m.manualData?'Edit match data':'Enter result by hand'}</button>`:''}${m.manualData?'':`<button class="btn primary" data-fxtag="${m.id}">Open in tagger</button>`}</div></header>
     <div class="fx-status">
       <div class="fx-stat${sel.ids.length?' ok':''}"><b>${sel.ids.length}</b><span>selected (max ${SEL_MAX})</span></div>
@@ -4962,7 +4993,7 @@ function renderFixture(){
 }
 function fxVideoHtml(m,vid){
   const online=col&&FSX.kind==='cloud', folder=col&&FSX.kind!=='cloud';
-  const pick=col&&videoIndex.length?`<div class="fx-tools"><select id="fxVidPick" aria-label="Video in your storage"><option value="">Choose a video…</option>${videoIndex.map(v=>`<option value="${esc(v.id)}"${m.videoPath===v.id||(!m.videoPath&&m.videoName===v.name)?' selected':''}>${esc(v.name)}${v.folder?' · '+esc(v.folder):''}</option>`).join('')}</select><button class="btn sm" data-fxvidlink="${m.id}">Link</button></div>`:'';
+  const pick=col&&videoIndex.length?`<div class="fx-tools"><select id="fxVidPick" aria-label="Video in your storage"><option value="">Choose a video…</option>${videoIndex.map(v=>`<option value="${esc(v.id)}"${m.videoPath===v.id||(!m.videoPath&&m.videoName===v.name)?' selected':''}>${esc(v.name)}${v.folder?' ('+esc(v.folder)+')':''}</option>`).join('')}</select><button class="btn sm" data-fxvidlink="${m.id}">Link</button></div>`:'';
   return `${m.videoName?`<p class="hint">${vid||!col?'This match uses <b>'+esc(m.videoName)+'</b>.':'<b>'+esc(m.videoName)+'</b> is not in '+esc(online?'your online storage':'the Videos folder')+' yet.'}</p>`:'<p class="hint">No video yet. Tag live from the tagger during the match, or link the recording afterwards.</p>'}
     ${pick}
     ${online?`<div class="row-actions"><label class="btn sm"><input type="file" id="fxVidUp" accept="video/*" hidden>Upload a video for this match</label><span class="hint">You can keep working while it uploads.</span></div>`
@@ -5196,8 +5227,8 @@ function renderTraining(){
   const open=all.filter(s=>!att[s.id]).length;
   el.innerHTML=`<div class="wrap page">
     <header class="page-head"><div><button class="back" style="display:block;margin-bottom:6px" data-go="calendar" data-calto="${ymd.slice(0,7)}">← Calendar</button>
-      <span class="eyebrow">Training attendance · Week ${plIsoWeek(dt).week}</span><h1>${esc(fmtDate(ymd,{weekday:'short',day:'numeric',month:'short'}))}</h1>
-      <p>${esc(e.type==='training'?[plRange(e),e.place].filter(Boolean).join(' · ')||'Training':e.type==='off'?(plCal.offLabel||'No training')+(e.reason?' · '+e.reason:''):'Not planned in the calendar')}</p></div>
+      <span class="eyebrow">Training attendance${SEP}Week ${plIsoWeek(dt).week}</span><h1>${esc(fmtDate(ymd,{weekday:'short',day:'numeric',month:'short'}))}</h1>
+      <p>${e.type==='training'?(mj([plRange(e),e.place].filter(Boolean).map(esc))||'Training'):esc(e.type==='off'?(plCal.offLabel||'No training')+(e.reason?': '+e.reason:''):'Not planned in the calendar')}</p></div>
       <div class="page-actions"><div class="seg" role="group" aria-label="Training"><button data-go="training" data-arg="${prev||''}" ${prev?'':'disabled'} aria-label="Previous training">‹ Previous</button><button data-go="training" data-arg="${next||''}" ${next?'':'disabled'} aria-label="Next training">Next ›</button></div>
         <button class="btn" data-go="week" data-arg="${plKey(plYmd(plMonday(dt)))}">Week plan</button></div></header>
     ${e.type!=='training'?`<p class="notice">This day is not a training in your calendar. <button class="tlink" data-attmake="${ymd}">Make it a training day</button></p>`:''}
@@ -5210,7 +5241,7 @@ function renderTraining(){
       :'<div class="empty-state"><strong>No players yet</strong><p>Add your players on the Players page first.</p><button class="btn primary" data-go="players">Players</button></div>'}
     <datalist id="attWhyList">${(()=>{ const n={}; Object.values(plCal.days).forEach(d=>Object.values(d.attWhy||{}).forEach(w=>{ w=String(w).trim(); if(w) n[w]=(n[w]||0)+1; })); return [...new Set(Object.keys(n).sort((a,b)=>n[b]-n[a]).concat(ATT_WHY))].slice(0,20).map(w=>`<option value="${esc(w)}">`).join(''); })()}</datalist>
     <p class="hint">Tap: <b>P</b> present, <b>A</b> absent (type the reason next to her name), <b>I</b> injured, <b>NT</b> national team. Tap again to clear. Attendance % = present out of all sessions except national team call-ups.</p>
-    ${others.length?`<section class="card att-others"><div class="card-head"><h2>Other team · ${others.length}</h2><span class="hint">Not in attendance for ${esc(seasonText(season).toLowerCase())}</span></div>
+    ${others.length?`<section class="card att-others"><div class="card-head"><h2>Other team <span class="count-pill">${others.length}</span></h2><span class="hint">Not in attendance for ${esc(seasonText(season).toLowerCase())}</span></div>
       <div class="att-otherlist">${others.map(x=>`<span class="att-other"><b>${esc(x.num||'–')}</b> ${esc(x.name)}<button class="btn sm ghost" data-attmine="${x.id}">Back to my team</button></span>`).join('')}</div></section>`:''}
     <div class="field"><label for="attNote">Notes</label><textarea id="attNote" class="att-note" placeholder="Who left early, reasons for absence…">${esc(e.attNote||'')}</textarea></div>
   </div>`;
@@ -5232,7 +5263,7 @@ function attCsv(scope){
     const base=t.present+t.absent+t.injured;
     return [s.num||'',s.name].concat(cells,[t.present,t.absent,t.injured,t.nt,base?Math.round(100*t.present/base)+'%':'']).map(q).join(','); });
   const name=fileSafe('Attendance '+(scope==='all'?'season '+seasonOf(month+'-15'):plCalModel(month).title))+'.csv';
-  return offerFile(name,'﻿'+[head.map(q).join(',')].concat(rows,['','P = present · A = absent (reason) · I = injured · NT = national team · Attendance % leaves national team call-ups out']).join('\r\n'));
+  return offerFile(name,'﻿'+[head.map(q).join(',')].concat(rows,['','P = present, A = absent (reason), I = injured, NT = national team. Attendance % leaves national team call-ups out.']).join('\r\n'));
 }
 function attPlayerCard(s,season){
   const sx=season==='all'?nowSeason():season;
@@ -5242,7 +5273,7 @@ function attPlayerCard(s,season){
   return `<section class="card"><div class="card-head"><h2>Training attendance</h2><span class="hint">${r.sessions} session${r.sessions===1?'':'s'} with attendance</span></div>
     <div class="att-kpi"><b>${r.pct==null?'–':r.pct+'%'}</b><span>present${r.nt?' (national team call-ups not counted)':''}</span></div>
     <div class="att-sum">${ATT.map(([k,l])=>`<span class="att-chip ${k}"><b>${r[k]}</b> ${l}</span>`).join('')}</div>
-    <div class="att-dots">${r.list.slice(-40).map(x=>`<button class="att-dot ${x.v}" data-go="training" data-arg="${x.d}" title="${esc(fmtDate(x.d,{weekday:'short',day:'numeric',month:'short'})+' · '+ATT_LBL[x.v]+(x.why?' · '+x.why:''))}" aria-label="${esc(fmtDate(x.d,{day:'numeric',month:'short'})+': '+ATT_LBL[x.v])}"></button>`).join('')}</div>
+    <div class="att-dots">${r.list.slice(-40).map(x=>`<button class="att-dot ${x.v}" data-go="training" data-arg="${x.d}" title="${esc(fmtDate(x.d,{weekday:'short',day:'numeric',month:'short'})+': '+ATT_LBL[x.v]+(x.why?' ('+x.why+')':''))}" aria-label="${esc(fmtDate(x.d,{day:'numeric',month:'short'})+': '+ATT_LBL[x.v])}"></button>`).join('')}</div>
     <p class="hint">Each square is a training, oldest first. Click one to open that session.</p></section>`;
 }
 document.addEventListener('click',e=>{ const b=e.target.closest('[data-potherteam]'); if(!b) return; const sq=SQ(b.dataset.potherteam), on=!isOther(sq,b.dataset.season);
@@ -5457,7 +5488,7 @@ function renderTactics(){
   el.innerHTML=`<div class="wrap page tb-page">
     <header class="page-head"><div><span class="eyebrow">Tactics board</span>
       ${tbUi.rename?`<div class="tb-ren"><input id="tbRenIn" value="${esc(b.name)}" aria-label="Board name" maxlength="80"><button class="btn sm primary" data-tbrensave>Save</button><button class="btn sm ghost" data-tbrencancel>Cancel</button></div>`:`<h1>${esc(b.name)}</h1>`}
-      <p>${onBoard} player${onBoard===1?'':'s'}${opp?' · '+opp+' opponent'+(opp===1?'':'s'):''} · ${boards.length} board${boards.length===1?'':'s'}</p></div>
+      <p>${onBoard} player${onBoard===1?'':'s'}${opp?', '+opp+' opponent'+(opp===1?'':'s'):''}${SEP}${boards.length} board${boards.length===1?'':'s'}</p></div>
       <div class="page-actions">
         <label class="sel">Board <select id="tbBoardSel">${boards.map(x=>`<option value="${x.id}"${x.id===b.id?' selected':''}>${esc(x.name)}</option>`).join('')}</select></label>
         <button class="btn" data-tbnew>${IC.plus} New board</button><button class="btn" data-tbdup>Duplicate</button><button class="btn" data-tbren>Rename</button><button class="btn ghost" data-tbdel>Delete</button>
@@ -5480,7 +5511,7 @@ function renderTactics(){
         <section class="card tb-card"><div class="card-head"><h2>Shapes</h2></div>
           <div class="tb-row"><label class="sel">Formation <select id="tbForm">${Object.keys(FORMATIONS).map(f=>`<option${f===b.formation?' selected':''}>${f}</option>`).join('')}</select></label></div>
           <div class="tb-row"><button class="btn sm" data-tbshape="us">Our team 1–11</button><button class="btn sm" data-tbshape="them">Opponents 1–11</button></div>
-          ${ms.length?`<div class="tb-row"><label class="sel tb-grow">Line-up from <select id="tbFromMatch"><option value="">Choose a match…</option>${ms.map(m=>`<option value="${m.id}">${esc(fmtDate(isoDate(m.date),{day:'numeric',month:'short'})+' · '+(m.home?'vs ':'at ')+(m.them||'Opponent'))}</option>`).join('')}</select></label></div>`:''}
+          ${ms.length?`<div class="tb-row"><label class="sel tb-grow">Line-up from <select id="tbFromMatch"><option value="">Choose a match…</option>${ms.map(m=>`<option value="${m.id}">${esc(fmtDate(isoDate(m.date),{day:'numeric',month:'short'})+' '+(m.home?'vs ':'at ')+(m.them||'Opponent'))}</option>`).join('')}</select></label></div>`:''}
           <p class="hint">A shape replaces the players of that team on the board. Undo brings them back.</p></section>
         <section class="card tb-card"><div class="card-head"><h2>Pitch</h2></div>
           <div class="tb-view">
@@ -5508,7 +5539,7 @@ function renderTactics(){
 function tbRefresh(){ const b=tbCur(); tbDraw(); const i=$('#tbInsp'); if(i) i.innerHTML=tbInspHtml(b); const l=$('#tbList'); if(l) l.innerHTML=tbListHtml(b);
   const u=document.querySelector('[data-tbundo]'), r=document.querySelector('[data-tbredo]'); if(u) u.disabled=!(tbUi.undo[b.id]||[]).length; if(r) r.disabled=!(tbUi.redo[b.id]||[]).length;
   const c=document.querySelector('[data-tbclear]'); if(c) c.disabled=!b.items.length;
-  const p=document.querySelector('#view-tactics .page-head p'); if(p){ const n=b.items.filter(x=>x.t==='pl'&&x.team!=='them').length, o=b.items.filter(x=>x.t==='pl'&&x.team==='them').length, nb=Object.keys(tbBoards).length; p.textContent=`${n} player${n===1?'':'s'}${o?' · '+o+' opponent'+(o===1?'':'s'):''} · ${nb} board${nb===1?'':'s'}`; } }
+  const p=document.querySelector('#view-tactics .page-head p'); if(p){ const n=b.items.filter(x=>x.t==='pl'&&x.team!=='them').length, o=b.items.filter(x=>x.t==='pl'&&x.team==='them').length, nb=Object.keys(tbBoards).length; p.textContent=`${n} player${n===1?'':'s'}${o?', '+o+' opponent'+(o===1?'':'s'):''}, ${nb} board${nb===1?'':'s'}`; } }
 
 /* ---------- editing ---------- */
 function tbAdd(kind,pt){ const b=tbCur(), k=b.size||1;
@@ -5557,14 +5588,14 @@ async function tbPdf(all){
       if(!doc) doc=new J({orientation:orient,unit:'mm',format:'a4'}); else doc.addPage('a4',orient);
       const pw=doc.internal.pageSize.getWidth(), ph=doc.internal.pageSize.getHeight(), mg=12, c=await tbCanvas(b,2400);
       doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.setTextColor(11,15,20); doc.text(String(b.name||'Tactics board'),mg,mg+7);
-      doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(86,97,109); doc.text(teamName()+' · '+day,mg,mg+13);
+      doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(86,97,109); doc.text(teamName()+', '+day,mg,mg+13);
       doc.setDrawColor(11,15,20); doc.setLineWidth(.6); doc.line(mg,mg+16,pw-mg,mg+16);
       const notes=String(b.notes||'').trim(), nl=notes?doc.splitTextToSize(notes,pw-2*mg):[], maxL=orient==='landscape'?8:14, nh=nl.length?Math.min(nl.length,maxL)*4.4+9:0;
       const top=mg+20, avH=ph-top-mg-nh-6, avW=pw-2*mg, ar=c.width/c.height; let iw=avW, ih=iw/ar; if(ih>avH){ ih=avH; iw=ih*ar; }
       doc.addImage(c.toDataURL('image/jpeg',.92),'JPEG',(pw-iw)/2,top,iw,ih);
       if(nl.length){ let y=top+ih+8; doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(11,15,20); doc.text('Notes',mg,y); doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(40,46,54);
         doc.text(nl.slice(0,maxL).concat(nl.length>maxL?['…']:[]),mg,y+5.5); }
-      doc.setFontSize(8); doc.setTextColor(140,150,160); doc.text('Match Tagger · Tactics board',mg,ph-6); }
+      doc.setFontSize(8); doc.setTextColor(140,150,160); doc.text('Match Tagger – Tactics board',mg,ph-6); }
     await offerFile(fileSafe(all?'Tactics boards':(list[0].name||'Tactics board'))+'.pdf',doc.output('blob'));
   }catch(e){ console.error(e); toast('Could not make the PDF: '+e.message); }
   finally{ if(btn&&btn.isConnected){ btn.disabled=false; btn.textContent=old; } }
@@ -5712,14 +5743,14 @@ async function pickFolder(){
 function renderLvModal(){
   const m=$('#lvModal'); m.hidden=!ui.lvOpen; if(!ui.lvOpen) return; const g=M?guessVideo(M):null;
   $('#lvSheet').innerHTML=`<div class="sheet-head"><div><h2 id="lvTitle">Add the match video</h2><p>Pick the recording of this match. Next, you mark the kick-off in the video and all live tags move into place.</p></div><button class="btn sm ghost" data-lvclose>Close</button></div>
-    ${videoIndexState==='loading'?'<p class="hint">Looking for videos…</p>':videoIndex.length?`<div class="od-row"><span>Videos in ${esc(videoFolder())}</span><div class="od-inline"><select id="lvPick" aria-label="Video in your folder">${videoIndex.map(v=>`<option value="${esc(v.id)}"${g&&g.id===v.id?' selected':''}>${esc(v.name)}${v.folder?' · '+esc(v.folder):''}</option>`).join('')}</select><button class="btn primary" data-lvplay>Use this video</button></div></div>`:`<p class="hint">${FSX.kind==='cloud'?'No videos in your online storage yet. Upload the recording below: you can sync while it uploads.':'No videos in '+esc(videoFolder())+' yet. Copy the recording there and click Check again, or choose a file below.'}</p>`}
+    ${videoIndexState==='loading'?'<p class="hint">Looking for videos…</p>':videoIndex.length?`<div class="od-row"><span>Videos in ${esc(videoFolder())}</span><div class="od-inline"><select id="lvPick" aria-label="Video in your folder">${videoIndex.map(v=>`<option value="${esc(v.id)}"${g&&g.id===v.id?' selected':''}>${esc(v.name)}${v.folder?' ('+esc(v.folder)+')':''}</option>`).join('')}</select><button class="btn primary" data-lvplay>Use this video</button></div></div>`:`<p class="hint">${FSX.kind==='cloud'?'No videos in your online storage yet. Upload the recording below: you can sync while it uploads.':'No videos in '+esc(videoFolder())+' yet. Copy the recording there and click Check again, or choose a file below.'}</p>`}
     <div class="row-actions"><label class="btn"><input type="file" id="videoFileLive" accept="video/*" hidden>${fileLabel()}</label><button class="btn ghost" data-odrefresh>Check again</button></div>`;
 }
 /* uploads to online storage */
 var ups=[], upSeq=0;
 const fmtBytes=b=>b>=1e9?(b/1e9).toFixed(b>=1e10?0:1)+' GB':b>=1e6?Math.round(b/1e6)+' MB':Math.max(1,Math.round(b/1e3))+' kB';
 const upActive=()=>(ups||[]).filter(u=>u.state==='queued'||u.state==='up');
-function upLabel(){ const a=upActive(); if(!a.length) return ''; const t=a.reduce((x,u)=>x+u.total,0), l=a.reduce((x,u)=>x+u.loaded,0); return 'Uploading '+(a.length>1?a.length+' videos':'video')+' · '+Math.floor(100*l/Math.max(1,t))+'%'; }
+function upLabel(){ const a=upActive(); if(!a.length) return ''; const t=a.reduce((x,u)=>x+u.total,0), l=a.reduce((x,u)=>x+u.loaded,0); return 'Uploading '+(a.length>1?a.length+' videos':'video')+' '+Math.floor(100*l/Math.max(1,t))+'%'; }
 function upKey(name){
   const clean=String(name||'video.mp4').replace(/[\\/:*?"<>|#%]+/g,'-').trim()||'video.mp4';
   const taken=k=>videoIndex.some(v=>v.key===k)||ups.some(u=>u.key===k&&u.state!=='cancel'&&u.state!=='error');
@@ -5754,7 +5785,7 @@ function uploadsHtml(){
   const list=ups.filter(u=>u.state!=='cleared');
   if(!list.length) return '<div id="clUps" hidden></div>';
   return `<div class="cl-list" id="clUps">${list.map(u=>{ const pct=Math.floor(100*u.loaded/Math.max(1,u.total));
-    const st={queued:'Waiting…',up:pct+'% of '+fmtBytes(u.total),done:'Uploaded · '+fmtBytes(u.total),error:'Stopped: '+(u.err||''),cancel:'Cancelled'}[u.state];
+    const st={queued:'Waiting…',up:pct+'% of '+fmtBytes(u.total),done:'Uploaded, '+fmtBytes(u.total),error:'Stopped: '+(u.err||''),cancel:'Cancelled'}[u.state];
     const act=u.state==='up'||u.state==='queued'?`<button class="btn sm ghost" data-upcancel="${u.id}">Cancel</button>`:u.state==='error'?`<button class="btn sm" data-upretry="${u.id}">Try again</button>`:`<button class="btn sm ghost" data-upclear="${u.id}" aria-label="Remove from list">✕</button>`;
     return `<div class="cl-row${u.state==='error'?' err':''}"><b>${esc(u.key.split('/').pop())}</b><span class="acts">${act}</span><small>${esc(st)}</small>${u.state==='up'||u.state==='queued'?`<div class="cl-bar"><i style="width:${pct}%"></i></div>`:''}</div>`; }).join('')}</div>`;
 }
@@ -5768,12 +5799,12 @@ async function downloadVideo(key){
 }
 function renderCloudModal(){
   const on=col&&FSX.state==='granted', total=videoIndex.reduce((a,v)=>a+(v.size||0),0);
-  const vids=videoIndexState==='loading'?'Looking for videos…':videoIndexState==='error'?'Could not read your videos':videoIndex.length+' video'+(videoIndex.length===1?'':'s')+' · '+fmtBytes(total);
+  const vids=videoIndexState==='loading'?'Looking for videos…':videoIndexState==='error'?'Could not read your videos':videoIndex.length+' video'+(videoIndex.length===1?'':'s')+', '+fmtBytes(total);
   $('#odSheet').innerHTML=`<div class="sheet-head"><div><h2 id="odTitle">Your online storage</h2><p>${on?'Logged in to <b>'+esc(FSX.host)+'</b>. Your videos and tags live online: open this site on any computer and log in to carry on.':'Not logged in. Your work is saved in this browser until you log in.'}</p></div><button class="btn sm ghost" id="btnOdClose">Close</button></div>
-    ${on?`<div class="cl-head"><span class="grow"><b style="color:var(--ink)">Videos</b> · ${esc(vids)}</span><label class="btn primary sm"><input type="file" id="clUpFiles" accept="video/*,.mp4,.mov,.m4v,.webm,.mkv" multiple hidden>Upload videos</label><button class="btn sm" data-odrefresh>Refresh</button></div>
+    ${on?`<div class="cl-head"><span class="grow"><b style="color:var(--ink)">Videos</b>${SEP}${esc(vids)}</span><label class="btn primary sm"><input type="file" id="clUpFiles" accept="video/*,.mp4,.mov,.m4v,.webm,.mkv" multiple hidden>Upload videos</label><button class="btn sm" data-odrefresh>Refresh</button></div>
       ${uploadsHtml()}
       ${videoIndex.length?`<div class="cl-list">${videoIndex.map(v=>{ const used=Object.values(store).filter(m=>m.videoPath===v.id||(!m.videoPath&&m.videoName===v.name)).map(vsLabel);
-        return `<div class="cl-row"><b>${esc(v.name)}</b><span class="acts">${ui.clDel===v.key?`<button class="btn sm danger" data-cldelyes="${esc(v.key)}">Delete for good</button><button class="btn sm ghost" data-cldelno>Keep</button>`:`<button class="btn sm" data-cldl="${esc(v.key)}">Download</button><button class="btn sm ghost" data-cldel="${esc(v.key)}">Delete</button>`}</span><small>${esc([fmtBytes(v.size||0),v.modified?fmtDate(String(v.modified).slice(0,10)):'',v.folder,used.length?'Used in '+used.join(', '):'Not linked to a match yet'].filter(Boolean).join(' · '))}</small></div>`; }).join('')}</div>`:'<p class="hint" style="margin:0">No videos yet. Click <b>Upload videos</b> and select one or more match videos. Matches that were tagged on a video with the same file name are linked automatically.</p>'}
+        return `<div class="cl-row"><b>${esc(v.name)}</b><span class="acts">${ui.clDel===v.key?`<button class="btn sm danger" data-cldelyes="${esc(v.key)}">Delete for good</button><button class="btn sm ghost" data-cldelno>Keep</button>`:`<button class="btn sm" data-cldl="${esc(v.key)}">Download</button><button class="btn sm ghost" data-cldel="${esc(v.key)}">Delete</button>`}</span><small>${mj([fmtBytes(v.size||0),v.modified?fmtDate(String(v.modified).slice(0,10)):'',v.folder,used.length?'Used in '+used.join(', '):'Not linked to a match yet'].filter(Boolean).map(esc))}</small></div>`; }).join('')}</div>`:'<p class="hint" style="margin:0">No videos yet. Click <b>Upload videos</b> and select one or more match videos. Matches that were tagged on a video with the same file name are linked automatically.</p>'}
       <p class="hint" style="margin:0">Uploads run while this tab is open. If an upload is interrupted, choose the same file again and it continues where it stopped.</p>
       <div class="row-actions"><button class="btn" id="btnCloudLock">Lock now</button><button class="btn ghost" id="btnCloudLogout">Log out</button><span style="flex:1"></span><button class="btn ghost" id="gateUseFolder">Use a folder on this computer instead</button></div>`
     :`<div class="row-actions"><button class="btn primary" id="btnCloudLogin">Log in</button><button class="btn ghost" id="btnOdClose2">Not now</button></div>`}`;
@@ -5816,7 +5847,7 @@ function renderGate(state,err){
   const g=$('#gate'); g.hidden=false; let inner; ui.gateState=state;
   if(FSX.kind==='cloud'){ g.innerHTML=PITCH_SVG+`<div class="gate-card">${cloudGate(state,err)}</div>`; const f=$(state==='prompt'||state==='lock'?'#gatePw':(ui.gateApi||FSX.api?'#gatePw':'#gateApi')); if(f) setTimeout(()=>f.focus(),30); return; }
   if(!backendChosen()&&(state==='none'||state==='unsupported')){
-    inner=`<span class="eyebrow">Set up · one time</span><h1>Where do your videos live?</h1>
+    inner=`<span class="eyebrow">One-time setup</span><h1>Where do your videos live?</h1>
     <p>Choose once. You can switch later from the status at the top right.</p>
     <div class="gate-opts">
       <div class="gate-opt"><em>Recommended</em><strong>Online storage</strong><p>Upload your videos once to your own Cloudflare storage. Tag from any computer and any browser, no OneDrive needed.</p><button class="btn primary" id="gateUseCloud">Use online storage</button></div>
@@ -5831,7 +5862,7 @@ function renderGate(state,err){
   else if(state==='prompt') inner=`<span class="eyebrow">Welcome back</span><h1>Match Tagger</h1>
     <p>Click below to reopen your folder “${esc(FSX.name)}”. Chrome asks for permission once per visit. Choose <b>Allow on every visit</b> and this step disappears.</p>
     <div class="row-actions"><button class="btn primary" id="gateReconnect">Open my folder</button><button class="btn ghost" id="gatePick">Choose another folder</button></div>`;
-  else inner=`<span class="eyebrow">Set up · one time</span><h1>Choose your folder</h1>
+  else inner=`<span class="eyebrow">One-time setup</span><h1>Choose your folder</h1>
     <p>Match Tagger keeps your analyses and reads your match videos from one folder. Put it in OneDrive, and the OneDrive app keeps it in sync everywhere.</p>
     <ol><li>On your computer, open <b>OneDrive</b> and create a folder <b>Match Tagger</b>. You can also select OneDrive itself and the app creates the folder for you.</li>
       <li>Click <b>Choose folder</b> below and select that folder.</li>
@@ -6166,6 +6197,7 @@ try{ ui.mtf=localStorage.getItem('matchTagger.mtf')||'all'; }catch(e){ ui.mtf='a
 const saved=lsLoad();
 if(saved&&saved.store&&Object.keys(saved.store).length){ store=saved.store; Object.values(store).forEach(normalize); Object.keys(store).forEach(id=>{ if(isUntouchedBlank(store[id])) delete store[id]; }); M=store[saved.current]||Object.values(store).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0))[0]||blankMatch(); }
 else { M=blankMatch(); }
+nameOrderMigrate(true); syncLinkedNames(true);
 linkAll();
 if(settings.ui&&settings.ui.pre!=null) ui.pre=+settings.ui.pre; if(settings.ui&&settings.ui.post!=null) ui.post=+settings.ui.post;
 renderAll();

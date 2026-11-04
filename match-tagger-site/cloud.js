@@ -1,4 +1,4 @@
-/* Match Tagger · online storage.
+/* Match Tagger – online storage.
    Talks to your own storage service (a Cloudflare Worker with an R2 bucket, see worker.js and the README).
    Same layout as the folder version:
      Data/matches/<id>.json   one file per match

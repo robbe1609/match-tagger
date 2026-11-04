@@ -1,4 +1,4 @@
-# Match Tagger · website with your OneDrive folder
+# Match Tagger: website with your OneDrive folder
 
 Match Tagger as a website that works with a folder on your computer. Put that folder in OneDrive and the OneDrive app keeps your analyses and videos in sync with the cloud and your other computers. No Microsoft sign-in, no Azure, no registration.
 
@@ -27,11 +27,11 @@ OneDrive
 
 ## Setup (once)
 
-### 1 · Put the new version online
+### 1. Put the new version online
 
 The website is published by Cloudflare Pages from the GitHub repository `match-tagger`: every update is online automatically about a minute later. Nothing to do here.
 
-### 2 · Make sure OneDrive is on your computer
+### 2. Make sure OneDrive is on your computer
 
 - **Windows:** OneDrive is built in. Open File Explorer: you see **OneDrive** in the left column. If not, start the OneDrive app from the Start menu and sign in.
 - **Mac:** install **OneDrive** from the App Store, sign in, and it appears under **Locations** in Finder.
@@ -40,7 +40,7 @@ In that OneDrive folder, create a folder **Match Tagger**, with a folder **Video
 
 **Recommended:** right-click the folder **Match Tagger** and choose **Always keep on this device**. Otherwise OneDrive downloads each video only when you open it.
 
-### 3 · Connect the folder in the site
+### 3. Connect the folder in the site
 
 1. Open your site in Chrome or Edge.
 2. Click **Choose folder**.
@@ -50,7 +50,7 @@ In that OneDrive folder, create a folder **Match Tagger**, with a folder **Video
 
 At the top right you now see **Saved to your folder**.
 
-### 4 · Bring your matches over from the Claude version
+### 4. Bring your matches over from the Claude version
 
 1. In the **Claude version** of Match Tagger: **Analyses → Back up all matches** (bottom of the page). A .json file downloads.
 2. In the site: **Analyses → Open backup**, choose that file, check the list and click **Restore**.

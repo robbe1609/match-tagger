@@ -257,9 +257,9 @@ function calendarShapes(st, cal){
         if (isM) out.push({t:'rect', x:ix, y:iy, w:iw, h:ih, fill:MT_FILL[it.mtype]||C.gym, r:0.04, name:'Match'});
         else out.push({t:'rect', x:ix, y:iy, w:iw, h:ih, fill:C.blockFill, line:C.kern2, lineW:1, dash:!!it.projected, r:0.04, name:'Training'});
         const ink = isM ? (MT_INK[it.mtype]||C.dark) : C.fg, ink2 = ink === C.fg ? C.muted : ink;
-        const l1 = isM ? ((it.mtype && it.mtype !== 'league' ? MT_NAME[it.mtype] : 'Match') + (it.time ? ' · ' + it.time : '')) : (it.time || 'Training');
+        const l1 = isM ? ((it.mtype && it.mtype !== 'league' ? MT_NAME[it.mtype] : 'Match') + (it.time ? '  ' + it.time : '')) : (it.time || 'Training');
         const l2 = isM ? [it.opponent, it.venue ? '(' + it.venue + ')' : ''].filter(Boolean).join(' ') : (it.place || '');
-        const single = l1 + (l2 ? ' · ' + l2 : '');
+        const single = l1 + (l2 ? ', ' + l2 : '');
         const paras = one
           ? [para(single, fitSize(single, fs[0], tw, true, 6.5), ink, true, fs[0]*1.2)]
           : [para(l1, fitSize(l1, fs[0], tw, true, 7), ink, true, fs[0]*1.25)].concat(l2 ? [para(l2, fitSize(l2, fs[1], tw, false, 6.5), ink2, false, fs[1]*1.25)] : []);

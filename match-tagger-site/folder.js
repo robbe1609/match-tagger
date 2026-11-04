@@ -1,4 +1,4 @@
-/* Match Tagger · folder storage.
+/* Match Tagger – folder storage.
    Uses a folder on this computer (for example the "Match Tagger" folder inside OneDrive, kept in sync by the OneDrive app).
    Chrome and Edge remember the folder between visits. Layout inside the folder:
      Data/matches/<id>.json   one file per match

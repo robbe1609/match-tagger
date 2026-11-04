@@ -1,4 +1,4 @@
-/* Match Tagger · online storage service (version 3: adds the player portal)
+/* Match Tagger – online storage service (version 3.1: player portal with match timelines)
    A Cloudflare Worker that keeps your match videos and tags in your own R2 bucket.
    Needs two settings on the Worker:
      - an R2 bucket binding with the variable name  BUCKET
@@ -100,7 +100,9 @@ function feedFor(a, share) {
     .map(b => ({ id: b.id, name: b.name, date: b.date, note: b.note || '',
       items: (b.items || []).filter(i => b.to !== 'involved' || a.all || (i.players || []).includes(a.id)).map(i => Object.assign({}, i, { mine: (i.players || []).includes(a.id) })) }))
     .filter(b => b.items.length);
-  return { matches, batches };
+  const mids = new Set(matches.map(m => m.id)); batches.forEach(b => b.items.forEach(i => mids.add(i.mid)));
+  const meta = {}; mids.forEach(id => { if (share.meta && share.meta[id]) meta[id] = share.meta[id]; });
+  return { matches, batches, meta };
 }
 function videoAllowed(a, share, mid) {
   const f = feedFor(a, share);
@@ -184,8 +186,8 @@ async function adminPortal(req, env, url) {
     await setPw(env, a, defaultPw(a), true); await wjson(env, P_ACC, accs); return json({ player: pub(a) });
   }
   if (p === '/api/admin/share') {
-    if (m === 'PUT') { const d = body && typeof body === 'object' ? body : {}; await wjson(env, P_SHARE, { matches: d.matches || [], batches: d.batches || [], videos: d.videos || {}, updatedAt: Date.now() }); }
-    return json(await rjson(env, P_SHARE, { matches: [], batches: [], videos: {} }));
+    if (m === 'PUT') { const d = body && typeof body === 'object' ? body : {}; await wjson(env, P_SHARE, { matches: d.matches || [], batches: d.batches || [], videos: d.videos || {}, meta: d.meta || {}, updatedAt: Date.now() }); }
+    return json(await rjson(env, P_SHARE, { matches: [], batches: [], videos: {}, meta: {} }));
   }
   if (p === '/api/admin/comments') {
     if (m === 'POST') {
