@@ -2691,7 +2691,11 @@ function filterDesc(){
   return parts.join(', ');
 }
 function tagTiming(k){ const c=customOf(k), o=c||(settings.cfg&&settings.cfg[k])||{}; return {pre:o.pre!=null?+o.pre:null,post:o.post!=null?+o.post:null}; }
-function preOf(e){ if(e.pre!=null) return +e.pre; const t=tagTiming(e.type).pre; return t!=null?t:ui.pre; }
+/* goals (ours and theirs) always start at least 15 s before the tag, so the build-up is in the clip */
+const GOAL_PRE=15, isGoalEv=e=>e&&(e.type==='goal'||e.type==='goal_against');
+function preOf(e){ if(e.pre!=null) return +e.pre; const t=tagTiming(e.type).pre; if(isGoalEv(e)) return Math.max(GOAL_PRE,t!=null?t:0); return t!=null?t:ui.pre; }
+/* how far before the tag a click on an event jumps to */
+const leadOf=e=>isGoalEv(e)?preOf(e):3;
 function postOf(e){ if(e.post!=null) return +e.post; const t=tagTiming(e.type).post; return t!=null?t:ui.post; }
 const customTiming=e=>e.pre!=null||e.post!=null;
 function clipBounds(e){ const d=V().duration||e.t+postOf(e); return [Math.max(0,e.t-preOf(e)),Math.min(d,e.t+postOf(e))]; }
@@ -3155,7 +3159,7 @@ function go(v,arg){
 }
 window.addEventListener('hashchange',()=>{ let h=''; try{ h=location.hash.slice(1); }catch(e){} if(ui.hashLock===h){ ui.hashLock=null; return; } const [v,a]=parseHash(); if(v!==view||a!==viewArg) go(v,a); });
 function renderView(){ const f={portal:renderPortal,entry:renderEntry,tactics:renderTactics,training:renderTraining,calendar:renderCalendar,week:renderWeek,fixture:renderFixture,home:renderHome,matches:renderMatches,report:renderReport,players:renderPlayers,player:renderPlayer,team:renderTeam,new:renderNew}[view]; if(f) f(); }
-function watchEvent(mid,eid){ const m=store[mid]; const e=m&&m.events.find(x=>x.id===eid); if(!e) return; ui.pendingSeek=e.t; go('match',mid); if(hasVideo()){ ui.pendingSeek=null; seek(e.t-3); } else toast('Load the video for this match to watch the moment.'); }
+function watchEvent(mid,eid){ const m=store[mid]; const e=m&&m.events.find(x=>x.id===eid); if(!e) return; ui.pendingSeek=e.t-leadOf(e); go('match',mid); if(hasVideo()){ ui.pendingSeek=null; seek(e.t-leadOf(e)); } else toast('Load the video for this match to watch the moment.'); }
 
 const IC={
   plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
@@ -5885,7 +5889,7 @@ function toast(msg,undo,label){
 const v=V();
 ['play','pause'].forEach(n=>v.addEventListener(n,()=>{ $('#playIcon').setAttribute('d',v.paused?'M8 5v14l11-7z':'M7 5h4v14H7zM13 5h4v14h-4z'); $('#bPlay').setAttribute('aria-label',v.paused?'Play':'Pause'); if(!v.paused&&!raf) loop(); }));
 ['seeked','timeupdate'].forEach(n=>v.addEventListener(n,()=>{ if(v.paused) tick(); }));
-v.addEventListener('loadedmetadata',()=>{ renderTimeline(); tick(true); renderTagging(); if(ui.pendingSeek!=null){ const t=ui.pendingSeek; ui.pendingSeek=null; seek(t-3); } });
+v.addEventListener('loadedmetadata',()=>{ renderTimeline(); tick(true); renderTagging(); if(ui.pendingSeek!=null){ const t=ui.pendingSeek; ui.pendingSeek=null; seek(t); } });
 v.addEventListener('error',async()=>{ if(!videoURL) return;
   if(videoFile&&videoFile.handle&&!ui.vidReopen){ ui.vidReopen=true; try{ const old=videoFile, f=await old.handle.getFile(); Object.assign(f,{id:old.id,folder:old.folder,modified:old.modified,handle:old.handle}); const i=videoIndex.indexOf(old); if(i>=0) videoIndex[i]=f; sessionFiles[M.id]=f; const t=v.currentTime||0; await loadVideo(f); v.addEventListener('loadedmetadata',()=>{ v.currentTime=t; },{once:true}); return; }catch(e){ console.error(e); } }
   if(videoFile&&videoFile.remote&&(ui.vidRetry||0)<2){ ui.vidRetry=(ui.vidRetry||0)+1; const f=videoFile, t=v.currentTime||0, playing=!!ui.wasPlaying;
@@ -6048,7 +6052,7 @@ document.addEventListener('click',e=>{
   if(b=g('[data-tadd]')){ const c={id:'c'+newId(),label:'',color:TAG_PALETTE[settings.custom.length%TAG_PALETTE.length],kind:'player',key:'',show:true}; settings.custom.push(c); saveSettings(); renderTagsModal(); const i=$('#tl-'+c.id); if(i) i.focus(); return; }
   if(b=g('[data-tdel]')){ const id=b.dataset.tdel, i=settings.custom.findIndex(x=>x.id===id); if(i<0) return; const [c]=settings.custom.splice(i,1); removeFromPanel(id); const keptItems=layout().items.filter(x=>x.kind==='tag'&&x.ref===id); layout().items=layout().items.filter(x=>!(x.kind==='tag'&&x.ref===id)); ui.layoutSel=null; saveSettings(); renderTagsModal(); renderTagging();
     toast('Deleted tag "'+(c.label||'Untitled tag')+'". Tagged events keep their label.',()=>{ settings.custom.splice(i,0,c); layout().items.push(...keptItems); saveSettings(); renderTagsModal(); renderTagging(); }); return; }
-  if(b=g('[data-seekev]')){ const ev=M.events.find(x=>x.id===b.dataset.seekev); if(ev){ if(!hasVideo()) return toast('Load the match video first.'); stopClips(); seek(ev.t-3); } return; }
+  if(b=g('[data-seekev]')){ const ev=M.events.find(x=>x.id===b.dataset.seekev); if(ev){ if(!hasVideo()) return toast('Load the match video first.'); stopClips(); seek(ev.t-leadOf(ev)); } return; }
   if(b=g('[data-delev]')) return removeEvent(b.dataset.delev);
   if(b=g('[data-timeev]')){ ui.timeEdit=ui.timeEdit===b.dataset.timeev?null:b.dataset.timeev; renderEvents(); return; }
   if(b=g('[data-tprev]')){ const ev=M.events.find(x=>x.id===b.dataset.tprev); if(ev){ if(!hasVideo()) return toast('Load the match video first.'); ui.clip={list:[ev],i:0}; playClip(); } return; }
