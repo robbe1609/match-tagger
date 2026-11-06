@@ -1,4 +1,4 @@
-/* Match Tagger – online storage service (version 3.3: player portal with match timelines, season stats and player photos)
+/* Match Tagger – online storage service (version 3.4: player portal with match timelines, season stats, player photos and practice rankings)
    A Cloudflare Worker that keeps your match videos and tags in your own R2 bucket.
    Needs two settings on the Worker:
      - an R2 bucket binding with the variable name  BUCKET
@@ -103,7 +103,9 @@ function feedFor(a, share) {
   const mids = new Set(matches.map(m => m.id)); batches.forEach(b => b.items.forEach(i => mids.add(i.mid)));
   const meta = {}; mids.forEach(id => { if (share.meta && share.meta[id]) meta[id] = share.meta[id]; });
   const st = share.stats || {}, mine = (st.players || {})[a.id];   // each player only gets her own numbers
-  return { matches, batches, meta, stats: mine ? Object.assign({ season: st.season || '', at: st.at || null }, mine) : null };
+  const pr = share.practice;   // team table of practice goals and assists (names and numbers only)
+  const practice = pr && Array.isArray(pr.rows) ? { season: pr.season || '', sessions: pr.sessions || 0, at: pr.at || null, rows: pr.rows.map(r => ({ id: r.id, name: r.name, num: r.num || '', g: +r.g || 0, a: +r.a || 0 })) } : null;
+  return { matches, batches, meta, practice, stats: mine ? Object.assign({ season: st.season || '', at: st.at || null }, mine) : null };
 }
 function videoAllowed(a, share, mid) {
   const f = feedFor(a, share);
@@ -191,8 +193,8 @@ async function adminPortal(req, env, url) {
     await setPw(env, a, defaultPw(a), true); await wjson(env, P_ACC, accs); return json({ player: pub(a) });
   }
   if (p === '/api/admin/share') {
-    if (m === 'PUT') { const d = body && typeof body === 'object' ? body : {}; await wjson(env, P_SHARE, { matches: d.matches || [], batches: d.batches || [], videos: d.videos || {}, meta: d.meta || {}, stats: d.stats || {}, updatedAt: Date.now() }); }
-    return json(await rjson(env, P_SHARE, { matches: [], batches: [], videos: {}, meta: {}, stats: {} }));
+    if (m === 'PUT') { const d = body && typeof body === 'object' ? body : {}; await wjson(env, P_SHARE, { matches: d.matches || [], batches: d.batches || [], videos: d.videos || {}, meta: d.meta || {}, stats: d.stats || {}, practice: d.practice || null, updatedAt: Date.now() }); }
+    return json(await rjson(env, P_SHARE, { matches: [], batches: [], videos: {}, meta: {}, stats: {}, practice: null }));
   }
   if (p === '/api/admin/comments') {
     if (m === 'POST') {

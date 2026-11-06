@@ -157,7 +157,7 @@ A clip can belong to more than one player, so everyone involved in a press, a bu
 
 ## Player portal (test phase)
 
-Players get their own login page where they watch the matches and clips you share, and comment on clips. It needs **version 3.3 of the storage service** (3.1 added the match timelines, 3.2 the season numbers, 3.3 her photo):
+Players get their own login page where they watch the matches and clips you share, and comment on clips. It needs **version 3.4 of the storage service** (3.1 added the match timelines, 3.2 the season numbers, 3.3 her photo, 3.4 the practice ranking):
 
 1. Cloudflare → **Workers & Pages** → **match-tagger-storage** → **Edit code**.
 2. Select all the code, delete it, paste the new `storage-service/worker.js` from GitHub, click **Deploy**. Your bucket, password and videos stay as they are.
@@ -184,6 +184,7 @@ Then open **Portal** in the top menu.
 - **Match timeline:** each match a player can open shows a timeline under the video: kick-off, half-time and full time, the goals (blue for us, red against, with the minute and scorer) and her own clips as coloured blocks. Below it the same moments as a list with the score after each goal. Tap a moment to jump there. Matches where you only shared her clips (not the full video) are listed too, marked "Your clips only"; there she can play her own clips only.
 - **Scoreboard:** the top right of the video shows the score and the match clock as the video plays, also when she watches a clip. It uses your kick-off, half-time and full-time marks from the tagger, so set those for every match you share. After you change a match, open **Portal** once so the players get the new timeline.
 - **Her card:** her landing page greets her by her full name and shows her photo (the one you uploaded in **Players**) with her goals, assists and matches this season. Each player only gets her own card. The numbers update every time you open **Portal**.
+- **Practice goals and assists:** on a training day in the calendar (Fridays show it automatically, other days via *Keep practice goals and assists*) tap + and − next to each player. Players marked absent, injured or national team are left out. The season standings are under the list, and the player page in **Players** shows her totals and place. Players see their practice goals and assists on their card within a few seconds; tapping a number opens the team ranking with her place highlighted (equal numbers share a place).
 - **Comments:** players comment on any clip; each conversation is private between you and that player. Reply under **Comments** on the Portal page; threads waiting for an answer are marked. **Watch and reply** opens the clip she commented on, plays it (it stops at the end of the clip, or keep playing), shows your note and the conversation, and lets you answer right there.
 
 ## Players chart
@@ -238,7 +239,7 @@ A full match of 3 GB takes about 20 minutes at an upload speed of 20 Mbps, and a
 
 ## Updating the storage service
 
-When a new version of `storage-service/worker.js` comes with an update (version 2 added downloads, version 3 the player portal, version 3.1 the match timelines, version 3.2 the season numbers on the player page, version 3.3 the player's photo):
+When a new version of `storage-service/worker.js` comes with an update (version 2 added downloads, version 3 the player portal, version 3.1 the match timelines, version 3.2 the season numbers on the player page, version 3.3 the player's photo, version 3.4 the practice ranking):
 
 1. **Workers & Pages** → **match-tagger-storage** → **Edit code**.
 2. Select all the code in the editor, delete it, and paste the new `worker.js`.
