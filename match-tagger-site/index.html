@@ -1318,6 +1318,47 @@ html.locked body>*:not(#gate):not(#toasts){visibility:hidden}
 .bar{height:8px;border-radius:4px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
 .bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .2s}
 @media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+.mg-layout{display:grid;grid-template-columns:340px minmax(0,1fr);gap:22px;align-items:start;margin-top:18px}
+.mg-side{position:sticky;top:76px;display:flex;flex-direction:column;gap:10px;max-height:calc(100vh - 96px)}
+.mg-q{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:var(--surface);color:var(--ink);font:inherit}
+.mg-filt{display:flex;flex-direction:column;gap:8px}.mg-filt .seg{flex-wrap:wrap}
+.mg-oa{display:flex;align-items:center;gap:7px;font-size:14px;font-weight:600;color:var(--muted)}
+.mg-list{overflow:auto;display:flex;flex-direction:column;gap:6px;padding:2px 2px 8px;min-height:0}
+.mg-mo{margin:10px 0 2px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.mg-mo:first-child{margin-top:0}
+.mg-item{display:flex;flex-direction:column;gap:3px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:10px;padding:9px 12px;color:var(--ink)}
+.mg-item:hover{border-color:var(--muted)}.mg-item.on{border-left-color:var(--accent);background:color-mix(in srgb,var(--accent) 7%,var(--surface))}
+.mg-it-top{display:flex;align-items:center;gap:8px;font-size:12px}
+.mg-dt{font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+.mg-k{font-weight:700;padding:1px 7px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line)}
+.mg-k.k-player{color:var(--accent)}.mg-k.k-parents{color:#B25E09}.mg-k.k-club{color:#7A4FBF}
+.mg-open{margin-left:auto;font-weight:700;color:var(--warn)}
+.mg-it-title{font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mg-sn{font-size:13px;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.mg-ed{display:flex;flex-direction:column;gap:14px;padding:18px 20px}
+.mg-ed-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.mg-ed-act{margin-left:auto;display:flex;gap:8px}
+.mg-back{display:none}
+.mg-title{resize:none;overflow:hidden;display:block;line-height:1.05;font-family:var(--f-display);font-weight:800;font-size:clamp(26px,3.4vw,38px);text-transform:uppercase;letter-spacing:.01em;border:0;border-bottom:2px solid var(--line);background:none;color:var(--ink);padding:4px 0 8px;width:100%}
+.mg-title:focus{outline:none;border-bottom-color:var(--accent)}
+.mg-ed label.f{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.mg-ed label.f input,.mg-ed label.f select,.mg-ed label.f textarea,#mgAddP,#mgNewAct,.mg-at{font:inherit;font-size:15px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:8px 10px}
+#mgBody{resize:vertical;line-height:1.55;min-height:260px}
+.mg-meta{display:grid;grid-template-columns:170px 120px 160px;gap:12px}
+.mg-lbl{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.mg-people{display:flex;flex-wrap:wrap;align-items:center;gap:8px}.mg-people .mg-lbl{width:100%}
+.mg-people .tag b{color:var(--muted)}
+.tag .x,.mg-acts .x{border:0;background:none;color:var(--muted);font-size:18px;line-height:1;padding:0 2px;cursor:pointer}
+.tag .x:hover,.mg-acts .x:hover{color:var(--bad)}
+#mgAddP{padding:6px 10px;font-size:14px}
+.mg-acts{display:flex;flex-direction:column;gap:8px}
+.mg-acts ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.mg-acts li{display:flex;align-items:center;gap:8px}
+.mg-acts li input[type=checkbox]{width:18px;height:18px;flex:none;accent-color:var(--accent)}
+.mg-at{flex:1;min-width:0}.mg-acts li.done .mg-at{text-decoration:line-through;color:var(--muted)}
+.mg-none{min-height:200px;justify-content:center}
+.mg-pcard{margin-top:16px}.mg-plist{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px;margin-top:10px}
+@media (max-width:899px){.mg-layout{grid-template-columns:1fr}.mg-side{position:static;max-height:none}.mg-layout.has-ed .mg-side{display:none}.mg-back{display:inline-flex}}
+@media (max-width:560px){.mg-meta{grid-template-columns:1fr 1fr}.mg-meta label:last-child{grid-column:1/3}.mg-ed{padding:14px}.mg-ed-act .btn{padding:6px 10px}}
 /* ---------- tactics board ---------- */
 .tb-page{gap:12px;padding-top:16px}
 .tb-page .page-head{padding-bottom:10px;align-items:center}
@@ -1466,7 +1507,7 @@ body.tb-dragging,body.tb-dragging *{cursor:grabbing!important;user-select:none!i
 
 <nav class="nav" aria-label="Main"><div class="wrap nav-in">
   <button class="nav-brand" data-go="calendar" aria-label="Match Tagger calendar"><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="1.5" y="5.5" width="29" height="21" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><line x1="16" y1="5.5" x2="16" y2="26.5" stroke="currentColor" stroke-width="2"/><circle cx="16" cy="16" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="25" cy="16" r="3" fill="var(--hero-accent)"/></svg><span>Match Tagger</span></button>
-  <div class="nav-links"><button data-go="calendar" data-nav="calendar">Calendar</button><button data-go="week" data-nav="week">Week</button><button data-go="matches" data-nav="matches">Analyses</button><button data-go="players" data-nav="players">Players</button><button data-go="tactics" data-nav="tactics">Tactics</button><button data-go="portal" data-nav="portal">Portal</button><button data-go="team" data-nav="team">Team</button><button data-go="home" data-nav="home">Overview</button></div>
+  <div class="nav-links"><button data-go="calendar" data-nav="calendar">Calendar</button><button data-go="week" data-nav="week">Week</button><button data-go="matches" data-nav="matches">Analyses</button><button data-go="players" data-nav="players">Players</button><button data-go="tactics" data-nav="tactics">Tactics</button><button data-go="meetings" data-nav="meetings">Meetings</button><button data-go="portal" data-nav="portal">Portal</button><button data-go="team" data-nav="team">Team</button><button data-go="home" data-nav="home">Overview</button></div>
   <span class="spacer"></span>
   <button class="sync" id="sync" data-od title="Your Match Tagger folder"><i></i><span>Opening folder…</span></button>
   <button class="btn primary sm" data-go="new">New match</button>
@@ -1482,6 +1523,7 @@ body.tb-dragging,body.tb-dragging *{cursor:grabbing!important;user-select:none!i
 <section class="view" id="view-players" hidden></section>
 <section class="view" id="view-player" hidden></section>
 <section class="view" id="view-tactics" hidden></section>
+<section class="view" id="view-meetings" hidden></section>
 <section class="view" id="view-entry" hidden></section>
 <section class="view" id="view-portal" hidden></section>
 <section class="view" id="view-team" hidden></section>
@@ -1894,7 +1936,7 @@ async function connectDb(){
     col=true; lastSync=Date.now(); linkAll(); if(view==='match') renderLiveBar();
     if(changedCurrent){ if(store[M.id]) M=store[M.id]; renderAll(); } else renderDrawer();
     lsSave(); setSync('cloud'); flush();
-    refreshVideos(); plSync(); tbSync(); phSync(); if(syncLinkedNames()&&view!=='match') renderView(); if(view==='portal'){ po.players=null; po.err=''; setTimeout(()=>poLoad(true),300); }
+    refreshVideos(); plSync(); tbSync(); mgSync(); phSync(); if(syncLinkedNames()&&view!=='match') renderView(); if(view==='portal'){ po.players=null; po.err=''; setTimeout(()=>poLoad(true),300); }
   }catch(e){ console.error(e); if(e&&e.name==='AuthError'){ authLost(); return; } setSync('error'); toast(FSX.kind==='cloud'?'Could not reach your online storage. Your work is kept in this browser and saved online as soon as the connection is back.':'Could not open your Match Tagger folder. Your work is kept in this browser. Click the status at the top to reconnect.'); clearTimeout(ui.retryT); if(FSX.kind==='cloud') ui.retryT=setTimeout(connectDb,20000); }
 }
 const localMode=()=>{ try{ return localStorage.getItem('matchTagger.localMode')==='1'; }catch(e){ return false; } };
@@ -3173,12 +3215,12 @@ function matchMin(t){ const c=matchClock(t); return c.phase==='pre'?null:c.secs/
 /* ---------- Router ---------- */
 let view='home', viewArg=null;
 const sessionFiles={};
-const VIEWS=['home','calendar','week','fixture','training','tactics','entry','portal','matches','report','players','player','team','new','match'];
+const VIEWS=['home','calendar','week','fixture','training','tactics','meetings','entry','portal','matches','report','players','player','team','new','match'];
 function parseHash(){ let h=''; try{ h=(location.hash||'').slice(1); }catch(e){}
-  if(/^(home|matches|players|team|new|calendar|tactics|portal)$/.test(h)) return [h,null];
+  if(/^(home|matches|players|team|new|calendar|tactics|portal|meetings)$/.test(h)) return [h,null];
   const w=h.match(/^week(?:-(\d{4}-W\d{2}))?$/); if(w) return ['week',w[1]||null];
   const tr=h.match(/^training-(\d{4}-\d{2}-\d{2})$/); if(tr) return ['training',tr[1]];
-  const k=h.match(/^(match|report|player|fixture|tactics|entry)-([A-Za-z0-9]+)$/); return k?[k[1],k[2]]:['calendar',null]; }
+  const k=h.match(/^(match|report|player|fixture|tactics|entry|meetings)-([A-Za-z0-9]+)$/); return k?[k[1],k[2]]:['calendar',null]; }
 const navKey=v=>({entry:'matches',report:'matches',match:'matches',player:'players',new:'calendar',fixture:'calendar',training:'calendar'}[v]||v);
 function go(v,arg){
   if(typeof plUi!=='undefined'&&(plUi.daySel||plUi.addMatch)){ plUi.daySel=null; plUi.addMatch=null; renderDayModal(); renderAddMatch(); }
@@ -3192,7 +3234,7 @@ function go(v,arg){
   if(v==='tactics'){ if(arg&&tbBoards[arg]){ tbUi.cur=arg; tbStoreLocal(); } arg=tbCur().id; }
   if(v==='portal'&&view!=='portal'&&po.players) setTimeout(()=>poLoad(true),0);   // coming back: pick up new notes, players and replies
   if(view==='tactics'&&(v!=='tactics'||arg!==viewArg)){ tbUi.drag=null; tbUi.rename=false; if(v!=='tactics'||arg!==viewArg) tbUi.sel=null; }
-  if(!['match','report','player','fixture','week','training','tactics','entry'].includes(v)) arg=null;
+  if(!['match','report','player','fixture','week','training','tactics','entry','meetings'].includes(v)) arg=null;
   if(view==='training'&&(v!=='training'||arg!==viewArg)) plUi.attQ='';
   if(view==='fixture'&&(v!=='fixture'||arg!==viewArg)){ plUi.fxEdit=false; plUi.fxQ=''; ui.fxDel=null; }
   if(view==='match'&&v!=='match'){ V().pause(); stopClips(); ui.tray=null; ui.numBuf=''; }
@@ -3206,7 +3248,7 @@ function go(v,arg){
   try{ window.scrollTo(0,0); }catch(e){}
 }
 window.addEventListener('hashchange',()=>{ let h=''; try{ h=location.hash.slice(1); }catch(e){} if(ui.hashLock===h){ ui.hashLock=null; return; } const [v,a]=parseHash(); if(v!==view||a!==viewArg) go(v,a); });
-function renderView(){ const f={portal:renderPortal,entry:renderEntry,tactics:renderTactics,training:renderTraining,calendar:renderCalendar,week:renderWeek,fixture:renderFixture,home:renderHome,matches:renderMatches,report:renderReport,players:renderPlayers,player:renderPlayer,team:renderTeam,new:renderNew}[view]; if(f) f(); }
+function renderView(){ const f={meetings:renderMeetings,portal:renderPortal,entry:renderEntry,tactics:renderTactics,training:renderTraining,calendar:renderCalendar,week:renderWeek,fixture:renderFixture,home:renderHome,matches:renderMatches,report:renderReport,players:renderPlayers,player:renderPlayer,team:renderTeam,new:renderNew}[view]; if(f) f(); }
 function watchEvent(mid,eid){ const m=store[mid]; const e=m&&m.events.find(x=>x.id===eid); if(!e) return; ui.pendingSeek=e.t-leadOf(e); go('match',mid); if(hasVideo()){ ui.pendingSeek=null; seek(e.t-leadOf(e)); } else toast('Load the video for this match to watch the moment.'); }
 
 const IC={
@@ -4096,7 +4138,7 @@ function renderPlayer(){
       </tbody></table></div>`:'<p class="hint">She has not played in a tagged match yet.</p>'}</section>
     </div>
     ${playTimeCard(s,season)}
-    ${attPlayerCard(s,season)}
+    ${attPlayerCard(s,season)}${mgPlayerCard(s)}
   </div>`;
   const slot=$('#pvSlot'); if(slot) slot.replaceWith(pvVideo());
   renderPvState();
@@ -5616,6 +5658,174 @@ function tbListHtml(b){ const q=fold(tbUi.q||'').trim().replace(/^#/,''), ss=now
   if(!list.length) return '<p class="hint">No player matches your search.</p>';
   return list.map(s=>`<button class="tb-pl${on.has(s.id)?' on':''}" data-tbadd="sq:${s.id}" title="${on.has(s.id)?'On the board: click to select, drag to move':'Click to add, or drag onto the pitch'}"><span class="tb-disc" style="--c:${b.home};--k:${tbInk(b.home)}">${esc(s.num||'')}</span><span class="nm">${esc(s.name)}${isOther(s,ss)?'<small>other team</small>':''}</span>${on.has(s.id)?'<span class="tb-on">✓</span>':''}</button>`).join(''); }
 function tbMatchOpts(){ return Object.values(store).filter(m=>(m.players||[]).some(p=>p.slot!=null&&p.slot<11)).sort(byDateDesc).slice(0,40); }
+/* ---------- meeting notes ----------
+   One file per meeting: Data/meetings/<id>.json (folder or online storage), cached in this browser.
+   Only the coach can read these: they never go to the player portal. */
+const MG_LS='matchTagger.meetings.v1';
+const MG_KINDS=[['staff','Staff'],['player','Player'],['parents','Parents'],['club','Club'],['other','Other']];
+const mgKind=k=>(MG_KINDS.find(x=>x[0]===k)||MG_KINDS[4])[1];
+let mgNotes={}, mgDeleted={}; const mgDirty=new Set(); let mgTimer=null, mgSyncing=false;
+const mgUi={cur:null, q:'', kind:'all', open:false, saved:true};
+const mgToday=()=>{ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+const mgDate=(ymd,opt)=>{ if(!/^\d{4}-\d{2}-\d{2}$/.test(ymd||'')) return ''; const [y,m,d]=ymd.split('-').map(Number); return new Date(Date.UTC(y,m-1,d)).toLocaleDateString('en-GB',Object.assign({timeZone:'UTC'},opt||{weekday:'short',day:'numeric',month:'short',year:'numeric'})); };
+function mgLoad(){ try{ const x=JSON.parse(localStorage.getItem(MG_LS)||'null'); if(x){ mgNotes=x.notes||{}; mgDeleted=x.deleted||{}; mgUi.cur=x.cur||null; } }catch(e){} }
+function mgStoreLocal(){ try{ localStorage.setItem(MG_LS,JSON.stringify({notes:mgNotes,deleted:mgDeleted,cur:mgUi.cur})); }catch(e){} }
+function mgFix(n){ if(!Array.isArray(n.people)) n.people=[]; if(!Array.isArray(n.actions)) n.actions=[]; ['title','with','body','time'].forEach(k=>{ if(n[k]==null) n[k]=''; }); if(!n.date) n.date=mgToday(); if(!n.kind) n.kind='staff'; return n; }
+const mgList=()=>Object.values(mgNotes).map(mgFix).sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.time||'').localeCompare(a.time||'')||(b.createdAt||0)-(a.createdAt||0));
+function mgNew(from){ const id='mg'+newId(), now=Date.now();
+  const n=mgFix(Object.assign({id,title:'',date:mgToday(),time:'',kind:'staff',people:[],with:'',body:'',actions:[],createdAt:now,updatedAt:now},from||{}));
+  mgNotes[id]=n; mgUi.cur=id; mgTouch(id); return n; }
+function mgTouch(id){ const n=mgNotes[id]; if(n) n.updatedAt=Date.now(); mgDirty.add(id); mgStoreLocal(); mgUi.saved=false; mgSavedUi(); clearTimeout(mgTimer); mgTimer=setTimeout(mgFlush,900); }
+function mgSavedUi(){ const el=$('#mgSaved'); if(el) el.textContent=!col?'Saved in this browser':mgUi.saved?(FSX.kind==='cloud'?'Saved online':'Saved'):'Saving…'; }
+async function mgFlush(){
+  if(!col){ mgUi.saved=true; mgSavedUi(); return; }
+  if(!mgDirty.size){ mgUi.saved=true; mgSavedUi(); return; }
+  const keys=[...mgDirty]; mgDirty.clear();
+  for(const k of keys){
+    try{
+      if(k==='_del') await FSX.write('Data/meetings/deleted.json',JSON.stringify(mgDeleted));
+      else if(k.startsWith('del:')) await FSX.remove('Data/meetings/'+k.slice(4)+'.json');
+      else if(mgNotes[k]) await FSX.write('Data/meetings/'+k+'.json',JSON.stringify(mgNotes[k],null,1));
+    }catch(e){ console.error(e); mgDirty.add(k); if(e&&e.name==='AuthError'&&typeof authLost==='function'){ authLost(); return; } clearTimeout(mgTimer); mgTimer=setTimeout(mgFlush,15000); return; }
+  }
+  if(!mgDirty.size){ mgUi.saved=true; mgSavedUi(); }
+}
+/* after the folder / online storage connects: newest copy of each meeting wins */
+async function mgSync(){
+  if(!col||mgSyncing) return; mgSyncing=true; let changed=false;
+  try{
+    try{ const t=await FSX.readText('Data/meetings/deleted.json'); if(t){ const r=JSON.parse(t)||{}; Object.entries(r).forEach(([id,ts])=>{ if(!mgDeleted[id]||mgDeleted[id]<ts) mgDeleted[id]=ts; }); } }catch(e){}
+    Object.keys(mgDeleted).forEach(id=>{ if(mgNotes[id]&&(mgNotes[id].updatedAt||0)<=mgDeleted[id]){ delete mgNotes[id]; changed=true; } });
+    let items=[]; try{ items=(await FSX.list('Data/meetings'))||[]; }catch(e){}
+    const remote=new Set();
+    for(const it of items.filter(x=>x.kind==='file'&&/^mg[a-z0-9]+\.json$/i.test(x.name))){
+      const id=it.name.replace(/\.json$/i,''); remote.add(id);
+      if(mgDeleted[id]&&!mgNotes[id]){ mgDirty.add('del:'+id); continue; }
+      try{ const r=JSON.parse(await (await it.handle.getFile()).text());
+        if(r&&r.id===id&&(!mgNotes[id]||(r.updatedAt||0)>(mgNotes[id].updatedAt||0))){ if(!(view==='meetings'&&mgUi.cur===id&&mgEditing())){ mgNotes[id]=mgFix(r); changed=true; } }
+        else if(mgNotes[id]&&(mgNotes[id].updatedAt||0)>((r&&r.updatedAt)||0)) mgDirty.add(id); }catch(e){ console.warn('meeting',id,e); }
+    }
+    Object.keys(mgNotes).forEach(id=>{ if(!remote.has(id)) mgDirty.add(id); });
+    if(Object.keys(mgDeleted).length) mgDirty.add('_del');
+    mgStoreLocal(); await mgFlush();
+  } finally { mgSyncing=false; }
+  if(changed&&view==='meetings'&&!mgEditing()) renderMeetings();
+}
+const mgEditing=()=>{ const a=document.activeElement; return !!(a&&a.closest&&a.closest('#view-meetings .mg-ed')&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)); };
+const mgSq=id=>squad().find(s=>s.id===id);
+function mgMatches(n,q){ if(!q) return true; const hay=[n.title,n.body,n.with,mgKind(n.kind),mgDate(n.date),...n.people.map(id=>(mgSq(id)||{}).name||''),...n.actions.map(a=>a.text)].join(' ').toLowerCase(); return q.toLowerCase().split(/\s+/).filter(Boolean).every(w=>hay.includes(w)); }
+function mgFiltered(){ return mgList().filter(n=>(mgUi.kind==='all'||n.kind===mgUi.kind)&&(!mgUi.open||n.actions.some(a=>!a.done&&a.text.trim()))&&mgMatches(n,mgUi.q.trim())); }
+const mgTitle=n=>n.title.trim()||(mgKind(n.kind)+' meeting');
+const mgSnippet=n=>{ const t=n.body.replace(/\s+/g,' ').trim(); return t.length>110?t.slice(0,110)+'…':t; };
+function mgItemHtml(n){ const open=n.actions.filter(a=>!a.done&&a.text.trim()).length;
+  return `<button class="mg-item${n.id===mgUi.cur?' on':''}" data-mgopen="${n.id}"><span class="mg-it-top"><span class="mg-dt">${esc(mgDate(n.date,{day:'numeric',month:'short'}))}</span><span class="mg-k k-${esc(n.kind)}">${esc(mgKind(n.kind))}</span>${open?`<span class="mg-open">${open} open</span>`:''}</span>
+    <b class="mg-it-title">${esc(mgTitle(n))}</b>${mgSnippet(n)?`<span class="mg-sn">${esc(mgSnippet(n))}</span>`:''}</button>`; }
+function mgListHtml(){ const list=mgFiltered(); if(!list.length) return `<p class="empty">${Object.keys(mgNotes).length?'No meetings match.':'No meetings yet. Click New meeting to write your first notes.'}</p>`;
+  let last='', out=''; list.forEach(n=>{ const m=mgDate(n.date,{month:'long',year:'numeric'}); if(m!==last){ out+=`<h3 class="mg-mo">${esc(m)}</h3>`; last=m; } out+=mgItemHtml(n); }); return out; }
+function mgEditorHtml(n){
+  const sq=squad().filter(s=>!n.people.includes(s.id)).sort((a,b)=>(+a.num||999)-(+b.num||999));
+  return `<div class="mg-ed card" data-mgid="${n.id}">
+    <div class="mg-ed-top"><button class="btn sm ghost mg-back" data-mgback>← All meetings</button><span class="hint" id="mgSaved" aria-live="polite"></span>
+      <span class="mg-ed-act"><button class="btn sm" data-mgpdf>Export PDF</button><button class="btn sm ghost" data-mgdel>Delete</button></span></div>
+    <textarea class="mg-title" id="mgTitle" data-mgf="title" rows="1" placeholder="${esc(mgKind(n.kind))} meeting" aria-label="Title" maxlength="140">${esc(n.title)}</textarea>
+    <div class="mg-meta">
+      <label class="f">Date<input type="date" data-mgf="date" value="${esc(n.date)}"></label>
+      <label class="f">Time<input type="time" data-mgf="time" value="${esc(n.time)}"></label>
+      <label class="f">Type<select data-mgf="kind">${MG_KINDS.map(([k,l])=>`<option value="${k}"${k===n.kind?' selected':''}>${l}</option>`).join('')}</select></label>
+    </div>
+    <div class="mg-people"><span class="mg-lbl">Players</span>${n.people.map(id=>{ const s=mgSq(id); return `<span class="tag">${s?`<b>${esc(s.num||'')}</b> ${esc(s.name)}`:'Removed player'}<button class="x" data-mgrmp="${id}" aria-label="Remove ${esc(s?s.name:'player')}">×</button></span>`; }).join('')}
+      <select id="mgAddP" aria-label="Add a player"><option value="">+ Add player</option>${sq.map(s=>`<option value="${s.id}">${esc((s.num?s.num+'  ':'')+s.name)}</option>`).join('')}</select></div>
+    <label class="f mg-with">Also present<input data-mgf="with" value="${esc(n.with)}" placeholder="Staff, parents, club…"></label>
+    <label class="f">Notes<textarea id="mgBody" data-mgf="body" rows="12" placeholder="What was discussed, agreements, feedback…">${esc(n.body)}</textarea></label>
+    <div class="mg-acts"><span class="mg-lbl">Action points</span>
+      <ul>${n.actions.map(a=>`<li class="${a.done?'done':''}"><input type="checkbox" data-mgchk="${a.id}" ${a.done?'checked':''} aria-label="Done"><input class="mg-at" data-mgat="${a.id}" value="${esc(a.text)}" aria-label="Action point"><button class="x" data-mgrma="${a.id}" aria-label="Remove action point">×</button></li>`).join('')}</ul>
+      <input id="mgNewAct" placeholder="Add an action point and press Enter" aria-label="New action point"></div>
+  </div>`; }
+function renderMeetings(){
+  const el=$('#view-meetings'); if(!el) return;
+  let n=mgNotes[viewArg]||null; if(n) mgUi.cur=n.id;
+  const all=mgList(), wide=window.matchMedia('(min-width: 900px)').matches;
+  if(!n&&wide&&all.length){ n=mgNotes[mgUi.cur]||all[0]; mgUi.cur=n.id; }
+  const showEd=!!n, showList=wide||!n, open=all.reduce((t,x)=>t+x.actions.filter(a=>!a.done&&a.text.trim()).length,0);
+  el.innerHTML=`<div class="wrap page mg-page">
+    <header class="page-head"><div><span class="eyebrow">Meeting notes</span><h1>Meetings</h1><p>${all.length} meeting${all.length===1?'':'s'}${open?SEP+open+' open action point'+(open===1?'':'s'):''}</p></div>
+      <div class="page-actions"><button class="btn primary" data-mgnew>${IC.plus} New meeting</button></div></header>
+    <div class="mg-layout${showEd?' has-ed':''}">
+      ${showList?`<aside class="mg-side"><input class="mg-q" id="mgQ" type="search" placeholder="Search notes, players, actions" value="${esc(mgUi.q)}" aria-label="Search meetings">
+        <div class="mg-filt"><div class="seg" role="group" aria-label="Type"><button data-mgkind="all" aria-pressed="${mgUi.kind==='all'}">All</button>${MG_KINDS.map(([k,l])=>`<button data-mgkind="${k}" aria-pressed="${mgUi.kind===k}">${l}</button>`).join('')}</div>
+          <label class="mg-oa"><input type="checkbox" id="mgOpenOnly" ${mgUi.open?'checked':''}> Open action points</label></div>
+        <div class="mg-list" id="mgList">${mgListHtml()}</div></aside>`:''}
+      ${showEd?mgEditorHtml(n):(wide?'':'')}${!showEd&&wide?`<div class="mg-ed card mg-none"><p class="empty">Click <b>New meeting</b> to write your first notes.</p></div>`:''}
+    </div></div>`;
+  mgSavedUi(); mgGrow();
+}
+function mgGrow(){ const t=$('#mgBody'); if(t){ t.style.height='auto'; t.style.height=Math.max(260,t.scrollHeight+4)+'px'; } const h=$('#mgTitle'); if(h){ h.style.height='auto'; h.style.height=h.scrollHeight+'px'; } }
+function mgRefreshList(){ const l=$('#mgList'); if(l) l.innerHTML=mgListHtml(); }
+function mgCurNote(){ const ed=document.querySelector('#view-meetings .mg-ed[data-mgid]'); return ed?mgNotes[ed.dataset.mgid]:null; }
+async function mgPdf(n){
+  try{
+    if(!(window.jspdf&&window.jspdf.jsPDF)) await loadScript('vendor/jspdf.umd.min.js');
+    const doc=new window.jspdf.jsPDF({unit:'mm',format:'a4'}), mg=18, W=210-2*mg; let y=16;
+    const need=h=>{ if(y+h>280){ doc.addPage(); y=20; } };
+    const para=(txt,size,style,color,gap)=>{ doc.setFont('helvetica',style||'normal'); doc.setFontSize(size); doc.setTextColor(...(color||[17,22,28]));
+      y+=size*0.36; String(txt).split('\n').forEach(line=>{ const parts=doc.splitTextToSize(line||' ',W); parts.forEach(p=>{ need(size*0.45); doc.text(p,mg,y); y+=size*0.45; }); }); y+=(gap||0)-size*0.36+1; };
+    const meta=[mgDate(n.date,{weekday:'long',day:'numeric',month:'long',year:'numeric'})+(n.time?', '+n.time:''),mgKind(n.kind)+' meeting',teamName()].filter(Boolean).join('   |   ');
+    para(meta,9,'bold',[100,108,118],2);
+    para(mgTitle(n),20,'bold',null,3);
+    const ppl=n.people.map(id=>{ const s=mgSq(id); return s?(s.num?'#'+s.num+' ':'')+s.name:''; }).filter(Boolean);
+    if(ppl.length) para('Players: '+ppl.join(', '),10,'normal',[60,66,74],1);
+    if(n.with.trim()) para('Also present: '+n.with.trim(),10,'normal',[60,66,74],1);
+    y+=2; doc.setDrawColor(17,22,28); doc.setLineWidth(.4); doc.line(mg,y,210-mg,y); y+=7;
+    if(n.body.trim()) para(n.body.trim(),11,'normal',null,4);
+    const acts=n.actions.filter(a=>a.text.trim());
+    if(acts.length){ need(18); y+=2; para('Action points',13,'bold',null,1); y+=4; acts.forEach(a=>{ need(6); doc.setDrawColor(100,108,118); doc.setLineWidth(.3); doc.rect(mg,y-3.2,3.6,3.6); if(a.done){ doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.text('x',mg+.9,y-.3); }
+      const parts=doc.splitTextToSize(a.text.trim(),W-7); doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.setTextColor(...(a.done?[120,126,134]:[17,22,28])); parts.forEach((p,i)=>{ if(i) need(5); doc.text(p,mg+7,y); y+=5; }); y+=1; }); }
+    const pages=doc.getNumberOfPages(); for(let i=1;i<=pages;i++){ doc.setPage(i); doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(140,146,154); doc.text('Match Tagger meeting notes',mg,290); doc.text(i+' / '+pages,210-mg,290,{align:'right'}); }
+    await offerFile(fileSafe(n.date+' '+mgTitle(n))+'.pdf',doc.output('blob'));
+  }catch(e){ console.error(e); toast('Could not make the PDF: '+e.message); }
+}
+document.addEventListener('click',e=>{
+  if(view!=='meetings') return; const g=s=>e.target.closest(s); let b;
+  if(g('[data-mgnew]')){ const n=mgNew(); go('meetings',n.id); setTimeout(()=>{ const t=$('#mgTitle'); if(t) t.focus(); },30); return; }
+  if(b=g('[data-mgopen]')){ mgUi.cur=b.dataset.mgopen; mgStoreLocal(); go('meetings',b.dataset.mgopen); return; }
+  if(g('[data-mgback]')){ go('meetings'); return; }
+  if(b=g('[data-mgkind]')){ mgUi.kind=b.dataset.mgkind; renderMeetings(); return; }
+  const n=mgCurNote(); if(!n) return;
+  if(g('[data-mgpdf]')){ mgPdf(n); return; }
+  if(g('[data-mgdel]')){ const copy=JSON.parse(JSON.stringify(n)); delete mgNotes[n.id]; mgDeleted[n.id]=Date.now(); mgDirty.add('del:'+n.id); mgDirty.add('_del'); mgUi.cur=null; mgStoreLocal(); clearTimeout(mgTimer); mgTimer=setTimeout(mgFlush,900);
+    go('meetings'); toast('Deleted '+mgTitle(copy)+'.',()=>{ delete mgDeleted[copy.id]; mgDirty.delete('del:'+copy.id); mgNotes[copy.id]=copy; mgTouch(copy.id); mgDirty.add('_del'); go('meetings',copy.id); },'Undo'); return; }
+  if(b=g('[data-mgrmp]')){ n.people=n.people.filter(x=>x!==b.dataset.mgrmp); mgTouch(n.id); renderMeetings(); return; }
+  if(b=g('[data-mgrma]')){ n.actions=n.actions.filter(x=>x.id!==b.dataset.mgrma); mgTouch(n.id); renderMeetings(); mgRefreshList(); return; }
+});
+document.addEventListener('input',e=>{
+  if(view!=='meetings') return; const t=e.target;
+  if(t.id==='mgQ'){ mgUi.q=t.value; mgRefreshList(); return; }
+  const n=mgCurNote(); if(!n) return;
+  if(t.dataset.mgf&&t.tagName!=='SELECT'){ n[t.dataset.mgf]=t.value; mgTouch(n.id); if(t.id==='mgBody'||t.id==='mgTitle') mgGrow(); if(t.dataset.mgf==='title'||t.dataset.mgf==='body') mgRefreshList(); return; }
+  if(t.dataset.mgat){ const a=n.actions.find(x=>x.id===t.dataset.mgat); if(a){ a.text=t.value; mgTouch(n.id); } return; }
+});
+document.addEventListener('change',e=>{
+  if(view!=='meetings') return; const t=e.target;
+  if(t.id==='mgOpenOnly'){ mgUi.open=t.checked; mgRefreshList(); return; }
+  const n=mgCurNote(); if(!n) return;
+  if(t.dataset.mgf==='date'||t.dataset.mgf==='kind'){ n[t.dataset.mgf]=t.value||(t.dataset.mgf==='date'?mgToday():'staff'); mgTouch(n.id); renderMeetings(); return; }
+  if(t.id==='mgAddP'&&t.value){ if(!n.people.includes(t.value)) n.people.push(t.value); if(n.kind==='staff'&&n.people.length===1&&!n.body.trim()&&!n.with.trim()) n.kind='player';   /* a new note about one player is usually a player meeting */ mgTouch(n.id); renderMeetings(); const s=$('#mgAddP'); if(s) s.focus(); return; }
+  if(t.dataset.mgchk){ const a=n.actions.find(x=>x.id===t.dataset.mgchk); if(a){ a.done=t.checked; mgTouch(n.id); t.closest('li').classList.toggle('done',a.done); mgRefreshList(); } return; }
+  if(t.dataset.mgat){ mgRefreshList(); return; }
+});
+document.addEventListener('keydown',e=>{
+  if(view!=='meetings') return; const t=e.target;
+  if(t.id==='mgNewAct'&&e.key==='Enter'){ e.preventDefault(); const v=t.value.trim(), n=mgCurNote(); if(!v||!n) return; n.actions.push({id:newId('a'),text:v,done:false}); mgTouch(n.id); renderMeetings(); mgRefreshList(); const i=$('#mgNewAct'); if(i) i.focus(); return; }
+  if(t.id==='mgTitle'&&e.key==='Enter'){ e.preventDefault(); const b=$('#mgBody'); if(b) b.focus(); return; }
+  if(t.dataset&&t.dataset.mgat&&e.key==='Enter'){ e.preventDefault(); const i=$('#mgNewAct'); if(i) i.focus(); }
+});
+window.addEventListener('beforeunload',()=>{ if(mgDirty.size) mgFlush(); });
+/* the coach's player page: meetings she was part of */
+function mgPlayerCard(s){ const list=mgList().filter(n=>n.people.includes(s.id)); if(!list.length) return '';
+  return `<section class="card mg-pcard"><div class="card-head"><h2>Meetings</h2><span class="hint">${list.length} meeting${list.length===1?'':'s'}</span></div>
+    <div class="mg-plist">${list.slice(0,6).map(n=>`<button class="mg-item" data-go="meetings" data-arg="${n.id}"><span class="mg-it-top"><span class="mg-dt">${esc(mgDate(n.date))}</span><span class="mg-k k-${esc(n.kind)}">${esc(mgKind(n.kind))}</span></span><b class="mg-it-title">${esc(mgTitle(n))}</b>${mgSnippet(n)?`<span class="mg-sn">${esc(mgSnippet(n))}</span>`:''}</button>`).join('')}</div>
+    ${list.length>6?`<p class="hint"><button class="tlink" data-go="meetings">All meetings</button></p>`:''}</section>`; }
+
 function renderTactics(){
   const el=$('#view-tactics'); if(!el) return; const b=tbCur(), boards=Object.values(tbBoards).sort((x,y)=>(y.updatedAt||0)-(x.updatedAt||0));
   const onBoard=b.items.filter(x=>x.t==='pl'&&x.team!=='them').length, opp=b.items.filter(x=>x.t==='pl'&&x.team==='them').length, ms=tbMatchOpts();
@@ -5864,7 +6074,7 @@ document.addEventListener('keydown',e=>{
     tbSetItem((it,b)=>{ tbMoveItem(it,JSON.parse(JSON.stringify(it)),dx,dy,b); }); return; }
   const tool=TB_TOOLS.find(x=>x[2].toLowerCase()===k); if(tool&&t.closest&&!t.closest('.sheet')){ tbUi.tool=tool[0]; if(tool[0]!=='move') tbUi.sel=null; renderTactics(); }
 });
-tbLoad();
+tbLoad(); mgLoad();
 
 
 /* ---------- Folder settings & start screen ---------- */

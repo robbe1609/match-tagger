@@ -212,6 +212,17 @@ Open **Tactics** in the top menu. Every board is saved automatically to your fol
 - **Boards:** **New board**, **Duplicate** (handy for step 1, step 2…), **Rename** and **Delete** at the top.
 - **Export:** **Export PDF** makes an A4 page with the board and your notes. **All boards PDF** puts every board in one file. **PNG** gives an image for WhatsApp or a slide.
 
+## Meetings
+
+The **Meetings** tab keeps your meeting notes: staff meetings, talks with a player, parents, the club.
+
+- **New meeting** opens an empty note dated today. Give it a title, date, time and type, add the players it was about and who else was there, then write your notes. Everything saves by itself (you see *Saved online* at the top).
+- **Action points:** type one and press Enter. Tick them off when done; the list shows how many are still open, and *Open action points* filters to the meetings that still have some.
+- **Find notes:** search (title, notes, players, action points) or filter by type. Notes are grouped by month, newest first.
+- **Export PDF** makes a clean one-page document of a meeting.
+- A player's page in **Players** lists the meetings she was part of.
+- Meetings are saved in your storage (Data/meetings) and are only for you: they never go to the player portal.
+
 ## Lock screen
 
 With online storage, the site locks itself after **1 hour without activity** (no mouse, keyboard, touch or scrolling, and no video playing). It also locks when you open it again after more than an hour away. Unlock it with your storage password (`ADMIN_PASSWORD`).
