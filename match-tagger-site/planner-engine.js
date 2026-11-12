@@ -75,87 +75,85 @@ function fitSize(text, size, width, bold, floor){
   if (need <= width) return size;
   return Math.max(floor, Math.floor(size * width/need * 2)/2);
 }
-function blockShapes(out, b, staff, x, y, w, h, border, sizes, flagAbsent){
+// A block on the week slide. With a time frame, the time sits above the box (outside it), so the box keeps its room for text.
+function blockShapes(out, b, staff, x, y, w, h, border, sizes, flagAbsent, band){
+  if (band){
+    const fr = frameOf(b);
+    if (fr){
+      const d = fmtMin(durOf(b)), withD = w >= 1.45 && d;
+      const z = fitSize(withD ? fr + '  ' + d : fr, 11, w, true, 7.5);
+      out.push({t:'text', x:x+0.02, y, w:w, h:band - 0.03, valign:'middle',
+        paras:[{runs:[{text:fr, size:z, color:border, bold:true}].concat(withD ? [{text:'  ' + d, size:z, color:C.muted, bold:false}] : []), ls:z*1.2}], name:'Block time'});
+    }
+    y += band; h -= band;
+  }
   out.push({t:'rect', x, y, w, h, fill:C.blockFill, line:border, lineW:1.5, r:0.06, name:'Block'});
-  const tw = w - 0.13;
+  const tw = w - 0.16;
   const fl0 = Math.max(8, sizes[0]-3), fl1 = Math.max(8, sizes[1]-3);
   const ts = fitSize(b.title||'', sizes[0], tw, true, fl0);
-  const lsOf = (z, base) => Math.max(z*1.4, base*1.25);
-  const fr = frameOf(b), l2 = line2(b), sl = staffLabel(b, staff);
-  const tail = [];
-  if (sl){ const z = fitSize(sl, sizes[1], tw, false, fl1); tail.push(para(sl, z, C.staff, false, lsOf(z, sizes[1]))); }
-  // the time frame sits on its own line above the name, in the colour of the block's outline;
-  // when the row is too low for that, it shares the type line instead
-  const head = [], fz = Math.max(8, sizes[1]-1);
-  let paras;
-  const title = para(b.title||'', ts, C.fg, true, lsOf(ts, sizes[0]));
-  const typeP = t => { const z = fitSize(t, sizes[1], tw, false, fl1); return para(t, z, C.muted, false, lsOf(z, sizes[1])); };
-  if (fr){
-    const sep = [para(fr, fitSize(fr, fz, tw, true, 7.5), border, true, fz*1.3), title].concat(l2 ? [typeP(l2)] : [], tail);
-    const need = sep.reduce((a,p)=>a+p.ls, 0) / 72;
-    if (need <= h - 0.1) paras = sep;
-    else {
-      const both = l2 ? fr + '  ' + l2 : fr, z = fitSize(both, sizes[1], tw, false, fl1);
-      paras = [title, {runs:[{text:fr, size:z, color:border, bold:true}].concat(l2 ? [{text:'  ' + l2, size:z, color:C.muted, bold:false}] : []), ls:lsOf(z, sizes[1])}].concat(tail);
-    }
-  } else paras = [title].concat(l2 ? [typeP(l2)] : [], tail);
-  out.push({t:'text', x:x+0.07, y:y+0.07, w:tw, h:h-0.1, paras, name:'Block text'});
+  const paras = [para(b.title||'', ts, C.fg, true, Math.max(ts*1.4, sizes[0]*1.25))];
+  const l2 = line2(b); if (l2){ const z = fitSize(l2, sizes[1], tw, false, fl1); paras.push(para(l2, z, C.muted, false, Math.max(z*1.4, sizes[1]*1.25))); }
+  const sl = staffLabel(b, staff); if (sl){ const z = fitSize(sl, sizes[1], tw, false, fl1); paras.push(para(sl, z, C.staff, false, Math.max(z*1.4, sizes[1]*1.25))); }
+  out.push({t:'text', x:x+0.08, y:y+0.07, w:tw, h:h-0.1, paras, name:'Block text'});
   if (flagAbsent && hasAbsent(b, staff)) out.push({t:'flag', x:x-0.04, y:y-0.04, w:w+0.08, h:h+0.08});
 }
 
+// Week slide, edge to edge: narrow day column, wide lanes, time frames above the blocks.
+const WK = {x0:0.3, right:13.03, dayW:1.5, g:0.1, laneW:1.95};
 function weekShapes(st, preview){
   const out = [];
   const days = st.days.filter(d=>d.active || !d.hidden);
-  out.push({t:'text', x:0.44, y:0.28, w:5.6, h:0.55, paras:[para(st.meta.title||'', 28, C.title, true, 34)], name:'Title'});
-  out.push({t:'text', x:6.2, y:0.4, w:6.69, h:0.32, align:'right', paras:[para(st.meta.subtitle||'', 14, C.muted, false, 18)], name:'Subtitle'});
-  // lane headers
+  const gymX = WK.x0 + WK.dayW + WK.g, warmX = gymX + WK.laneW + WK.g, kernX = warmX + WK.laneW + WK.g, kernW = WK.right - kernX, fullW = WK.right - gymX;
+  out.push({t:'text', x:WK.x0, y:0.2, w:6, h:0.5, paras:[para(st.meta.title||'', 26, C.title, true, 32)], name:'Title'});
+  out.push({t:'text', x:6.4, y:0.32, w:WK.right-6.4, h:0.3, align:'right', paras:[para(st.meta.subtitle||'', 13, C.muted, false, 17)], name:'Subtitle'});
   const hdr = [
-    {x:2.62, w:1.78, fill:C.gym, color:C.dark, text:st.meta.gymLabel||'Gym'},
-    {x:4.47, w:1.78, fill:C.warm, color:C.dark, text:st.meta.warmLabel||'Warm-up'},
-    {x:6.40, w:6.49, fill:C.kern, color:C.onKern, text:st.meta.kernLabel||'Kern'}];
+    {x:gymX, w:WK.laneW, fill:C.gym, color:C.dark, text:st.meta.gymLabel||'Gym'},
+    {x:warmX, w:WK.laneW, fill:C.warm, color:C.dark, text:st.meta.warmLabel||'Warm-up'},
+    {x:kernX, w:kernW, fill:C.kern, color:C.onKern, text:st.meta.kernLabel||'Kern'}];
   hdr.forEach(hh=>{
-    out.push({t:'rect', x:hh.x, y:0.86, w:hh.w, h:0.41, fill:hh.fill, r:0.08, name:'Header'});
-    out.push({t:'text', x:hh.x, y:0.86, w:hh.w, h:0.41, align:'center', valign:'middle', paras:[para(hh.text,14,hh.color,true,17)], name:'Header text'});
+    out.push({t:'rect', x:hh.x, y:0.78, w:hh.w, h:0.36, fill:hh.fill, r:0.08, name:'Header'});
+    out.push({t:'text', x:hh.x, y:0.78, w:hh.w, h:0.36, align:'center', valign:'middle', paras:[para(hh.text,13,hh.color,true,16)], name:'Header text'});
   });
   if (!days.length) return out;
-  const top = 1.37, bottom = 7.15, gap = 0.1;
-  const rowH = Math.min(1.25, (bottom - top - gap*(days.length-1)) / days.length);
+  const top = 1.22, bottom = 7.3, gap = 0.08;
+  const rowH = Math.min(1.7, (bottom - top - gap*(days.length-1)) / days.length);
   const small = rowH < 0.95;
   days.forEach((d, i)=>{
     const y = top + i*(rowH+gap);
     const di = st.days.indexOf(d);
-    out.push({t:'rect', x:0.44, y, w:2.08, h:rowH, fill:C.dayFill, r:0.08, name:'Day', day:di});
-    const dp = [para(d.name||'', small?15:17, C.dayText, true, small?18:21)];
+    out.push({t:'rect', x:WK.x0, y, w:WK.dayW, h:rowH, fill:C.dayFill, r:0.08, name:'Day', day:di});
+    const dw = WK.dayW - 0.2;
+    const dp = [para(d.name||'', fitSize(d.name||'', small?14:16, dw*0.8, true, 11), C.dayText, true, small?17:20)];
     if (!d.active){
-      out.push({t:'text', x:0.6, y, w:1.86, h:rowH, valign:'middle', paras:dp, name:'Day text', day:di});
-      // one full-width cell: no training
-      out.push({t:'rect', x:2.62, y, w:10.27, h:rowH, fill:C.cell, line:C.noBorder, lineW:1, r:0.06, name:'No training'});
+      out.push({t:'text', x:WK.x0+0.12, y, w:dw, h:rowH, valign:'middle', paras:dp, name:'Day text', day:di});
+      out.push({t:'rect', x:gymX, y, w:fullW, h:rowH, fill:C.cell, line:C.noBorder, lineW:1, r:0.06, name:'No training'});
       const np = [para(st.meta.noTrainingLabel||'Geen training', small?14:17, C.fg, true, small?18:22)];
       const why = String(d.reason||'').trim();
-      if (why) np.push(para(why, fitSize(why, small?11:13, 9.8, false, 9), C.muted, false, small?15:18));
-      out.push({t:'text', x:2.85, y, w:9.8, h:rowH, align:'center', valign:'middle', paras:np, name:'No training text'});
+      if (why) np.push(para(why, fitSize(why, small?11:13, fullW-0.5, false, 9), C.muted, false, small?15:18));
+      out.push({t:'text', x:gymX+0.25, y, w:fullW-0.5, h:rowH, align:'center', valign:'middle', paras:np, name:'No training text'});
       return;
     }
-    if (d.time) dp.push(para(d.time, small?12:14, C.dayText, true, small?16:20));
-    if (d.place){ const ps = fitSize(d.place, small?12:14, 1.84, false, 9); dp.push(para(d.place, ps, C.dayText, false, small?16:20)); }
-    out.push({t:'text', x:0.6, y:y+(small?0.07:0.11), w:1.86, h:rowH-0.12, paras:dp, name:'Day text', day:di});
-    // cells
-    out.push({t:'rect', x:2.62, y, w:1.78, h:rowH, fill:C.cell, r:0.08, name:'Gym cell'});
-    out.push({t:'rect', x:4.47, y, w:1.78, h:rowH, fill:C.cell, r:0.08, name:'Warm-up cell'});
-    out.push({t:'rect', x:6.40, y, w:6.49, h:rowH, fill:C.cell, r:0.06, name:'Kern cell'});
-    const bp = 0.1, bh = rowH - 2*bp;
-    const sz = small ? [11,10] : [13,12];
-    if (d.gym && d.gym.on) blockShapes(out, d.gym, st.staff, 2.62+bp, y+bp, 1.78-2*bp, bh, C.gymLine, sz, preview);
-    if (d.warmup && d.warmup.on) blockShapes(out, d.warmup, st.staff, 4.47+bp, y+bp, 1.78-2*bp, bh, C.warmLine, sz, preview);
+    if (d.time) dp.push(para(d.time, fitSize(d.time, small?11:12, dw, true, 8.5), C.dayText, true, small?14:17));
+    if (d.place) dp.push(para(d.place, fitSize(d.place, small?10:11, dw, false, 8), C.dayText, false, small?13:15));
+    out.push({t:'text', x:WK.x0+0.12, y:y+(small?0.06:0.1), w:dw, h:rowH-0.12, paras:dp, name:'Day text', day:di});
+    out.push({t:'rect', x:gymX, y, w:WK.laneW, h:rowH, fill:C.cell, r:0.08, name:'Gym cell'});
+    out.push({t:'rect', x:warmX, y, w:WK.laneW, h:rowH, fill:C.cell, r:0.08, name:'Warm-up cell'});
+    out.push({t:'rect', x:kernX, y, w:kernW, h:rowH, fill:C.cell, r:0.06, name:'Kern cell'});
+    // one shared line for the times in this row (only when a block in it has a time frame), so all boxes line up
+    const live = timeline(d), band = live.some(v=>frameOf(v.b)) ? (small ? 0.21 : 0.24) : 0;
+    const bp = 0.08, by = y + (band ? 0.03 : bp), bh = rowH - (band ? 0.03 : bp) - bp;
+    const sz = small ? [12,10.5] : [14,12];
+    if (d.gym && d.gym.on) blockShapes(out, d.gym, st.staff, gymX+bp, by, WK.laneW-2*bp, bh, C.gymLine, sz, preview, band);
+    if (d.warmup && d.warmup.on) blockShapes(out, d.warmup, st.staff, warmX+bp, by, WK.laneW-2*bp, bh, C.warmLine, sz, preview, band);
     const k = d.kern || [];
     if (k.length){
-      const pad = 0.12, kg = 0.14;
-      const bw = (6.49 - 2*pad - kg*(k.length-1)) / k.length;
+      const pad = 0.1, kg = 0.12;
+      const bw = (kernW - 2*pad - kg*(k.length-1)) / k.length;
       let ks = sz;
-      if (k.length === 4) ks = small ? [10.5,9.5] : [12,11];
-      if (k.length === 5) ks = small ? [9.5,9] : [11,10];
-      if (k.length >= 6) ks = small ? [9,8] : [10,9];
-      k.forEach((b, j)=> blockShapes(out, b, st.staff, 6.40+pad+j*(bw+kg), y+bp, bw, bh, C.kern2, ks, preview));
+      if (k.length === 4) ks = small ? [11,10] : [13,11.5];
+      if (k.length === 5) ks = small ? [10,9.5] : [12,11];
+      if (k.length >= 6) ks = small ? [9.5,9] : [11,10];
+      k.forEach((b, j)=> blockShapes(out, b, st.staff, kernX+pad+j*(bw+kg), by, bw, bh, C.kern2, ks, preview, band));
     }
   });
   return out;
