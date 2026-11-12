@@ -1166,20 +1166,6 @@ html.locked body>*:not(#gate):not(#toasts){visibility:hidden}
 .wk-block.gym{border-color:rgba(224,168,0,.65)}.wk-block.warm{border-color:#9AA3B0}.wk-block.kern{border-color:rgba(0,120,191,.6)}
 .wk-block .field input{background:var(--surface)}
 .wk-b3{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1.3fr) 76px;gap:8px}
-.wk-b2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
-.wk-bhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.wk-bhead .wk-tools{margin-left:auto}
-.wk-when{display:inline-flex;align-items:center;gap:4px;background:var(--surface);border:1.5px solid var(--line);border-radius:8px;padding:2px 8px}
-.wk-block.gym .wk-when{border-color:rgba(224,168,0,.75)}.wk-block.warm .wk-when{border-color:#9AA3B0}.wk-block.kern .wk-when{border-color:rgba(0,120,191,.7)}
-.wk-block.bad .wk-when{border-color:var(--against)}
-.wk-when input{border:0;background:none;color:var(--ink);font-family:var(--f-display);font-weight:700;font-size:17px;letter-spacing:.02em;font-variant-numeric:tabular-nums;padding:2px 0;width:auto;min-width:0}
-.wk-when input:focus{outline:none;color:var(--accent)}
-.wk-when input::-webkit-calendar-picker-indicator{opacity:.35;margin-left:2px;cursor:pointer}.wk-when input:hover::-webkit-calendar-picker-indicator{opacity:.8}
-.wk-when:focus-within{box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 25%,transparent)}
-.wk-when .to{font-size:12px;font-weight:600;color:var(--muted);padding:0 4px}
-.wk-dur{font-family:var(--f-display);font-weight:700;font-size:16px;color:var(--muted);font-variant-numeric:tabular-nums}
-.wk-warn{margin:-2px 0 0;font-size:13px;font-weight:600;color:var(--against)}.wk-warn:empty{display:none}
-.wk-fr{font-family:var(--f-display);font-weight:700;font-variant-numeric:tabular-nums;color:var(--accent)}
 .wk-tools{display:flex;gap:4px;justify-content:flex-end}
 .wk-ib{width:28px;height:28px;border:1px solid var(--line);background:var(--surface);border-radius:6px;color:var(--muted);padding:0;font-size:13px}
 .wk-ib:hover{color:var(--ink);border-color:var(--muted)}
@@ -1209,7 +1195,7 @@ html.locked body>*:not(#gate):not(#toasts){visibility:hidden}
 .wk-thumb .cap{display:block;font-size:11px;color:var(--muted);padding:3px 6px}
 .wk-exrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .wk-check{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--muted)}
-@media (max-width:520px){.wk-b3{grid-template-columns:minmax(0,1fr) 76px}.wk-b3 .field:first-child{grid-column:1/-1}.wk-b2{grid-template-columns:1fr}.wk-when input{font-size:18px}}
+@media (max-width:520px){.wk-b3{grid-template-columns:minmax(0,1fr) 76px}.wk-b3 .field:first-child{grid-column:1/-1}}
 /* match page */
 .fx-status{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
 .fx-stat{border:1px solid var(--line);border-radius:12px;padding:10px 14px;background:var(--surface);display:flex;flex-direction:column;gap:3px;min-width:0}
@@ -4966,7 +4952,6 @@ function saveMatchObj(m){ if(m===M){ save(); return; } m.updatedAt=Date.now(); s
 function renderWeek(){
   const el=$('#view-week'); const key=viewArg&&plMonOfKey(viewArg)?viewArg:plCurKey(); plUi.week=key;
   const st=plWeek(key); if(plSyncWeek(st)&&st.updatedAt) plTouch(key);
-  if(st.days.reduce((ch,d)=>wkFill(d)||ch,false)&&st.updatedAt) plTouch(key);
   const mon=st.meta.weekStart, ms=plWeekMatches(st), saved=!!st.updatedAt;
   const opts=[]; const base=plMonday(plToday()); const set=new Set(); for(let i=-12;i<=26;i++) set.add(plYmd(plAdd(base,i*7))); set.add(mon); Object.keys(plWeeks).forEach(k=>{ const m=plMonOfKey(k); if(m) set.add(m); });
   [...set].sort().forEach(v=>opts.push(`<option value="${plKey(v)}"${v===mon?' selected':''}>${plWeeks[plKey(v)]&&plWeeks[plKey(v)].updatedAt?'● ':''}${esc(plWeekLabel(v))}${v===plYmd(base)?' (this week)':''}</option>`));
@@ -4997,45 +4982,11 @@ function wkStaffPick(st,path,b){
   const present=st.staff.filter(s=>s.present), absent=st.staff.filter(s=>!s.present&&(b.staff||[]).includes(s.id));
   return `<div class="wk-staffpick"><span class="lbl">Staff</span>${present.length?'':'<span class="hint">Mark staff present above first</span>'}${present.map(s=>`<button class="wk-chip mini" aria-pressed="${(b.staff||[]).includes(s.id)}" data-wkact="pick" data-path="${path}" data-sid="${s.id}"><i></i>${esc(s.name)}</button>`).join('')}${absent.map(s=>`<button class="wk-chip mini absent" title="Absent this week. Click to unassign." data-wkact="pick" data-path="${path}" data-sid="${s.id}">${esc(s.name)} (absent)</button>`).join('')}</div>`;
 }
-/* ---- time frames per block (from / until) ----
-   Blocks used to have minutes only; a frame now carries the time, and b.min is kept equal to its length. */
-const wkLive=d=>timeline(d).map(v=>v.b);
-const wkStart=d=>hm(plSplit(d.time).start);
-function wkSetSpan(b,a,z){ b.from=a==null?'':fmtHM(a); b.to=z==null?'':fmtHM(z); const sp=spanOf(b); if(sp) b.min=sp[1]-sp[0]; }
-/* blocks planned with minutes only get a frame, back to back after the block before (or the session start) */
-function wkFill(d){ let cur=wkStart(d), ch=false;
-  wkLive(d).forEach(b=>{ const sp=spanOf(b); if(sp){ cur=sp[1]; return; } if(cur==null||b.from||b.to) return; const m=Number(b.min); if(!(m>0)) return; wkSetSpan(b,cur,cur+m); cur+=m; ch=true; });
-  return ch; }
-/* a block that ended at `end` now ends `delta` minutes later: the blocks that started right after it move along, keeping their length */
-function wkCascade(d,end,delta,skip){ if(!delta||end==null) return; const done=new Set(skip||[]);
-  for(let guard=0;guard<30;guard++){ const nx=wkLive(d).find(x=>!done.has(x)&&spanOf(x)&&spanOf(x)[0]===end); if(!nx) return; const sp=spanOf(nx); done.add(nx); end=sp[1]; wkSetSpan(nx,sp[0]+delta,sp[1]+delta); } }
-/* put every block back to back from the session start (or the first block's start), in slide order */
-function wkRetime(d){ let cur=wkStart(d); if(cur==null){ const f=wkLive(d).map(spanOf).filter(Boolean); cur=f.length?Math.min(...f.map(x=>x[0])):null; } if(cur==null) return false;
-  wkLive(d).forEach(b=>{ const m=durOf(b)||15; wkSetSpan(b,cur,cur+m); cur+=m; }); return true; }
-function wkIssues(d){ const out={}, L=wkLive(d), ses=plSplit(d.time), s0=hm(ses.start), s1=hm(ses.end);
-  L.forEach(b=>{ if(!b.from&&!b.to) return; const a=hm(b.from), z=hm(b.to);
-    if(a==null||z==null){ out[b.id]='Fill in both times'; return; } if(z<=a){ out[b.id]='Ends before it starts'; return; }
-    if((s0!=null&&a<s0)||(s1!=null&&z>s1)) out[b.id]='Outside the session ('+plRange(ses)+')'; });
-  const sp=L.map(b=>({b,s:spanOf(b)})).filter(x=>x.s).sort((x,y)=>x.s[0]-y.s[0]||x.s[1]-y.s[1]);
-  for(let k=1;k<sp.length;k++) if(sp[k].s[0]<sp[k-1].s[1]&&!out[sp[k].b.id]) out[sp[k].b.id]='Overlaps '+(sp[k-1].b.title||(sp[k-1].b===d.gym?'the gym':'the block before'))+' (until '+fmtHM(sp[k-1].s[1])+')';
-  return out; }
-function wkNeedsLineUp(d){ const L=wkLive(d); if(!L.length) return false; if(Object.keys(wkIssues(d)).length||L.some(b=>!spanOf(b))) return true;
-  const s0=wkStart(d), first=Math.min(...L.map(b=>spanOf(b)[0])); return s0!=null&&first!==s0; }
-const wkDurTxt=b=>{ const sp=spanOf(b); return sp?(sp[1]-sp[0])+'’':''; };
-function wkBlock(st,path,b,kind,tools,iss){
-  const f=(k,label,extra='')=>`<div class="field"><label>${label}</label><input data-wkbind="${path}.${k}" value="${esc(b[k])}" ${extra}></div>`, bad=iss&&iss[b.id];
-  const t=k=>`<input type="time" step="300" data-wktime="${path}" data-k="${k}" value="${esc(b[k]||'')}" aria-label="${k==='from'?'From':'Until'}">`;
-  return `<div class="wk-block ${kind}${bad?' bad':''}" data-bid="${b.id}"><div class="wk-bhead"><div class="wk-when">${t('from')}<span class="to">until</span>${t('to')}</div><span class="wk-dur" data-dur="${b.id}">${wkDurTxt(b)}</span>${tools?`<div class="wk-tools">${tools}</div>`:''}</div>
-    <p class="wk-warn" data-warn="${b.id}">${esc(bad||'')}</p>
-    <div class="wk-b2">${f('title','Name')}${f('type','Type / focus')}</div>${wkStaffPick(st,path,b)}</div>`;
+function wkBlock(st,path,b,kind,tools){
+  const f=(k,label,extra='')=>`<div class="field"><label>${label}</label><input data-wkbind="${path}.${k}" value="${esc(b[k])}" ${extra}></div>`;
+  return `<div class="wk-block ${kind}">${tools?`<div class="wk-tools">${tools}</div>`:''}<div class="wk-b3">${f('title','Name')}${f('type','Type / focus')}${f('min','Min','type="number" min="0" step="5" inputmode="numeric"')}</div>${wkStaffPick(st,path,b)}</div>`;
 }
-const wkMinutes=d=>timeline(d).reduce((a,v)=>a+durOf(v.b),0);
-/* after a time changes: refresh the other time fields, lengths, warnings and the day total in place (no re-render, focus stays) */
-function wkRefreshDay(st,i){ const d=st.days[i], iss=wkIssues(d), act=document.activeElement;
-  document.querySelectorAll(`[data-wktime^="days.${i}."]`).forEach(el=>{ const b=plGet(st,el.dataset.wktime); if(b&&el!==act&&el.value!==(b[el.dataset.k]||'')) el.value=b[el.dataset.k]||''; });
-  wkLive(d).forEach(b=>{ const du=document.querySelector(`[data-dur="${b.id}"]`); if(du) du.textContent=wkDurTxt(b); const w=document.querySelector(`[data-warn="${b.id}"]`); if(w) w.textContent=iss[b.id]||''; const bl=document.querySelector(`.wk-block[data-bid="${b.id}"]`); if(bl) bl.classList.toggle('bad',!!iss[b.id]); });
-  const head=document.querySelectorAll('#wkEditor .wk-day')[i]; if(head){ const bEl=head.querySelector('.wk-budget'), planned=wkMinutes(d), len=sessionLength(d.time); if(d.active&&bEl){ bEl.textContent=planned+'’'+(len?' / '+len+'’':''); bEl.classList.toggle('over',!!(len&&planned>len)); }
-    const lu=head.querySelector('[data-wkact="retime"]'); if(lu) lu.hidden=!wkNeedsLineUp(d); } }
+const wkMinutes=d=>timeline(d).reduce((a,v)=>a+(Number(v.b.min)||0),0);
 function wkPlan(st){
   const ms=plWeekMatches(st);
   let h=`<div class="card"><div class="card-head"><h2>Slides</h2></div><div class="form">
@@ -5049,17 +5000,17 @@ function wkPlan(st){
   st.days.forEach((d,i)=>{
     const open=plUi.open.has(i), planned=wkMinutes(d), len=sessionLength(d.time), date=plAdd(plParse(st.meta.weekStart),i);
     const dm=plMatchesOn(plYmd(date));
-    const budget=d.active?`<span class="wk-budget${len&&planned>len?' over':''}" title="Planned minutes (from the time frames) vs session length">${planned}’${len?' / '+len+'’':''}</span>`:`<span class="wk-budget">${d.hidden?'Not on slide':esc(st.meta.noTrainingLabel||'No training')}</span>`;
+    const budget=d.active?`<span class="wk-budget${len&&planned>len?' over':''}" title="Gym + warm-up + kern minutes vs session length">${planned}’${len?' / '+len+'’':''}</span>`:`<span class="wk-budget">${d.hidden?'Not on slide':esc(st.meta.noTrainingLabel||'No training')}</span>`;
     h+=`<div class="wk-day${d.active?'':' off'}" data-expanded="${open}">
       <div class="wk-dayhead" data-wkact="toggleDay" data-i="${i}"><button class="pl-switch" role="switch" aria-checked="${d.active}" aria-label="${esc(d.name)} has training" data-wkact="activeDay" data-i="${i}"></button>
         <span class="nm">${esc(d.name)} <small>${date.getUTCDate()}/${date.getUTCMonth()+1}</small></span><span class="sub">${d.active?mj([d.time,d.place].filter(Boolean).map(esc)):esc(d.reason||'')}${dm.length?` <em>Match ${esc(dm.map(m=>(m.kickoff||'')+' vs '+m.them).join(', '))}</em>`:''}</span>${d.active&&attTaken(plYmd(date))?`<span class="cal-att" title="Attendance: present or late / marked">✓ ${attBadge(plYmd(date))}</span>`:''}${budget}<span class="caret">›</span></div>`;
     if(open&&!d.active) h+=`<div class="wk-daybody">${wkNoTraining(st,i)}</div>`;
-    else if(open){ const p='days.'+i, iss=wkIssues(d), s0=wkStart(d);
-      h+=`<div class="wk-daybody"><div class="wk-ctx"><span class="hint">Times and locations come from the month calendar.</span><button class="btn sm" data-wkact="openSession" data-i="${i}">Edit time &amp; location</button><button class="btn sm" data-wkact="retime" data-i="${i}" title="Keeps each block's length and order, removes gaps and overlaps"${wkNeedsLineUp(d)?'':' hidden'}>Line up from ${esc(s0!=null?fmtHM(s0):'the first block')}</button><button class="btn sm" data-go="training" data-arg="${plYmd(date)}">${attTaken(plYmd(date))?'Attendance '+attBadge(plYmd(date)):'Take attendance'}</button></div>
-        <div class="wk-lane"><div class="wk-lanehead"><span class="wk-tag gym">${esc(st.meta.gymLabel||'Gym')}</span><span class="hint">Counts toward session time, no detail box</span><button class="pl-switch" role="switch" aria-checked="${!!d.gym.on}" aria-label="Gym on ${esc(d.name)}" data-wkact="toggleOn" data-path="${p}.gym"></button></div>${d.gym.on?wkBlock(st,p+'.gym',d.gym,'gym','',iss):''}</div>
-        <div class="wk-lane"><div class="wk-lanehead"><span class="wk-tag warm">${esc(st.meta.warmLabel||'Warm-up')}</span><span class="hint"></span><button class="pl-switch" role="switch" aria-checked="${!!d.warmup.on}" aria-label="Warm-up on ${esc(d.name)}" data-wkact="toggleOn" data-path="${p}.warmup"></button></div>${d.warmup.on?wkBlock(st,p+'.warmup',d.warmup,'warm','',iss):''}</div>
+    else if(open){ const p='days.'+i;
+      h+=`<div class="wk-daybody"><div class="wk-ctx"><span class="hint">Times and locations come from the month calendar.</span><button class="btn sm" data-wkact="openSession" data-i="${i}">Edit time &amp; location</button><button class="btn sm" data-go="training" data-arg="${plYmd(date)}">${attTaken(plYmd(date))?'Attendance '+attBadge(plYmd(date)):'Take attendance'}</button></div>
+        <div class="wk-lane"><div class="wk-lanehead"><span class="wk-tag gym">${esc(st.meta.gymLabel||'Gym')}</span><span class="hint">Counts toward session time, no detail box</span><button class="pl-switch" role="switch" aria-checked="${!!d.gym.on}" aria-label="Gym on ${esc(d.name)}" data-wkact="toggleOn" data-path="${p}.gym"></button></div>${d.gym.on?wkBlock(st,p+'.gym',d.gym,'gym'):''}</div>
+        <div class="wk-lane"><div class="wk-lanehead"><span class="wk-tag warm">${esc(st.meta.warmLabel||'Warm-up')}</span><span class="hint"></span><button class="pl-switch" role="switch" aria-checked="${!!d.warmup.on}" aria-label="Warm-up on ${esc(d.name)}" data-wkact="toggleOn" data-path="${p}.warmup"></button></div>${d.warmup.on?wkBlock(st,p+'.warmup',d.warmup,'warm'):''}</div>
         <div class="wk-lane"><div class="wk-lanehead"><span class="wk-tag kern">${esc(st.meta.kernLabel||'Kern')}</span><span class="hint">${d.kern.length} form${d.kern.length===1?'':'s'}, blocks resize to fit</span></div>
-          ${d.kern.map((b,j)=>wkBlock(st,`${p}.kern.${j}`,b,'kern',`<button class="wk-ib" aria-label="Move up" data-wkact="mv" data-i="${i}" data-j="${j}" data-d="-1" ${j===0?'disabled':''}>↑</button><button class="wk-ib" aria-label="Move down" data-wkact="mv" data-i="${i}" data-j="${j}" data-d="1" ${j===d.kern.length-1?'disabled':''}>↓</button><button class="wk-ib" aria-label="Duplicate" data-wkact="dupK" data-i="${i}" data-j="${j}">⧉</button><button class="wk-ib del" aria-label="Remove form" data-wkact="rmK" data-i="${i}" data-j="${j}">✕</button>`,iss)).join('')}
+          ${d.kern.map((b,j)=>wkBlock(st,`${p}.kern.${j}`,b,'kern',`<button class="wk-ib" aria-label="Move up" data-wkact="mv" data-i="${i}" data-j="${j}" data-d="-1" ${j===0?'disabled':''}>↑</button><button class="wk-ib" aria-label="Move down" data-wkact="mv" data-i="${i}" data-j="${j}" data-d="1" ${j===d.kern.length-1?'disabled':''}>↓</button><button class="wk-ib" aria-label="Duplicate" data-wkact="dupK" data-i="${i}" data-j="${j}">⧉</button><button class="wk-ib del" aria-label="Remove form" data-wkact="rmK" data-i="${i}" data-j="${j}">✕</button>`)).join('')}
           <div><button class="btn sm" data-wkact="addK" data-i="${i}">+ Add form</button></div></div></div>`; }
     h+='</div>';
   });
@@ -5074,7 +5025,7 @@ function wkDetails(st){
   if(!days.length) return '<div class="card"><p class="hint">Add a warm-up or kern form to a training day in the Week plan tab. Each form then gets its own box here.</p></div>';
   return '<p class="hint">Each form (gym excluded) gets its own box on the training slide. Type the organisation, rules or coaching points; line breaks are kept.</p>'+days.map(({d,i})=>`<div class="card wk-detail"><h3>${esc(d.name)} <small>${mj([d.time,d.place].filter(Boolean).map(esc))}</small></h3>
     ${vormen(d).map((v,n)=>{ const path=v.kind==='warm'?`days.${i}.warmup`:`days.${i}.kern.${d.kern.indexOf(v.b)}`, sl=staffLabel(v.b,st.staff);
-      return `<div class="wk-vorm ${v.kind}"><div class="wk-vh"><span class="n">${n+1}</span>${frameOf(v.b)?`<span class="wk-fr">${esc(frameOf(v.b))}</span>`:''}<b>${esc(v.b.title||'Untitled')}</b><span>${esc(line2(v.b))}</span>${sl?`<em>${esc(sl)}</em>`:''}</div><textarea data-wkbind="${path}.notes" data-day="${i}" placeholder="Organisation, rules, coaching points…">${esc(v.b.notes||'')}</textarea></div>`; }).join('')}</div>`).join('');
+      return `<div class="wk-vorm ${v.kind}"><div class="wk-vh"><span class="n">${n+1}</span><b>${esc(v.b.title||'Untitled')}</b><span>${esc(line2(v.b))}</span>${sl?`<em>${esc(sl)}</em>`:''}</div><textarea data-wkbind="${path}.notes" data-day="${i}" placeholder="Organisation, rules, coaching points…">${esc(v.b.notes||'')}</textarea></div>`; }).join('')}</div>`).join('');
 }
 function wkSession(st){
   const i=plUi.sessionDay, d=st.days[i], tm=plSplit(d.time), date=plAdd(plParse(st.meta.weekStart),i);
@@ -5321,22 +5272,15 @@ function wkAct(t,e){
     case 'toggleDay': if(e.target.closest('.pl-switch')) return; if(plUi.open.has(i)) plUi.open.delete(i); else plUi.open.add(i); renderWeek(); return;
     case 'activeDay': e.stopPropagation(); st.days[i].active=!st.days[i].active; if(!st.days[i].active){ st.days[i].hidden=false; plUi.open.add(i); } plPushDay(st,i); wkChanged(true); return;
     case 'toggleHidden': st.days[i].hidden=!st.days[i].hidden; plPushDay(st,i); wkChanged(true); return;
-    case 'toggleOn': { const b=plGet(st,t.dataset.path); b.on=!b.on; if(b.on&&!spanOf(b)&&!b.from&&!b.to){ const di=+t.dataset.path.split('.')[1]; if(!(Number(b.min)>0)) b.min=b===st.days[di].gym?30:15; wkFill(st.days[di]); } wkChanged(true); return; }
-    case 'retime': { e.stopPropagation(); if(wkRetime(st.days[i])) wkChanged(true); else toast('Set a start time for this training first (Edit time & location).'); return; }
+    case 'toggleOn': { const b=plGet(st,t.dataset.path); b.on=!b.on; wkChanged(true); return; }
     case 'pick': { const b=plGet(st,t.dataset.path), sid=t.dataset.sid; b.staff=b.staff||[]; b.staff=b.staff.includes(sid)?b.staff.filter(x=>x!==sid):[...b.staff,sid]; wkChanged(true); return; }
     case 'present': { const s=st.staff.find(x=>x.id===t.dataset.sid); s.present=!s.present; wkChanged(true); return; }
     case 'rmStaff': if(t.dataset.armed!=='1'){ t.dataset.armed='1'; t.textContent='remove?'; setTimeout(()=>{ if(t.isConnected){ t.dataset.armed=''; t.textContent='×'; } },2500); return; }
       st.staff=st.staff.filter(x=>x.id!==t.dataset.sid); st.days.forEach(d=>[d.gym,d.warmup,...d.kern].forEach(b=>{ if(b&&b.staff) b.staff=b.staff.filter(x=>x!==t.dataset.sid); })); wkChanged(true); return;
-    case 'addK': { const d=st.days[i], nb=plBlk('','',20,[]), ends=wkLive(d).map(spanOf).filter(Boolean).map(x=>x[1]), a=ends.length?Math.max(...ends):wkStart(d); if(a!=null) wkSetSpan(nb,a,a+20); d.kern.push(nb); } wkChanged(true); setTimeout(()=>{ const el=document.querySelector(`[data-wkbind="days.${i}.kern.${st.days[i].kern.length-1}.title"]`); if(el) el.focus(); },0); return;
+    case 'addK': st.days[i].kern.push(plBlk('','',20,[])); wkChanged(true); setTimeout(()=>{ const el=document.querySelector(`[data-wkbind="days.${i}.kern.${st.days[i].kern.length-1}.title"]`); if(el) el.focus(); },0); return;
     case 'rmK': st.days[i].kern.splice(j,1); wkChanged(true); return;
-    case 'dupK': { const d=st.days[i], o=d.kern[j], c=JSON.parse(JSON.stringify(o)); c.id=plUid(); const sp=spanOf(o);
-      if(sp){ const len=sp[1]-sp[0]; wkCascade(d,sp[1],len,[o]); wkSetSpan(c,sp[1],sp[1]+len); }   /* the copy follows the original; what came after moves up */
-      d.kern.splice(j+1,0,c); wkChanged(true); return; }
-    case 'mv': { const k=st.days[i].kern, dd=+t.dataset.d, A=k[j], B=k[j+dd], sa=spanOf(A), sb=spanOf(B);
-      [k[j],k[j+dd]]=[B,A];
-      if(sa&&sb){ /* swap the time slots too: the block that now comes first starts when the first one did */ const [e1,e2]=sa[0]<=sb[0]?[A,B]:[B,A], s1=spanOf(e1), s2=spanOf(e2), gap=Math.max(0,s2[0]-s1[1]), l1=s1[1]-s1[0], l2=s2[1]-s2[0];
-        wkSetSpan(e2,s1[0],s1[0]+l2); wkSetSpan(e1,s1[0]+l2+gap,s1[0]+l2+gap+l1); }
-      wkChanged(true); return; }
+    case 'dupK': { const c=JSON.parse(JSON.stringify(st.days[i].kern[j])); c.id=plUid(); st.days[i].kern.splice(j+1,0,c); wkChanged(true); return; }
+    case 'mv': { const k=st.days[i].kern, d=+t.dataset.d; [k[j],k[j+d]]=[k[j+d],k[j]]; wkChanged(true); return; }
     case 'openSession': e.stopPropagation(); plUi.sessionDay=i; plUi.wtab='session'; renderWeek(); return;
     case 'closeSession': plUi.sessionDay=null; plUi.wtab='plan'; renderWeek(); return;
     case 'subFromMatch': { const ms=plWeekMatches(st); st.meta.subtitle='Week '+plPad(plParse(st.meta.weekStart).getUTCDate())+'/'+plPad(plParse(st.meta.weekStart).getUTCMonth()+1)+' – '+ms.map(m=>PL_DOW[(plParse(isoDate(m.date)).getUTCDay()+6)%7].toLowerCase()+': '+m.them+' '+(m.home?'H':'A')+(m.kickoff?' '+m.kickoff:'')).join(', '); wkChanged(true); return; }
@@ -5354,16 +5298,8 @@ document.addEventListener('input',e=>{
     if(/^days\.\d+\.(name|.*min)$/.test(p)||/^meta\./.test(p)){ const i=+p.split('.')[1]; const head=document.querySelectorAll('#wkEditor .wk-day')[i]; if(head&&plUi.wtab==='plan'&&!isNaN(i)){ const d=st.days[i], bEl=head.querySelector('.wk-budget'), planned=wkMinutes(d), len=sessionLength(d.time); if(d.active&&bEl){ bEl.textContent=planned+'’'+(len?' / '+len+'’':''); bEl.classList.toggle('over',!!(len&&planned>len)); } } }
     if(t.dataset.day!=null&&plUi.wtab==='details'){ const list=slideList(st,st.options.detail), k=list.findIndex(s=>s.kind==='day'&&s.i===+t.dataset.day); if(k>=0) plUi.slide=k; }
     wkChanged(false); return; }
-  if(t.dataset.wktime){ const st=plWeeks[plUi.week]; if(!st) return; const b=plGet(st,t.dataset.wktime), i=+t.dataset.wktime.split('.')[1], d=st.days[i]; if(!b) return;
-    const old=spanOf(b), v=t.value||'';
-    if(t.dataset.k==='from'){ const len=old?old[1]-old[0]:(Number(b.min)>0?+b.min:null), a=hm(v); b.from=v;
-      /* a new start keeps the block's length: the end moves along (type the end yourself to change the length) */
-      if(a!=null&&len&&(old||!b.to)){ b.to=fmtHM(Math.min(a+len,23*60+59)); if(old) wkCascade(d,old[1],hm(b.to)-old[1],[b]); } }
-    else { b.to=v; if(old&&spanOf(b)) wkCascade(d,old[1],spanOf(b)[1]-old[1],[b]); }
-    const sp=spanOf(b); if(sp) b.min=sp[1]-sp[0];
-    wkRefreshDay(st,i); wkChanged(false); return; }
   if(t.dataset.wksess){ const st=plWeeks[plUi.week], i=+t.dataset.i, a=document.querySelector('[data-wksess="start"]').value, b=document.querySelector('[data-wksess="end"]').value;
-    st.days[i].time=(a&&b)?a+' – '+b:(a||b); plPushDay(st,i); wkFill(st.days[i]); const s=$('#wkSum'); if(s) s.innerHTML=wkSum(st.days[i]); wkChanged(false); return; }
+    st.days[i].time=(a&&b)?a+' – '+b:(a||b); plPushDay(st,i); const s=$('#wkSum'); if(s) s.innerHTML=wkSum(st.days[i]); wkChanged(false); return; }
   if(t.id==='fxSearch'){ plUi.fxQ=t.value; const pos=t.selectionStart; renderFixture(); const n=$('#fxSearch'); if(n){ n.focus(); try{ n.setSelectionRange(pos,pos); }catch(err){} } return; }
   if(t.dataset.fxs){ const m=store[viewArg]; fxSel(m)[t.dataset.fxs]=t.value; saveMatchObj(m); clearTimeout(plUi.fxT); plUi.fxT=setTimeout(()=>{ const a=document.activeElement, k=a&&a.dataset.fxs; renderFixture(); if(k){ const n=document.querySelector('[data-fxs="'+k+'"]'); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } } },400); return; }
   if(t.dataset.fxt){ const m=store[viewArg]; fxSel(m).times[t.dataset.fxt]=t.value; saveMatchObj(m); return; }

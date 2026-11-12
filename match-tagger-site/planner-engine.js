@@ -23,17 +23,8 @@ function dayDate(st, day){
   return pad(d.getUTCDate()) + '/' + pad(d.getUTCMonth()+1) + '/' + d.getUTCFullYear();
 }
 function fmtMin(m){ const n = Number(m); return (m === '' || m == null || isNaN(n)) ? '' : n + '’'; }
-// Time frames: each block can carry from / to ("13:45" / "14:15"). Blocks planned before this only have minutes.
-function hm(t){ const m = String(t||'').match(/^(\d{1,2}):(\d{2})$/); return m ? (+m[1])*60 + (+m[2]) : null; }
-function fmtHM(n){ return String(Math.floor(n/60)).padStart(2,'0') + ':' + String(n%60).padStart(2,'0'); }
-function spanOf(b){ const a = hm(b && b.from), z = hm(b && b.to); return (a != null && z != null && z > a) ? [a, z] : null; }
-function frameOf(b){ const s = spanOf(b); return s ? fmtHM(s[0]) + '–' + fmtHM(s[1]) : ''; }
-function durOf(b){ const s = spanOf(b); return s ? s[1] - s[0] : (Number(b && b.min) || 0); }
-// Second line of a block: the type; minutes only for old blocks without a time frame (the frame has its own line).
 function line2(b){
-  const t = (b.type||'').trim();
-  if (frameOf(b)) return t;
-  const m = fmtMin(b.min);
+  const t = (b.type||'').trim(), m = fmtMin(b.min);
   if (t && m) return t + ' – ' + m;
   return t || m;
 }
@@ -58,7 +49,7 @@ function timeline(day){
   return list.concat(vormen(day));
 }
 function minutesOf(day){
-  return timeline(day).reduce((a,v)=>a+durOf(v.b),0);
+  return timeline(day).reduce((a,v)=>a+(Number(v.b.min)||0),0);
 }
 function sessionLength(time){
   const m = String(time||'').match(/(\d{1,2})[:.h](\d{2})\s*[–\-–to]+\s*(\d{1,2})[:.h](\d{2})/);
@@ -75,117 +66,76 @@ function fitSize(text, size, width, bold, floor){
   if (need <= width) return size;
   return Math.max(floor, Math.floor(size * width/need * 2)/2);
 }
-// A block on the week slide. With a time frame, the time sits above the box (outside it), so the box keeps its room for text.
-function blockShapes(out, b, staff, x, y, w, h, border, sizes, flagAbsent, band){
-  if (band){
-    const fr = frameOf(b);
-    if (fr){
-      const d = fmtMin(durOf(b)), withD = w >= 1.45 && d;
-      const z = fitSize(withD ? fr + '  ' + d : fr, 11, w, true, 7.5);
-      out.push({t:'text', x:x+0.02, y, w:w, h:band - 0.03, valign:'middle',
-        paras:[{runs:[{text:fr, size:z, color:border, bold:true}].concat(withD ? [{text:'  ' + d, size:z, color:C.muted, bold:false}] : []), ls:z*1.2}], name:'Block time'});
-    }
-    y += band; h -= band;
-  }
+function blockShapes(out, b, staff, x, y, w, h, border, sizes, flagAbsent){
   out.push({t:'rect', x, y, w, h, fill:C.blockFill, line:border, lineW:1.5, r:0.06, name:'Block'});
-  const tw = w - 0.16;
+  const tw = w - 0.13;
   const fl0 = Math.max(8, sizes[0]-3), fl1 = Math.max(8, sizes[1]-3);
   const ts = fitSize(b.title||'', sizes[0], tw, true, fl0);
   const paras = [para(b.title||'', ts, C.fg, true, Math.max(ts*1.4, sizes[0]*1.25))];
   const l2 = line2(b); if (l2){ const z = fitSize(l2, sizes[1], tw, false, fl1); paras.push(para(l2, z, C.muted, false, Math.max(z*1.4, sizes[1]*1.25))); }
   const sl = staffLabel(b, staff); if (sl){ const z = fitSize(sl, sizes[1], tw, false, fl1); paras.push(para(sl, z, C.staff, false, Math.max(z*1.4, sizes[1]*1.25))); }
-  out.push({t:'text', x:x+0.08, y:y+0.07, w:tw, h:h-0.1, paras, name:'Block text'});
+  out.push({t:'text', x:x+0.07, y:y+0.07, w:tw, h:h-0.1, paras, name:'Block text'});
   if (flagAbsent && hasAbsent(b, staff)) out.push({t:'flag', x:x-0.04, y:y-0.04, w:w+0.08, h:h+0.08});
 }
 
-// Week slide, edge to edge: narrow day column, wide lanes, time frames above the blocks.
-const WK = {x0:0.3, right:13.03, dayW:1.5, g:0.1, laneW:1.95};
 function weekShapes(st, preview){
   const out = [];
   const days = st.days.filter(d=>d.active || !d.hidden);
-  const gymX = WK.x0 + WK.dayW + WK.g, warmX = gymX + WK.laneW + WK.g, kernX = warmX + WK.laneW + WK.g, kernW = WK.right - kernX, fullW = WK.right - gymX;
-  out.push({t:'text', x:WK.x0, y:0.2, w:6, h:0.5, paras:[para(st.meta.title||'', 26, C.title, true, 32)], name:'Title'});
-  out.push({t:'text', x:6.4, y:0.32, w:WK.right-6.4, h:0.3, align:'right', paras:[para(st.meta.subtitle||'', 13, C.muted, false, 17)], name:'Subtitle'});
+  out.push({t:'text', x:0.44, y:0.28, w:5.6, h:0.55, paras:[para(st.meta.title||'', 28, C.title, true, 34)], name:'Title'});
+  out.push({t:'text', x:6.2, y:0.4, w:6.69, h:0.32, align:'right', paras:[para(st.meta.subtitle||'', 14, C.muted, false, 18)], name:'Subtitle'});
+  // lane headers
   const hdr = [
-    {x:gymX, w:WK.laneW, fill:C.gym, color:C.dark, text:st.meta.gymLabel||'Gym'},
-    {x:warmX, w:WK.laneW, fill:C.warm, color:C.dark, text:st.meta.warmLabel||'Warm-up'},
-    {x:kernX, w:kernW, fill:C.kern, color:C.onKern, text:st.meta.kernLabel||'Kern'}];
+    {x:2.62, w:1.78, fill:C.gym, color:C.dark, text:st.meta.gymLabel||'Gym'},
+    {x:4.47, w:1.78, fill:C.warm, color:C.dark, text:st.meta.warmLabel||'Warm-up'},
+    {x:6.40, w:6.49, fill:C.kern, color:C.onKern, text:st.meta.kernLabel||'Kern'}];
   hdr.forEach(hh=>{
-    out.push({t:'rect', x:hh.x, y:0.78, w:hh.w, h:0.36, fill:hh.fill, r:0.08, name:'Header'});
-    out.push({t:'text', x:hh.x, y:0.78, w:hh.w, h:0.36, align:'center', valign:'middle', paras:[para(hh.text,13,hh.color,true,16)], name:'Header text'});
+    out.push({t:'rect', x:hh.x, y:0.86, w:hh.w, h:0.41, fill:hh.fill, r:0.08, name:'Header'});
+    out.push({t:'text', x:hh.x, y:0.86, w:hh.w, h:0.41, align:'center', valign:'middle', paras:[para(hh.text,14,hh.color,true,17)], name:'Header text'});
   });
   if (!days.length) return out;
-  const top = 1.22, bottom = 7.3, gap = 0.08;
-  const rowH = Math.min(1.7, (bottom - top - gap*(days.length-1)) / days.length);
+  const top = 1.37, bottom = 7.15, gap = 0.1;
+  const rowH = Math.min(1.25, (bottom - top - gap*(days.length-1)) / days.length);
   const small = rowH < 0.95;
   days.forEach((d, i)=>{
     const y = top + i*(rowH+gap);
     const di = st.days.indexOf(d);
-    out.push({t:'rect', x:WK.x0, y, w:WK.dayW, h:rowH, fill:C.dayFill, r:0.08, name:'Day', day:di});
-    const dw = WK.dayW - 0.2;
-    const dp = [para(d.name||'', fitSize(d.name||'', small?14:16, dw*0.8, true, 11), C.dayText, true, small?17:20)];
+    out.push({t:'rect', x:0.44, y, w:2.08, h:rowH, fill:C.dayFill, r:0.08, name:'Day', day:di});
+    const dp = [para(d.name||'', small?15:17, C.dayText, true, small?18:21)];
     if (!d.active){
-      out.push({t:'text', x:WK.x0+0.12, y, w:dw, h:rowH, valign:'middle', paras:dp, name:'Day text', day:di});
-      out.push({t:'rect', x:gymX, y, w:fullW, h:rowH, fill:C.cell, line:C.noBorder, lineW:1, r:0.06, name:'No training'});
+      out.push({t:'text', x:0.6, y, w:1.86, h:rowH, valign:'middle', paras:dp, name:'Day text', day:di});
+      // one full-width cell: no training
+      out.push({t:'rect', x:2.62, y, w:10.27, h:rowH, fill:C.cell, line:C.noBorder, lineW:1, r:0.06, name:'No training'});
       const np = [para(st.meta.noTrainingLabel||'Geen training', small?14:17, C.fg, true, small?18:22)];
       const why = String(d.reason||'').trim();
-      if (why) np.push(para(why, fitSize(why, small?11:13, fullW-0.5, false, 9), C.muted, false, small?15:18));
-      out.push({t:'text', x:gymX+0.25, y, w:fullW-0.5, h:rowH, align:'center', valign:'middle', paras:np, name:'No training text'});
+      if (why) np.push(para(why, fitSize(why, small?11:13, 9.8, false, 9), C.muted, false, small?15:18));
+      out.push({t:'text', x:2.85, y, w:9.8, h:rowH, align:'center', valign:'middle', paras:np, name:'No training text'});
       return;
     }
-    if (d.time) dp.push(para(d.time, fitSize(d.time, small?11:12, dw, true, 8.5), C.dayText, true, small?14:17));
-    if (d.place) dp.push(para(d.place, fitSize(d.place, small?10:11, dw, false, 8), C.dayText, false, small?13:15));
-    out.push({t:'text', x:WK.x0+0.12, y:y+(small?0.06:0.1), w:dw, h:rowH-0.12, paras:dp, name:'Day text', day:di});
-    out.push({t:'rect', x:gymX, y, w:WK.laneW, h:rowH, fill:C.cell, r:0.08, name:'Gym cell'});
-    out.push({t:'rect', x:warmX, y, w:WK.laneW, h:rowH, fill:C.cell, r:0.08, name:'Warm-up cell'});
-    out.push({t:'rect', x:kernX, y, w:kernW, h:rowH, fill:C.cell, r:0.06, name:'Kern cell'});
-    // one shared line for the times in this row (only when a block in it has a time frame), so all boxes line up
-    const live = timeline(d), band = live.some(v=>frameOf(v.b)) ? (small ? 0.21 : 0.24) : 0;
-    const bp = 0.08, by = y + (band ? 0.03 : bp), bh = rowH - (band ? 0.03 : bp) - bp;
-    const sz = small ? [12,10.5] : [14,12];
-    if (d.gym && d.gym.on) blockShapes(out, d.gym, st.staff, gymX+bp, by, WK.laneW-2*bp, bh, C.gymLine, sz, preview, band);
-    if (d.warmup && d.warmup.on) blockShapes(out, d.warmup, st.staff, warmX+bp, by, WK.laneW-2*bp, bh, C.warmLine, sz, preview, band);
+    if (d.time) dp.push(para(d.time, small?12:14, C.dayText, true, small?16:20));
+    if (d.place){ const ps = fitSize(d.place, small?12:14, 1.84, false, 9); dp.push(para(d.place, ps, C.dayText, false, small?16:20)); }
+    out.push({t:'text', x:0.6, y:y+(small?0.07:0.11), w:1.86, h:rowH-0.12, paras:dp, name:'Day text', day:di});
+    // cells
+    out.push({t:'rect', x:2.62, y, w:1.78, h:rowH, fill:C.cell, r:0.08, name:'Gym cell'});
+    out.push({t:'rect', x:4.47, y, w:1.78, h:rowH, fill:C.cell, r:0.08, name:'Warm-up cell'});
+    out.push({t:'rect', x:6.40, y, w:6.49, h:rowH, fill:C.cell, r:0.06, name:'Kern cell'});
+    const bp = 0.1, bh = rowH - 2*bp;
+    const sz = small ? [11,10] : [13,12];
+    if (d.gym && d.gym.on) blockShapes(out, d.gym, st.staff, 2.62+bp, y+bp, 1.78-2*bp, bh, C.gymLine, sz, preview);
+    if (d.warmup && d.warmup.on) blockShapes(out, d.warmup, st.staff, 4.47+bp, y+bp, 1.78-2*bp, bh, C.warmLine, sz, preview);
     const k = d.kern || [];
     if (k.length){
-      const pad = 0.1, kg = 0.12;
-      const bw = (kernW - 2*pad - kg*(k.length-1)) / k.length;
+      const pad = 0.12, kg = 0.14;
+      const bw = (6.49 - 2*pad - kg*(k.length-1)) / k.length;
       let ks = sz;
-      if (k.length === 4) ks = small ? [11,10] : [13,11.5];
-      if (k.length === 5) ks = small ? [10,9.5] : [12,11];
-      if (k.length >= 6) ks = small ? [9.5,9] : [11,10];
-      k.forEach((b, j)=> blockShapes(out, b, st.staff, kernX+pad+j*(bw+kg), by, bw, bh, C.kern2, ks, preview, band));
+      if (k.length === 4) ks = small ? [10.5,9.5] : [12,11];
+      if (k.length === 5) ks = small ? [9.5,9] : [11,10];
+      if (k.length >= 6) ks = small ? [9,8] : [10,9];
+      k.forEach((b, j)=> blockShapes(out, b, st.staff, 6.40+pad+j*(bw+kg), y+bp, bw, bh, C.kern2, ks, preview));
     }
   });
   return out;
 }
 
-// Detail slide with time frames: the bar becomes a real time line. Blocks sit where they happen
-// (a break between two blocks shows as a gap) and the clock times run underneath.
-function timeAxis(out, tl, spans, tx, tw, ty, th){
-  const t0 = Math.min(...spans.map(s=>s[0])), t1 = Math.max(...spans.map(s=>s[1]));
-  const per = tw / Math.max(1, t1 - t0), X = t => tx + (t - t0) * per, tg = 0.05;
-  const order = tl.map((v,i)=>({v, s:spans[i]})).sort((a,b)=>a.s[0]-b.s[0] || a.s[1]-b.s[1]);
-  order.forEach(({v, s}, k)=>{
-    const x = X(s[0]), w = Math.max(0.12, X(s[1]) - x - (k < order.length-1 ? tg : 0));
-    const fill = v.kind === 'gym' ? C.gym : v.kind === 'warm' ? C.warm : C.kern;
-    const ink = v.kind === 'kern' ? C.onKern : C.dark;
-    out.push({t:'rect', x, y:ty, w, h:th, fill, r:0.06, name:'Timeline'});
-    const d = fmtMin(s[1]-s[0]);
-    const label = w > 1.6 ? [(v.b.title||''), d].filter(Boolean).join('  ') : w > 0.42 ? d : '';
-    if (label) out.push({t:'text', x:x+0.08, y:ty, w:w-0.12, h:th, valign:'middle', paras:[para(label, 11, ink, true, 13)], name:'Timeline text'});
-  });
-  // clock times under the bar: every start, plus the final end; skip one that would collide with the previous
-  const marks = [...new Set(order.map(o=>o.s[0]).concat(order.map(o=>o.s[1])))].sort((a,b)=>a-b);
-  const ly = ty + th + 0.03, lw = 0.62; let lastX = -9;
-  marks.forEach((t, i)=>{
-    const end = i === marks.length - 1, x = X(t);
-    if (!end && x - lastX < lw + 0.06) return;
-    if (end && x - lastX < lw + 0.06 && lastX > -9) out.pop();
-    const ax = end ? x - lw : (i === 0 ? x : x - lw/2);
-    out.push({t:'text', x:ax, y:ly, w:lw, h:0.17, align: end ? 'right' : (i === 0 ? 'left' : 'center'), valign:'middle', paras:[para(fmtHM(t), 9.5, C.muted, true, 11)], name:'Time'});
-    lastX = x;
-  });
-}
 function gridFor(n){
   if (n <= 3) return [n, 1];
   if (n === 4) return [2, 2];
@@ -206,9 +156,6 @@ function dayShapes(st, day, preview){
   // timeline: proportional to minutes, gym included
   const tl = timeline(day);
   const tx = 0.44, tw = 12.45, ty = 0.98, th = 0.36, tg = 0.05;
-  const spans = tl.map(v=>spanOf(v.b));
-  if (spans.length && spans.every(Boolean)) timeAxis(out, tl, spans, tx, tw, ty, th);
-  else {
   const mins = tl.map(v=>Math.max(Number(v.b.min)||0, 0));
   const total = mins.reduce((a,b)=>a+b,0);
   const minW = 0.55;
@@ -230,10 +177,9 @@ function dayShapes(st, day, preview){
     out.push({t:'text', x:cx+0.08, y:ty, w:w-0.12, h:th, valign:'middle', paras:[para(label, 11, ink, true, 13)], name:'Timeline text'});
     cx += w + tg;
   });
-  }
   // cards
   const [cols, rows] = gridFor(vs.length);
-  const gx = 0.2, gy = 0.2, top = spans.length && spans.every(Boolean) ? 1.66 : 1.56, bottom = 7.12, left = 0.44, width = 12.45;
+  const gx = 0.2, gy = 0.2, top = 1.56, bottom = 7.12, left = 0.44, width = 12.45;
   const cw = (width - gx*(cols-1)) / cols;
   const ch = (bottom - top - gy*(rows-1)) / rows;
   const tight = cols >= 4;
@@ -245,14 +191,12 @@ function dayShapes(st, day, preview){
     // order badge
     out.push({t:'oval', x:x+cw-0.46, y:y+0.14, w:0.32, h:0.32, fill:C.blockFill, line:border, lineW:1.25, name:'Order'});
     out.push({t:'text', x:x+cw-0.46, y:y+0.14, w:0.32, h:0.32, align:'center', valign:'middle', paras:[para(String(i+1), 11, C.fg, true, 13)], name:'Order text'});
-    const fr = frameOf(v.b);
-    const hp = (fr ? [para(fr, 11, border, true, 15)] : []).concat([para(v.b.title||'', tight?14:16, C.fg, true, tight?18:20)]);
+    const hp = [para(v.b.title||'', tight?14:16, C.fg, true, tight?18:20)];
     const l2 = line2(v.b); if (l2) hp.push(para(l2, 12, C.muted, false, 16));
     const sl = staffLabel(v.b, st.staff); if (sl) hp.push(para(sl, 12, C.staff, false, 16));
-    const hh = fr ? 1.08 : 0.92;
-    out.push({t:'text', x:x+0.18, y:y+0.15, w:cw-0.72, h:hh, paras:hp, name:'Card header'});
+    out.push({t:'text', x:x+0.18, y:y+0.15, w:cw-0.72, h:0.92, paras:hp, name:'Card header'});
     if (preview && hasAbsent(v.b, st.staff)) out.push({t:'flag', x:x-0.04, y:y-0.04, w:cw+0.08, h:ch+0.08});
-    const ny = y + hh + 0.18;
+    const ny = y + 1.1;
     out.push({t:'rect', x:x+0.1, y:ny, w:cw-0.2, h:ch-1.2, fill:C.notesFill, r:0.06, name:'Notes panel'});
     const notes = String(v.b.notes||'').split('\n');
     out.push({t:'text', x:x+0.22, y:ny+0.12, w:cw-0.44, h:ch-1.44, notes:true,
