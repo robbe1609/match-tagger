@@ -212,6 +212,17 @@ Open **Tactics** in the top menu. Every board is saved automatically to your fol
 - **Boards:** **New board**, **Duplicate** (handy for step 1, step 2…), **Rename** and **Delete** at the top.
 - **Export:** **Export PDF** makes an A4 page with the board and your notes. **All boards PDF** puts every board in one file. **PNG** gives an image for WhatsApp or a slide.
 
+## Video editor (drawings on clips)
+
+Draw on your clips the way analysis apps do, and export them as video.
+
+- **Open it:** in the tagger click **Export…**, tick the clips, then **Open in video editor**. Each clip is cut out of the match on its own (with the start and end you set for it); the list on the left is the order of the final video. **+ Add clips** adds more, ↑ ↓ reorders, × removes. The start and end can be nudged by a second under the video.
+- **Draw:** pause where you want to explain something and pick a tool: arrow (dashed for runs without the ball), curved arrow, line, free draw, **mark a player** (a ring at her feet, with an optional name or number), **spotlight** (darkens everything except one player), **formation line** (click the players in a line, double-click to finish), **area** (click the corners of a zone), **vision** (the direction a player looks), **zoom** and **text**. Six colours and three line widths.
+- **The pause:** when the clip plays, it stops at every drawing for 5 seconds (change it per drawing), the drawing builds up, then the clip plays on. *Keep on screen* leaves a drawing visible after the pause.
+- **Edit:** the Select tool moves an item, Delete removes it, Ctrl+Z undoes. The yellow diamonds under the video are your drawings; click one to jump to it.
+- **Export video:** one video with all clips, or a .zip with one video per clip. The export plays everything once in real time while it records (so it takes as long as the video, pauses included), and the video has no sound.
+- Drawings are saved with the match, so they are still there next time.
+
 ## Meetings
 
 The **Meetings** tab keeps your meeting notes: staff meetings, talks with a player, parents, the club.

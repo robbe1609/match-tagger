@@ -1359,6 +1359,65 @@ html.locked body>*:not(#gate):not(#toasts){visibility:hidden}
 .mg-pcard{margin-top:16px}.mg-plist{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px;margin-top:10px}
 @media (max-width:899px){.mg-layout{grid-template-columns:1fr}.mg-side{position:static;max-height:none}.mg-layout.has-ed .mg-side{display:none}.mg-back{display:inline-flex}}
 @media (max-width:560px){.mg-meta{grid-template-columns:1fr 1fr}.mg-meta label:last-child{grid-column:1/3}.mg-ed{padding:14px}.mg-ed-act .btn{padding:6px 10px}}
+.st-wrap{max-width:1680px;margin:0 auto;padding:14px 16px 40px}
+.st-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+.st-title h1{margin:0;font-size:clamp(22px,2.6vw,32px)}.st-top .btn.primary{margin-left:auto}
+.st-grid{display:grid;grid-template-columns:250px minmax(0,1fr) 290px;gap:16px;align-items:start}
+.st-clips,.st-side{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px;position:sticky;top:72px;max-height:calc(100vh - 90px);overflow:auto}
+.st-h{display:flex;align-items:center;gap:8px}.st-h .btn,.st-h .hint+.btn{margin-left:auto}
+.st-clip{display:flex;align-items:center;gap:4px;border:1px solid var(--line);border-left:4px solid var(--line);border-radius:10px;background:var(--surface);padding:4px}
+.st-clip.on{border-left-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--surface))}
+.st-cbtn{flex:1;min-width:0;display:flex;align-items:center;gap:8px;background:none;border:0;text-align:left;color:var(--ink);padding:4px}
+.st-cbtn .n{font-family:var(--f-display);font-weight:800;font-size:18px;color:var(--muted);min-width:18px}
+.st-cbtn .t{display:flex;flex-direction:column;min-width:0}.st-cbtn b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.st-cbtn small{color:var(--muted)}
+.st-cact{display:flex;flex-direction:column;gap:2px}
+.st-ib{min-width:26px;height:26px;border:1px solid var(--line);background:var(--surface);border-radius:6px;color:var(--muted);padding:0 5px;font-size:13px;font-weight:700}
+.st-ib:hover:not(:disabled){color:var(--ink);border-color:var(--muted)}.st-ib:disabled{opacity:.35}
+.st-cact .st-ib{min-width:22px;height:20px;font-size:11px}
+.st-main{display:flex;flex-direction:column;gap:10px;min-width:0}
+.st-tools{display:flex;flex-wrap:wrap;align-items:center;gap:4px;background:#0B0F14;border-radius:12px;padding:6px}
+.st-tool{width:38px;height:38px;border:0;border-radius:8px;background:none;color:#C9D1DC;display:inline-flex;align-items:center;justify-content:center;padding:0}
+.st-tool:hover{background:rgba(255,255,255,.08);color:#fff}.st-tool[aria-pressed="true"]{background:var(--accent);color:#fff}
+.st-sep{width:1px;height:24px;background:rgba(255,255,255,.18);margin:0 4px}
+.st-col{width:24px;height:24px;border-radius:50%;border:2px solid rgba(255,255,255,.25);background:var(--c);padding:0;margin:0 2px}
+.st-col[aria-pressed="true"]{box-shadow:0 0 0 2px #0B0F14,0 0 0 4px #fff}
+.st-col.sm{width:20px;height:20px;border-color:var(--line)}.st-col.sm[aria-pressed="true"]{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--ink)}
+.st-size{width:34px;height:38px;border:0;border-radius:8px;background:none;display:inline-flex;align-items:center;justify-content:center;padding:0 7px}
+.st-size i{display:block;width:100%;background:#C9D1DC;border-radius:3px}.st-size[aria-pressed="true"]{background:rgba(255,255,255,.14)}.st-size[aria-pressed="true"] i{background:#fff}
+.st-stage{position:relative;background:#000;border-radius:12px;overflow:hidden;aspect-ratio:16/9;width:100%;max-height:calc(100vh - 260px);margin:0 auto;user-select:none;touch-action:none}
+.st-stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;display:block}
+.st-stage canvas{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair}
+.st-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;color:#C9D1DC;margin:0}
+.st-hold{position:absolute;right:12px;top:12px;display:flex;align-items:center;gap:8px;background:rgba(8,10,14,.82);color:#fff;border-radius:999px;padding:6px 12px;font-weight:700;pointer-events:none}
+.st-hold i{display:block;width:60px;height:5px;border-radius:3px;background:rgba(255,255,255,.25);overflow:hidden}.st-hold span{display:block;height:100%;background:var(--goal,#FFD400)}
+.st-txt{position:absolute;transform:translateY(-100%);min-width:180px;font:700 18px var(--f-body);padding:6px 10px;border-radius:8px;border:2px solid var(--accent);background:rgba(8,10,14,.9);color:#fff}
+.st-trans{display:flex;align-items:center;gap:8px}
+.st-time{font-variant-numeric:tabular-nums;font-weight:700;color:var(--muted);min-width:96px;text-align:center}
+.st-bar{position:relative;flex:1;height:30px;border-radius:8px;background:var(--surface-2);border:1px solid var(--line);cursor:pointer;overflow:visible}
+.st-fill{position:absolute;left:0;top:0;bottom:0;background:color-mix(in srgb,var(--accent) 25%,transparent);border-radius:8px 0 0 8px;pointer-events:none}
+.st-tag{position:absolute;top:-3px;bottom:-3px;width:2px;margin-left:-1px;background:var(--ink);opacity:.5;pointer-events:none}
+.st-mk{position:absolute;top:50%;width:16px;height:16px;margin:-8px 0 0 -8px;transform:rotate(45deg);border-radius:3px;border:2px solid #0B0F14;background:var(--goal,#FFD400);padding:0}
+.st-mk.on{background:var(--accent)}
+.st-trim{display:flex;flex-wrap:wrap;align-items:center;gap:14px;font-size:14px}.st-trim span{display:inline-flex;align-items:center;gap:5px}
+.st-draw{display:grid;grid-template-columns:1fr auto;gap:4px 8px;align-items:center;border:1px solid var(--line);border-left:4px solid var(--goal,#FFD400);border-radius:10px;padding:8px 10px;font-size:13px}
+.st-draw.on{border-left-color:var(--accent);background:color-mix(in srgb,var(--accent) 7%,var(--surface))}
+.st-dgo{display:flex;align-items:baseline;gap:8px;background:none;border:0;padding:0;color:var(--ink);text-align:left}.st-dgo b{font-size:16px;font-variant-numeric:tabular-nums}.st-dgo span{color:var(--muted)}
+.st-draw label{display:flex;align-items:center;gap:5px;color:var(--muted);font-weight:600}
+.st-draw input[type=number]{width:52px;font:inherit;padding:3px 5px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink)}
+.st-keep{grid-column:1/2}.st-draw .st-ib{grid-row:1;grid-column:2}
+.st-selbox{border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:8px}
+.st-f{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;color:var(--muted)}.st-f input{font:inherit;font-size:15px;font-weight:400;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+.st-row{display:flex;gap:6px}
+.st-help summary{cursor:pointer;font-weight:700;font-size:13px;color:var(--muted)}
+.st-empty{padding:30px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px}
+.st-picklist{max-height:55vh;overflow:auto;display:flex;flex-direction:column;gap:4px;margin:8px 0}
+.st-picklist .sel-row{display:flex;align-items:center;gap:10px;padding:6px 8px;border:1px solid var(--line);border-radius:8px}
+.st-exopts{display:flex;flex-direction:column;gap:8px;margin:10px 0}
+.st-opt{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer}.st-opt span{display:flex;flex-direction:column}.st-opt small{color:var(--muted)}
+.st-prog{display:flex;flex-direction:column;gap:10px;align-items:stretch}.st-prog .bar{height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden}.st-prog .bar i{display:block;height:100%;background:var(--accent)}
+.st-prog canvas{width:100%;border-radius:8px;background:#000}
+@media (max-width:1180px){.st-grid{grid-template-columns:220px minmax(0,1fr)}.st-side{grid-column:1/3;position:static;max-height:none}}
+@media (max-width:760px){.st-grid{grid-template-columns:1fr}.st-clips,.st-side{position:static;max-height:none;grid-column:auto}}
 /* ---------- tactics board ---------- */
 .tb-page{gap:12px;padding-top:16px}
 .tb-page .page-head{padding-bottom:10px;align-items:center}
@@ -1524,6 +1583,7 @@ body.tb-dragging,body.tb-dragging *{cursor:grabbing!important;user-select:none!i
 <section class="view" id="view-player" hidden></section>
 <section class="view" id="view-tactics" hidden></section>
 <section class="view" id="view-meetings" hidden></section>
+<section class="view" id="view-studio" hidden></section>
 <section class="view" id="view-entry" hidden></section>
 <section class="view" id="view-portal" hidden></section>
 <section class="view" id="view-team" hidden></section>
@@ -2812,7 +2872,7 @@ function renderSelect(ctx,el,title,sub){
     <div class="selbar"><button class="btn sm" data-selall="${ctx}">Select all</button><button class="btn sm" data-selnone="${ctx}">Select none</button><span class="hint">or pick by tag:</span>${types.map(chip).join('')}</div>
     <div class="sel-list">${groups.map(g=>{ const gi=items.filter(i=>i.group===g), gn=gi.filter(i=>set.has(i.key)).length;
       return `<div class="clipgrp"><span>${esc(g)}${SEP}${gn}/${gi.length}</span><button class="linkbtn" data-selgrp="${esc(g)}" data-ctx="${ctx}">${gn===gi.length?'Deselect all':'Select all'}</button></div>`+gi.map(i=>`<div class="sel-row${set.has(i.key)?'':' off'}" style="--c:${i.css}"><label class="sel-main"><input type="checkbox" data-selkey="${esc(i.key)}" data-ctx="${ctx}"${set.has(i.key)?' checked':''}><span class="min">${esc(i.min)}</span><span class="what"><span><i class="dot"></i>${esc(i.label)}</span>${i.who||i.note?`<small>${mj([i.who,i.note].filter(Boolean).map(esc))}</small>`:''}</span></label><button class="sel-time${customTiming(i.ev)?' custom':''}" data-seltime="${esc(i.key)}" data-ctx="${ctx}" title="Change the timing of this clip">−${preOf(i.ev)} s / +${postOf(i.ev)} s</button>${ui.selTime===i.key?timingEditor(i.mid,i.ev):''}</div>`).join(''); }).join('')}</div>
-    <div class="sel-foot"><span class="hint"><b>${n}</b> of ${items.length} clip${items.length===1?'':'s'} selected${SEP}about ${fmtDur(items.filter(i=>set.has(i.key)).reduce((a,i)=>a+i.secs,0))} of video</span><button class="btn ghost" data-selclose="${ctx}">Cancel</button><button class="btn primary" data-selnext="${ctx}"${n?'':' disabled'}>Next: choose format</button></div>`;
+    <div class="sel-foot"><span class="hint"><b>${n}</b> of ${items.length} clip${items.length===1?'':'s'} selected${SEP}about ${fmtDur(items.filter(i=>set.has(i.key)).reduce((a,i)=>a+i.secs,0))} of video</span><button class="btn ghost" data-selclose="${ctx}">Cancel</button>${ctx==='ex'?`<button class="btn" data-stopen${n?'':' disabled'} title="Draw on these clips (arrows, player rings, spotlight, formations) and export them as video">Open in video editor</button>`:''}<button class="btn primary" data-selnext="${ctx}"${n?'':' disabled'}>Next: choose format</button></div>`;
   const nl=el.querySelector('.sel-list'); if(nl) nl.scrollTop=top;
 }
 function selRefresh(ctx){ if(ctx==='ex') renderExport(); else renderPex(); }
@@ -3215,13 +3275,13 @@ function matchMin(t){ const c=matchClock(t); return c.phase==='pre'?null:c.secs/
 /* ---------- Router ---------- */
 let view='home', viewArg=null;
 const sessionFiles={};
-const VIEWS=['home','calendar','week','fixture','training','tactics','meetings','entry','portal','matches','report','players','player','team','new','match'];
+const VIEWS=['home','calendar','week','fixture','training','tactics','meetings','studio','entry','portal','matches','report','players','player','team','new','match'];
 function parseHash(){ let h=''; try{ h=(location.hash||'').slice(1); }catch(e){}
   if(/^(home|matches|players|team|new|calendar|tactics|portal|meetings)$/.test(h)) return [h,null];
   const w=h.match(/^week(?:-(\d{4}-W\d{2}))?$/); if(w) return ['week',w[1]||null];
   const tr=h.match(/^training-(\d{4}-\d{2}-\d{2})$/); if(tr) return ['training',tr[1]];
-  const k=h.match(/^(match|report|player|fixture|tactics|entry|meetings)-([A-Za-z0-9]+)$/); return k?[k[1],k[2]]:['calendar',null]; }
-const navKey=v=>({entry:'matches',report:'matches',match:'matches',player:'players',new:'calendar',fixture:'calendar',training:'calendar'}[v]||v);
+  const k=h.match(/^(match|report|player|fixture|tactics|entry|meetings|studio)-([A-Za-z0-9]+)$/); return k?[k[1],k[2]]:['calendar',null]; }
+const navKey=v=>({studio:'matches',entry:'matches',report:'matches',match:'matches',player:'players',new:'calendar',fixture:'calendar',training:'calendar'}[v]||v);
 function go(v,arg){
   if(typeof plUi!=='undefined'&&(plUi.daySel||plUi.addMatch)){ plUi.daySel=null; plUi.addMatch=null; renderDayModal(); renderAddMatch(); }
   if(!VIEWS.includes(v)) v='calendar';
@@ -3234,7 +3294,7 @@ function go(v,arg){
   if(v==='tactics'){ if(arg&&tbBoards[arg]){ tbUi.cur=arg; tbStoreLocal(); } arg=tbCur().id; }
   if(v==='portal'&&view!=='portal'&&po.players) setTimeout(()=>poLoad(true),0);   // coming back: pick up new notes, players and replies
   if(view==='tactics'&&(v!=='tactics'||arg!==viewArg)){ tbUi.drag=null; tbUi.rename=false; if(v!=='tactics'||arg!==viewArg) tbUi.sel=null; }
-  if(!['match','report','player','fixture','week','training','tactics','entry','meetings'].includes(v)) arg=null;
+  if(!['match','report','player','fixture','week','training','tactics','entry','meetings','studio'].includes(v)) arg=null;
   if(view==='training'&&(v!=='training'||arg!==viewArg)) plUi.attQ='';
   if(view==='fixture'&&(v!=='fixture'||arg!==viewArg)){ plUi.fxEdit=false; plUi.fxQ=''; ui.fxDel=null; }
   if(view==='match'&&v!=='match'){ V().pause(); stopClips(); ui.tray=null; ui.numBuf=''; }
@@ -3248,7 +3308,7 @@ function go(v,arg){
   try{ window.scrollTo(0,0); }catch(e){}
 }
 window.addEventListener('hashchange',()=>{ let h=''; try{ h=location.hash.slice(1); }catch(e){} if(ui.hashLock===h){ ui.hashLock=null; return; } const [v,a]=parseHash(); if(v!==view||a!==viewArg) go(v,a); });
-function renderView(){ const f={meetings:renderMeetings,portal:renderPortal,entry:renderEntry,tactics:renderTactics,training:renderTraining,calendar:renderCalendar,week:renderWeek,fixture:renderFixture,home:renderHome,matches:renderMatches,report:renderReport,players:renderPlayers,player:renderPlayer,team:renderTeam,new:renderNew}[view]; if(f) f(); }
+function renderView(){ const f={studio:renderStudio,meetings:renderMeetings,portal:renderPortal,entry:renderEntry,tactics:renderTactics,training:renderTraining,calendar:renderCalendar,week:renderWeek,fixture:renderFixture,home:renderHome,matches:renderMatches,report:renderReport,players:renderPlayers,player:renderPlayer,team:renderTeam,new:renderNew}[view]; if(f) f(); }
 function watchEvent(mid,eid){ const m=store[mid]; const e=m&&m.events.find(x=>x.id===eid); if(!e) return; ui.pendingSeek=e.t-leadOf(e); go('match',mid); if(hasVideo()){ ui.pendingSeek=null; seek(e.t-leadOf(e)); } else toast('Load the video for this match to watch the moment.'); }
 
 const IC={
@@ -5052,6 +5112,344 @@ function wkPreview(){
   plFit();
 }
 function wkChanged(full){ plTouch(plUi.week); if(full){ const y=window.scrollY; renderWeek(); window.scrollTo(0,y); } else wkPreview(); }
+
+/* =================== VIDEO EDITOR (studio) ===================
+   Cut clips from one match, draw on them (arrows, player rings, spotlight, formation lines, areas, vision cones, zoom, text),
+   play them back with a pause on every drawing, and export the result as video.
+   Drawings live on the event: e.draw = [{id, at (video seconds), hold (s), keep, shapes:[...]}]; shape coordinates are 0..1 of the frame. */
+const STU={mid:null, items:[], i:0, tool:'arrow', color:'#FFD400', size:2, dash:false, sel:null, drawId:null, draft:null, playing:false, stop:false, src:null, undo:[], pick:false, ex:null, txt:null};
+const ST_COLORS=[['#FFD400','Yellow'],['#FF3B30','Red'],['#3BA7FF','Blue'],['#FFFFFF','White'],['#2EE06F','Green'],['#FF8A00','Orange']];
+const ST_TOOLS=[
+  ['select','Select and move','<path d="M5 3l12 7-5 1.5L9.5 17z"/>'],
+  ['arrow','Arrow (pass, run)','<path d="M4 16L15 5"/><path d="M8 5h7v7"/>'],
+  ['curve','Curved arrow (run)','<path d="M4 16c1-7 6-10 11-10"/><path d="M11 3l4 3-3 4"/>'],
+  ['line','Line','<path d="M4 16L16 4"/>'],
+  ['pen','Free draw','<path d="M3 15c3-4 5 2 8-2s3-6 6-7"/>'],
+  ['ring','Mark a player','<ellipse cx="10" cy="14" rx="7" ry="3"/><circle cx="10" cy="6" r="2.5"/>'],
+  ['spot','Spotlight','<path d="M6 3h8l3 13H3z" opacity=".5"/><ellipse cx="10" cy="16" rx="7" ry="2"/>'],
+  ['chain','Formation line: click the players, double-click to finish','<circle cx="4" cy="12" r="2"/><circle cx="10" cy="7" r="2"/><circle cx="16" cy="12" r="2"/><path d="M5.6 11l2.8-2.8M11.6 8.2l2.8 2.6"/>'],
+  ['area','Area or zone: click the corners, double-click to finish','<path d="M3 15l4-10 10 3-3 8z"/>'],
+  ['cone','Vision: drag from the player in the direction she looks','<circle cx="4" cy="10" r="2"/><path d="M5 9l12-5M5 11l12 5"/>'],
+  ['zoom','Zoom in on a spot','<circle cx="9" cy="9" r="5.5"/><path d="M13 13l4 4"/>'],
+  ['text','Text','<path d="M4 5h12M10 5v11"/>']];
+const ST_SIZES=[[1,'Thin'],[2,'Medium'],[3,'Thick']];
+const stM=()=>store[STU.mid];
+const stEv=id=>{ const m=stM(); return m&&m.events.find(e=>e.id===id); };
+const stCur=()=>stEv(STU.items[STU.i]);
+const stDraws=e=>{ if(!Array.isArray(e.draw)) e.draw=[]; return e.draw; };
+const stUid=()=>'d'+Math.random().toString(36).slice(2,9);
+const r4=v=>Math.round(v*10000)/10000;
+function stBounds(e){ const m=stM(); return withMatch(m,()=>[Math.max(0,+(e.t-preOf(e)).toFixed(2)),+(e.t+postOf(e)).toFixed(2)]); }
+function stLabel(e){ const m=stM(); return withMatch(m,()=>{ const p=e.pid&&P(e.pid); return minuteLabel(e.t)+' '+T(e.type).label+(p?' '+(p.num?'#'+p.num+' ':'')+firstName(p):''); }); }
+function stSave(){ const m=stM(); if(!m) return; m.events.forEach(e=>{ if(Array.isArray(e.draw)){ e.draw=e.draw.filter(d=>d.shapes&&d.shapes.length); if(!e.draw.length) delete e.draw; } });
+  m.studio={items:STU.items.slice()}; saveMatchObj(m); const s=$('#stSaved'); if(s) s.textContent='Saved'; }
+function stPushUndo(){ const e=stCur(); if(!e) return; STU.undo.push({eid:e.id,draw:JSON.stringify(e.draw||[])}); if(STU.undo.length>60) STU.undo.shift(); }
+function stUndo(){ const u=STU.undo.pop(); if(!u){ toast('Nothing to undo.'); return; } const e=stEv(u.eid); if(e){ e.draw=JSON.parse(u.draw); STU.sel=null; stSave(); stSide(); stPaint(); stBar(); } }
+
+/* ---------- open ---------- */
+function stOpen(mid,ids){ const m=store[mid]; if(!m) return; STU.mid=mid; STU.items=ids.slice(); STU.i=0; STU.sel=null; STU.drawId=null; STU.undo=[]; m.studio={items:STU.items.slice()}; saveMatchObj(m); go('studio',mid); }
+async function stSource(mid){
+  if(M.id===mid&&videoURL) return {url:videoURL,remote:!!(videoFile&&videoFile.remote)};
+  const f=sessionFiles[mid]; if(!f) return null;
+  if(f.remote) return {url:await f.url(),remote:true};
+  if(f instanceof Blob) return {url:URL.createObjectURL(f),remote:false,own:true};
+  return null; }
+
+/* ---------- page ---------- */
+function stIcon(path){ return `<svg viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`; }
+function renderStudio(){
+  const el=$('#view-studio'); if(!el) return; const mid=viewArg||STU.mid, m=store[mid];
+  if(!m){ el.innerHTML='<div class="wrap page"><p class="empty">This match is not available.</p></div>'; return; }
+  if(STU.mid!==mid){ STU.mid=mid; STU.items=((m.studio&&m.studio.items)||[]).filter(id=>m.events.some(e=>e.id===id)); STU.i=0; STU.sel=null; STU.undo=[]; }
+  STU.items=STU.items.filter(id=>m.events.some(e=>e.id===id)); if(STU.i>=STU.items.length) STU.i=Math.max(0,STU.items.length-1);
+  if(M.id!==mid) openMatch(mid);
+  try{ V().pause(); }catch(e){}
+  const e=stCur();
+  el.innerHTML=`<div class="st-wrap">
+    <header class="st-top"><button class="btn sm ghost" data-go="match" data-arg="${mid}">← Back to the tagger</button><div class="st-title"><span class="eyebrow">Video editor</span><h1>${esc(matchName(m))}</h1></div><span class="hint" id="stSaved"></span>
+      <button class="btn primary" data-stexport ${STU.items.length?'':'disabled'}>Export video</button></header>
+    <div class="st-grid">
+      <aside class="st-clips"><div class="st-h"><b>Clips</b><span class="hint">${STU.items.length}</span><button class="btn sm" data-stpick>+ Add clips</button></div><div id="stClipList">${stClipsHtml()}</div></aside>
+      <section class="st-main">${e?`
+        <div class="st-tools" role="toolbar" aria-label="Drawing tools">${ST_TOOLS.map(([k,l,p])=>`<button class="st-tool" data-sttool="${k}" aria-pressed="${STU.tool===k}" title="${esc(l)}" aria-label="${esc(l)}">${stIcon(p)}</button>`).join('')}
+          <span class="st-sep"></span>${ST_COLORS.map(([c,n])=>`<button class="st-col" data-stcol="${c}" aria-pressed="${STU.color===c}" title="${n}" aria-label="${n}" style="--c:${c}"></button>`).join('')}
+          <span class="st-sep"></span>${ST_SIZES.map(([s,n])=>`<button class="st-size" data-stsize="${s}" aria-pressed="${STU.size===s}" title="${n}" aria-label="${n} line"><i style="height:${s*2}px"></i></button>`).join('')}
+          <button class="st-tool" data-stdash aria-pressed="${STU.dash}" title="Dashed line (runs without the ball)" aria-label="Dashed line">${stIcon('<path d="M3 10h3M8.5 10h3M14 10h3"/>')}</button>
+          <span class="st-sep"></span><button class="st-tool" data-stundo title="Undo (Ctrl+Z)" aria-label="Undo">${stIcon('<path d="M7 5L3 9l4 4"/><path d="M3 9h9a5 5 0 010 10H9"/>')}</button></div>
+        <div class="st-stage" id="stStage"><video id="stVid" playsinline muted preload="auto"></video><canvas id="stCv"></canvas>
+          <div class="st-hold" id="stHold" hidden><b></b><i><span></span></i></div><input class="st-txt" id="stTxt" hidden placeholder="Type and press Enter" maxlength="60">
+          <p class="st-msg" id="stMsg" hidden></p></div>
+        <div class="st-trans"><button class="btn sm primary" data-stplay id="stPlayBtn">▶ Play</button><button class="st-ib" data-ststep="-0.2" title="Back a little (←)" aria-label="Back a little">‹</button><button class="st-ib" data-ststep="0.2" title="Forward a little (→)" aria-label="Forward a little">›</button>
+          <span class="st-time" id="stTime"></span><div class="st-bar" id="stBar"></div></div>
+        <div class="st-trim"><span class="hint">Clip:</span>${(()=>{ const m2=stM(); return withMatch(m2,()=>`<span>starts <b>${preOf(e)}s</b> before the tag <button class="st-ib" data-sttrim="pre" data-d="1" title="Start 1 s earlier">−1s</button><button class="st-ib" data-sttrim="pre" data-d="-1" title="Start 1 s later">+1s</button></span><span>ends <b>${postOf(e)}s</b> after <button class="st-ib" data-sttrim="post" data-d="-1" title="End 1 s earlier">−1s</button><button class="st-ib" data-sttrim="post" data-d="1" title="End 1 s later">+1s</button></span>`); })()}</div>`
+        :`<div class="st-empty card"><h2>No clips yet</h2><p class="hint">Add the moments you want to work on. Each one is cut out of the match on its own, with the timing you set in the tagger.</p><button class="btn primary" data-stpick>+ Add clips</button></div>`}</section>
+      <aside class="st-side" id="stSide">${e?stSideHtml():''}</aside>
+    </div>${STU.pick?stPickHtml():''}${STU.ex?stExportHtml():''}</div>
+    <datalist id="stPlayers">${(m.players||[]).filter(p=>p.name).map(p=>`<option value="${esc((p.num?p.num+' ':'')+firstName(p))}"></option>`).join('')}</datalist>`;
+  if(e) stMount();
+}
+function stClipsHtml(){ return STU.items.map((id,k)=>{ const e=stEv(id); if(!e) return ''; const [a,b]=stBounds(e), nd=(e.draw||[]).filter(d=>d.shapes.length).length;
+  return `<div class="st-clip${k===STU.i?' on':''}"><button class="st-cbtn" data-stclip="${k}"><span class="n">${k+1}</span><span class="t"><b>${esc(stLabel(e))}</b><small>${Math.round(b-a)}s${nd?', '+nd+' drawing'+(nd===1?'':'s'):''}</small></span></button>
+    <span class="st-cact"><button class="st-ib" data-stmv="${k}" data-d="-1" ${k===0?'disabled':''} aria-label="Move up">↑</button><button class="st-ib" data-stmv="${k}" data-d="1" ${k===STU.items.length-1?'disabled':''} aria-label="Move down">↓</button><button class="st-ib" data-strm="${k}" aria-label="Remove from the video">×</button></span></div>`; }).join('')||'<p class="hint">No clips.</p>'; }
+function stSideHtml(){ const e=stCur(); if(!e) return ''; const ds=stDraws(e).filter(d=>d.shapes.length).sort((a,b)=>a.at-b.at), [a]=stBounds(e), sh=stSelShape();
+  return `<div class="st-h"><b>Drawings in this clip</b></div>
+    ${ds.length?ds.map(d=>`<div class="st-draw${d.id===STU.drawId?' on':''}"><button class="st-dgo" data-stdraw="${d.id}"><b>${(d.at-a).toFixed(1)}s</b><span>${d.shapes.length} item${d.shapes.length===1?'':'s'}</span></button>
+      <label title="How long the video stops to show this drawing">Pause <input type="number" min="1" max="20" step="0.5" value="${d.hold}" data-sthold="${d.id}"> s</label>
+      <label class="st-keep" title="Leave the drawing on screen when the video plays on"><input type="checkbox" data-stkeep="${d.id}" ${d.keep?'checked':''}> Keep on screen</label>
+      <button class="st-ib" data-stdeldraw="${d.id}" aria-label="Delete this drawing">×</button></div>`).join(''):'<p class="hint">Pause the clip where you want to explain something, pick a tool and draw on the video. When the clip plays, it stops there for 5 seconds to show the drawing, then plays on.</p>'}
+    ${sh?`<div class="st-selbox"><div class="st-h"><b>Selected</b><button class="btn sm ghost" data-stdelshape>Delete</button></div>
+      ${['ring','spot','chain'].includes(sh.t)?`<label class="st-f">Label <input data-stlabel value="${esc(sh.label||'')}" list="stPlayers" placeholder="Name or number" maxlength="30"></label>`:''}
+      ${sh.t==='text'?`<label class="st-f">Text <input data-stlabel value="${esc(sh.text||'')}" maxlength="60"></label>`:''}
+      <div class="st-row">${ST_COLORS.map(([c,n])=>`<button class="st-col sm" data-stshcol="${c}" aria-pressed="${sh.c===c}" aria-label="${n}" style="--c:${c}"></button>`).join('')}</div></div>`:''}
+    <details class="st-help"><summary>Shortcuts</summary><p class="hint">Space play or pause. ← → step. Delete removes the selected item. Ctrl+Z undo. Esc cancels a line you are drawing. Double-click finishes a formation line or area.</p></details>`; }
+function stSide(){ const s=$('#stSide'); if(s) s.innerHTML=stSideHtml(); const c=$('#stClipList'); if(c) c.innerHTML=stClipsHtml(); }
+function stPickHtml(){ const m=stM(), have=new Set(STU.items); const cand=withMatch(m,()=>sortedEvents().filter(e=>!['swap','formation','sub','h1s','h1e','h2s','h2e'].includes(e.type)));
+  return `<div class="modal" id="stPickModal"><div class="sheet"><div class="sheet-head"><div><h2>Add clips</h2><p>${esc(matchName(m))}: tick the moments to add</p></div><button class="btn ghost" data-stpickclose>Close</button></div>
+    <div class="st-picklist">${cand.map(e=>`<label class="sel-row${have.has(e.id)?' off':''}"><input type="checkbox" data-stpickid="${e.id}" ${have.has(e.id)?'checked disabled':''}> <span>${esc(stLabel(e))}</span></label>`).join('')||'<p class="hint">This match has no tagged moments yet.</p>'}</div>
+    <div class="sel-foot"><button class="btn ghost" data-stpickclose>Cancel</button><button class="btn primary" data-stpickadd>Add selected</button></div></div></div>`; }
+
+/* ---------- stage ---------- */
+let stRO=null;
+async function stMount(){
+  const v=$('#stVid'), cv=$('#stCv'); if(!v) return; const mid=STU.mid, e=stCur();
+  v.muted=true;
+  const msg=t=>{ const p=$('#stMsg'); if(p){ p.hidden=!t; p.textContent=t||''; } };
+  if(!STU.src||STU.src.mid!==mid){ msg('Loading the match video…'); let s=null; try{ s=await stSource(mid); }catch(err){ console.error(err); }
+    if(!s){ msg('Load this match’s video in the tagger first (Back to the tagger, then choose the video). Clips are cut from it.'); return; } STU.src=Object.assign({mid},s); }
+  if(!$('#stVid')||STU.mid!==mid) return;
+  if(STU.src.remote) v.crossOrigin='anonymous';
+  if(v.src!==STU.src.url) v.src=STU.src.url;
+  const ready=()=>{ msg(''); const st=$('#stStage'); if(st&&v.videoWidth) st.style.aspectRatio=v.videoWidth+'/'+v.videoHeight; stFit(); const [a]=stBounds(e); const d=STU.drawId&&stDraws(e).find(x=>x.id===STU.drawId); stSeekTo(d?d.at:a); };
+  if(v.readyState>=1) ready(); else v.addEventListener('loadedmetadata',ready,{once:true});
+  v.addEventListener('error',()=>msg('The video could not be played here.'),{once:true});
+  v.addEventListener('seeked',()=>{ if(!STU.playing){ stPaint(); stBar(); } });
+  v.addEventListener('timeupdate',()=>{ if(!STU.playing) stBar(); });
+  if(stRO) stRO.disconnect(); stRO=new ResizeObserver(()=>{ stFit(); stPaint(); }); stRO.observe($('#stStage'));
+  stBindCanvas(cv); stBar();
+}
+function stFit(){ const cv=$('#stCv'), st=$('#stStage'); if(!cv||!st) return; const r=st.getBoundingClientRect(), dpr=window.devicePixelRatio||1; cv.width=Math.round(r.width*dpr); cv.height=Math.round(r.height*dpr); }
+function stSeekTo(t){ const v=$('#stVid'); if(!v) return; const e=stCur(); const [a,b]=stBounds(e); t=Math.max(a,Math.min(b,t)); try{ v.currentTime=t; }catch(err){} STU.drawId=(stDrawAt(e,t)||{}).id||null; stSide(); }
+const stDrawAt=(e,t)=>stDraws(e).find(d=>Math.abs(d.at-t)<0.06);
+function stVisible(e,t){ const ds=stDraws(e).filter(d=>d.shapes.length); const cur=stDrawAt(e,t); const kept=ds.filter(d=>d.keep&&d.at<t-0.06); return {cur,kept}; }
+function stPaint(){ const cv=$('#stCv'), v=$('#stVid'); if(!cv||!v||STU.playing) return; const e=stCur(); if(!e) return; const ctx=cv.getContext('2d'); ctx.clearRect(0,0,cv.width,cv.height);
+  const t=v.currentTime, {cur,kept}=stVisible(e,t);
+  kept.forEach(d=>stShapes(ctx,cv.width,cv.height,d.shapes,1,v));
+  if(cur) stShapes(ctx,cv.width,cv.height,cur.shapes,1,v);
+  if(STU.draft) stShapes(ctx,cv.width,cv.height,[STU.draft],1,v,true);
+  const sh=stSelShape(); if(sh) stHandles(ctx,cv.width,cv.height,sh);
+  $('#stTime')&&($('#stTime').textContent=stTimeTxt(e,t)); }
+function stTimeTxt(e,t){ const [a,b]=stBounds(e); return (Math.max(0,t-a)).toFixed(1)+' / '+(b-a).toFixed(1)+' s'; }
+function stBar(){ const bar=$('#stBar'), v=$('#stVid'), e=stCur(); if(!bar||!v||!e) return; const [a,b]=stBounds(e), X=t=>Math.max(0,Math.min(100,(t-a)/(b-a)*100));
+  bar.innerHTML=`<i class="st-fill" style="width:${X(v.currentTime)}%"></i><i class="st-tag" style="left:${X(e.t)}%" title="Tag"></i>${stDraws(e).filter(d=>d.shapes.length).map(d=>`<button class="st-mk${d.id===STU.drawId?' on':''}" style="left:${X(d.at)}%" data-stdraw="${d.id}" title="Drawing, pauses ${d.hold}s" aria-label="Drawing at ${(d.at-a).toFixed(1)} s"></button>`).join('')}`;
+  const tm=$('#stTime'); if(tm) tm.textContent=stTimeTxt(e,v.currentTime); }
+
+/* ---------- drawing shapes ---------- */
+const stHex=(c,a)=>{ const n=parseInt(c.slice(1),16); return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`; };
+function stPath(ctx,pts,W,H,smooth){ ctx.beginPath(); if(!pts.length) return; ctx.moveTo(pts[0][0]*W,pts[0][1]*H);
+  if(!smooth||pts.length<3){ pts.slice(1).forEach(p=>ctx.lineTo(p[0]*W,p[1]*H)); return; }
+  for(let i=1;i<pts.length-1;i++){ const mx=(pts[i][0]+pts[i+1][0])/2*W, my=(pts[i][1]+pts[i+1][1])/2*H; ctx.quadraticCurveTo(pts[i][0]*W,pts[i][1]*H,mx,my); }
+  const l=pts[pts.length-1]; ctx.lineTo(l[0]*W,l[1]*H); }
+function stHead(ctx,x1,y1,x2,y2,w,c){ const a=Math.atan2(y2-y1,x2-x1), L=w*3.6; ctx.save(); ctx.setLineDash([]); ctx.fillStyle=c; ctx.beginPath(); ctx.moveTo(x2+Math.cos(a)*w*.6,y2+Math.sin(a)*w*.6); ctx.lineTo(x2-Math.cos(a-0.42)*L,y2-Math.sin(a-0.42)*L); ctx.lineTo(x2-Math.cos(a+0.42)*L,y2-Math.sin(a+0.42)*L); ctx.closePath(); ctx.fill(); ctx.restore(); }
+/* part of a polyline, for the draw-in animation */
+function stCut(pts,p){ if(p>=1||pts.length<2) return pts; let tot=0; const seg=[]; for(let i=1;i<pts.length;i++){ const d=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]); seg.push(d); tot+=d; }
+  let want=tot*Math.max(0,p); const out=[pts[0]]; for(let i=1;i<pts.length;i++){ if(want>=seg[i-1]){ out.push(pts[i]); want-=seg[i-1]; } else { const f=seg[i-1]?want/seg[i-1]:0; out.push([pts[i-1][0]+(pts[i][0]-pts[i-1][0])*f,pts[i-1][1]+(pts[i][1]-pts[i-1][1])*f]); break; } } return out; }
+function stEll(ctx,cx,cy,rx,ry){ ctx.beginPath(); ctx.ellipse(cx,cy,Math.max(1,rx),Math.max(1,ry),0,0,Math.PI*2); }
+function stPill(ctx,txt,x,y,fs,c,anchor){ ctx.save(); ctx.setLineDash([]); ctx.shadowColor='transparent'; ctx.font=`700 ${fs}px "DM Sans",system-ui,sans-serif`; const w=ctx.measureText(txt).width+fs*0.9, h=fs*1.45;
+  const x0=anchor==='left'?x:x-w/2, y0=y-h; ctx.fillStyle='rgba(8,10,14,.9)'; ctx.beginPath(); if(ctx.roundRect) ctx.roundRect(x0,y0,w,h,h/2.4); else ctx.rect(x0,y0,w,h); ctx.fill();
+  ctx.fillStyle=c; ctx.textBaseline='middle'; ctx.fillText(txt,x0+fs*0.45,y0+h/2+fs*0.04); ctx.restore(); return {x:x0,y:y0,w,h}; }
+function stShapes(ctx,W,H,shapes,prog,video,draft){
+  const u=H/720;
+  shapes.forEach((s,idx)=>{
+    const p=Math.max(0,Math.min(1,prog-(idx*0.08))), w=({1:3,2:5,3:8}[s.w]||5)*u, c=s.c||'#FFD400';
+    if(p<=0) return;
+    ctx.save(); ctx.lineCap='round'; ctx.lineJoin='round'; ctx.lineWidth=w; ctx.strokeStyle=c; ctx.fillStyle=c;
+    ctx.shadowColor='rgba(0,0,0,.6)'; ctx.shadowBlur=5*u; ctx.setLineDash(s.dash?[w*2.2,w*1.9]:[]);
+    const P=q=>[q[0]*W,q[1]*H];
+    if(s.t==='arrow'||s.t==='line'){ const pts=stCut(s.pts,p); stPath(ctx,pts,W,H); ctx.stroke(); if(s.t==='arrow'&&pts.length>1){ const a=P(pts[pts.length-2]), b=P(pts[pts.length-1]); stHead(ctx,a[0],a[1],b[0],b[1],w,c); } }
+    else if(s.t==='curve'||s.t==='pen'){ const pts=stCut(s.pts,p); stPath(ctx,pts,W,H,true); ctx.stroke(); if(s.t==='curve'&&pts.length>1){ const n=pts.length, a=P(pts[Math.max(0,n-3)]), b=P(pts[n-1]); stHead(ctx,a[0],a[1],b[0],b[1],w,c); } }
+    else if(s.t==='ring'){ const [cx,cy]=P(s.p), rx=s.r*W*(0.6+0.4*p), ry=rx*0.38; ctx.globalAlpha=p; ctx.setLineDash([]); ctx.fillStyle=stHex(c,.22); stEll(ctx,cx,cy,rx,ry); ctx.fill(); ctx.lineWidth=w*0.8; stEll(ctx,cx,cy,rx,ry); ctx.stroke(); ctx.lineWidth=w*0.35; stEll(ctx,cx,cy,rx*1.28,ry*1.28); ctx.stroke();
+      if(s.label) stPill(ctx,s.label,cx,cy-ry-rx*2.1,Math.max(12,15*u*(s.w||2)/1.6+6*u),c); }
+    else if(s.t==='spot'){ const [cx,cy]=P(s.p), rx=s.r*W, ry=rx*0.38, top=cy-rx*3.4; ctx.globalAlpha=1; ctx.shadowColor='transparent';
+      ctx.fillStyle=`rgba(0,0,0,${0.55*p})`; ctx.beginPath(); ctx.rect(0,0,W,H); ctx.moveTo(cx+rx*1.15,cy); ctx.ellipse(cx,cy-rx*1.55,rx*1.15,rx*1.9,0,0,Math.PI*2,true); ctx.fill('evenodd');
+      const g=ctx.createLinearGradient(0,top,0,cy); g.addColorStop(0,stHex(c,0)); g.addColorStop(1,stHex(c,.28*p)); ctx.fillStyle=g; ctx.beginPath(); ctx.moveTo(cx-rx*0.35,top); ctx.lineTo(cx+rx*0.35,top); ctx.lineTo(cx+rx,cy); ctx.lineTo(cx-rx,cy); ctx.closePath(); ctx.fill();
+      ctx.globalAlpha=p; ctx.lineWidth=w*0.8; ctx.strokeStyle=c; ctx.setLineDash([]); stEll(ctx,cx,cy,rx,ry); ctx.stroke(); if(s.label) stPill(ctx,s.label,cx,cy-rx*3.6,Math.max(12,15*u*(s.w||2)/1.6+6*u),c); }
+    else if(s.t==='chain'){ const pts=stCut(s.pts,draft?1:p); ctx.setLineDash(s.dash?[w*2.2,w*1.9]:[]); stPath(ctx,pts,W,H); ctx.stroke(); ctx.setLineDash([]);
+      s.pts.forEach((q,k)=>{ if(!draft&&k>pts.length-1) return; const [x,y]=P(q), rx=w*3.2, ry=rx*0.42; ctx.fillStyle=stHex(c,.3); stEll(ctx,x,y,rx,ry); ctx.fill(); ctx.lineWidth=w*0.7; stEll(ctx,x,y,rx,ry); ctx.stroke(); });
+      if(s.label&&pts.length) { const top=s.pts.reduce((a,q)=>q[1]<a[1]?q:a,s.pts[0]); const [x,y]=P(top); stPill(ctx,s.label,x,y-w*5,Math.max(12,14*u+4*u),c); } }
+    else if(s.t==='area'){ ctx.globalAlpha=draft?1:p; ctx.setLineDash([]); stPath(ctx,s.pts,W,H); if(!draft) ctx.closePath(); ctx.fillStyle=stHex(c,.26); if(s.pts.length>2) ctx.fill(); ctx.lineWidth=w*0.55; ctx.setLineDash(s.dash?[w*1.6,w*1.4]:[]); ctx.stroke(); }
+    else if(s.t==='cone'){ const [ax,ay]=P(s.pts[0]), [bx,by]=P(s.pts[1]), L=Math.hypot(bx-ax,by-ay)*p, a=Math.atan2(by-ay,bx-ax), sp=0.36; ctx.shadowColor='transparent';
+      const g=ctx.createRadialGradient(ax,ay,0,ax,ay,Math.max(1,L)); g.addColorStop(0,stHex(c,.5)); g.addColorStop(1,stHex(c,0)); ctx.fillStyle=g; ctx.beginPath(); ctx.moveTo(ax,ay); ctx.arc(ax,ay,Math.max(1,L),a-sp,a+sp); ctx.closePath(); ctx.fill();
+      ctx.lineWidth=w*0.4; ctx.strokeStyle=stHex(c,.8); ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(ax+Math.cos(a-sp)*L,ay+Math.sin(a-sp)*L); ctx.moveTo(ax,ay); ctx.lineTo(ax+Math.cos(a+sp)*L,ay+Math.sin(a+sp)*L); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle=c; stEll(ctx,ax,ay,w*1.1,w*1.1); ctx.fill(); }
+    else if(s.t==='zoom'){ const [cx,cy]=P(s.p), R=s.r*W*(0.5+0.5*p), z=2, vw=video&&video.videoWidth, vh=video&&video.videoHeight; ctx.shadowColor='rgba(0,0,0,.6)'; ctx.shadowBlur=12*u;
+      ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.fillStyle='#000'; ctx.fill(); ctx.shadowColor='transparent';
+      if(vw){ try{ ctx.save(); ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.clip(); const sx=(s.p[0]-s.r/z)*vw, sy=(s.p[1]-s.r*W/H/z)*vh, sw=2*s.r/z*vw, shh=2*s.r*W/H/z*vh; ctx.drawImage(video,sx,sy,sw,shh,cx-R,cy-R,2*R,2*R); ctx.restore(); }catch(err){} }
+      ctx.lineWidth=Math.max(2,w*0.7); ctx.strokeStyle=c; ctx.setLineDash([]); ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.stroke(); }
+    else if(s.t==='text'){ ctx.globalAlpha=p; const fs=({1:20,2:28,3:40}[s.w]||28)*u; stPill(ctx,s.text||'',s.p[0]*W,s.p[1]*H,fs,c,'left'); }
+    ctx.restore();
+  });
+}
+function stHandles(ctx,W,H,s){ const pts=s.pts||[s.p]; ctx.save(); ctx.fillStyle='#fff'; ctx.strokeStyle='#0B0F14'; ctx.lineWidth=1.5; pts.forEach(q=>{ ctx.beginPath(); ctx.rect(q[0]*W-5,q[1]*H-5,10,10); ctx.fill(); ctx.stroke(); }); ctx.restore(); }
+
+/* ---------- pointer input ---------- */
+function stSelShape(){ const e=stCur(); if(!e||!STU.sel) return null; for(const d of stDraws(e)){ const s=d.shapes.find(x=>x.id===STU.sel); if(s) return s; } return null; }
+function stDist(p,a,b){ const dx=b[0]-a[0], dy=b[1]-a[1], L=dx*dx+dy*dy; let t=L?((p[0]-a[0])*dx+(p[1]-a[1])*dy)/L:0; t=Math.max(0,Math.min(1,t)); return Math.hypot(p[0]-(a[0]+t*dx),p[1]-(a[1]+t*dy)); }
+function stHit(s,q,W,H){ const px=[q[0]*W,q[1]*H], PX=a=>[a[0]*W,a[1]*H], tol=12;
+  if(s.pts&&s.pts.length>1){ for(let i=1;i<s.pts.length;i++) if(stDist(px,PX(s.pts[i-1]),PX(s.pts[i]))<tol) return true;
+    if(s.t==='area'){ let inside=false; const pts=s.pts.map(PX); for(let i=0,j=pts.length-1;i<pts.length;j=i++){ if(((pts[i][1]>px[1])!==(pts[j][1]>px[1]))&&(px[0]<(pts[j][0]-pts[i][0])*(px[1]-pts[i][1])/(pts[j][1]-pts[i][1])+pts[i][0])) inside=!inside; } if(inside) return true; }
+    if(s.t==='chain'&&s.pts.some(a=>Math.hypot(PX(a)[0]-px[0],PX(a)[1]-px[1])<tol)) return true; return false; }
+  if(s.p){ const c=PX(s.p); if(s.t==='text') return px[0]>=c[0]-6&&px[0]<=c[0]+((s.text||'').length*0.6+1)*({1:20,2:28,3:40}[s.w]||28)*H/720&&px[1]<=c[1]+6&&px[1]>=c[1]-60*H/720;
+    const R=(s.r||0.03)*W; if(s.t==='zoom') return Math.hypot(px[0]-c[0],px[1]-c[1])<R+tol; return Math.abs(px[0]-c[0])<R+tol&&Math.abs(px[1]-c[1])<R*0.6+tol+(s.t==='spot'?R*3:0)&&px[1]<=c[1]+R*0.6+tol; }
+  return false; }
+function stEnsureDraw(){ const e=stCur(), v=$('#stVid'); const t=+v.currentTime.toFixed(2); let d=stDrawAt(e,t); if(!d){ d={id:stUid(),at:t,hold:5,keep:false,shapes:[]}; stDraws(e).push(d); } STU.drawId=d.id; return d; }
+function stCommit(s){ stPushUndo(); const d=stEnsureDraw(); s.id=stUid(); d.shapes.push(s); STU.sel=['ring','spot','text','chain'].includes(s.t)?s.id:null; STU.draft=null; stSave(); stSide(); stPaint(); stBar(); }
+function stBindCanvas(cv){
+  const pos=ev=>{ const r=cv.getBoundingClientRect(); return [r4(Math.max(0,Math.min(1,(ev.clientX-r.left)/r.width))),r4(Math.max(0,Math.min(1,(ev.clientY-r.top)/r.height)))]; };
+  const base=()=>({c:STU.color,w:STU.size,dash:STU.dash});
+  let drag=null;
+  cv.addEventListener('pointerdown',ev=>{
+    if(STU.playing){ stStopPlay(); return; } const v=$('#stVid'); if(!v.paused) v.pause();
+    const q=pos(ev), tool=STU.tool, r=cv.getBoundingClientRect();
+    if(tool==='select'){ const e=stCur(), {cur,kept}=stVisible(e,v.currentTime); const all=[].concat(kept,cur?[cur]:[]).flatMap(d=>d.shapes); const hit=all.slice().reverse().find(s=>stHit(s,q,r.width,r.height));
+      STU.sel=hit?hit.id:null; if(hit){ stPushUndo(); drag={kind:'move',s:hit,last:q}; cv.setPointerCapture(ev.pointerId); } stSide(); stPaint(); return; }
+    if(tool==='chain'||tool==='area'){ if(!STU.draft||STU.draft.t!==tool) STU.draft=Object.assign({t:tool,pts:[q,q]},base()); else { const pts=STU.draft.pts, f=pts[0];
+        if(tool==='area'&&pts.length>3&&Math.hypot((f[0]-q[0])*r.width,(f[1]-q[1])*r.height)<14){ pts.pop(); stCommit(STU.draft); return; } pts[pts.length-1]=q; pts.push(q); } stPaint(); return; }
+    if(tool==='text'){ stTextAt(q); return; }
+    cv.setPointerCapture(ev.pointerId);
+    if(tool==='ring'||tool==='spot'||tool==='zoom') STU.draft=Object.assign({t:tool,p:q,r:tool==='zoom'?0.09:0.035},base());
+    else STU.draft=Object.assign({t:tool,pts:[q,q]},base());
+    drag={kind:'draw',start:q}; stPaint(); });
+  cv.addEventListener('pointermove',ev=>{ const q=pos(ev), r=cv.getBoundingClientRect();
+    if(!drag){ if(STU.draft&&(STU.draft.t==='chain'||STU.draft.t==='area')){ STU.draft.pts[STU.draft.pts.length-1]=q; stPaint(); } return; }
+    if(drag.kind==='move'){ const dx=q[0]-drag.last[0], dy=q[1]-drag.last[1]; drag.last=q; const s=drag.s; if(s.pts) s.pts=s.pts.map(a=>[r4(a[0]+dx),r4(a[1]+dy)]); if(s.p) s.p=[r4(s.p[0]+dx),r4(s.p[1]+dy)]; drag.moved=true; stPaint(); return; }
+    const d=STU.draft; if(!d) return;
+    if(d.t==='curve'||d.t==='pen'){ const l=d.pts[d.pts.length-1]; if(Math.hypot((q[0]-l[0])*r.width,(q[1]-l[1])*r.height)>6) d.pts.push(q); }
+    else if(d.p){ d.r=r4(Math.max(d.t==='zoom'?0.04:0.015,Math.hypot((q[0]-d.p[0]),(q[1]-d.p[1])*r.height/r.width))); }
+    else d.pts[1]=q;
+    stPaint(); });
+  const up=ev=>{ if(!drag) return; const k=drag; drag=null; if(k.kind==='move'){ if(k.moved) stSave(); else STU.undo.pop(); stSide(); stPaint(); return; }
+    const d=STU.draft; if(!d) return; const r=cv.getBoundingClientRect();
+    if(d.pts){ const a=d.pts[0], b=d.pts[d.pts.length-1], len=Math.hypot((b[0]-a[0])*r.width,(b[1]-a[1])*r.height); if(len<8&&d.pts.length<3){ STU.draft=null; stPaint(); return; }
+      if(d.pts.length>2) d.pts=stSimplify(d.pts,0.004); }
+    stCommit(d); };
+  cv.addEventListener('pointerup',up); cv.addEventListener('pointercancel',()=>{ drag=null; STU.draft=null; stPaint(); });
+  cv.addEventListener('dblclick',()=>{ const d=STU.draft; if(d&&(d.t==='chain'||d.t==='area')){ d.pts.pop(); const pts=[]; d.pts.forEach(p=>{ const l=pts[pts.length-1]; if(!l||Math.hypot(l[0]-p[0],l[1]-p[1])>0.005) pts.push(p); }); d.pts=pts;
+      if(d.pts.length>=(d.t==='area'?3:2)) stCommit(d); else { STU.draft=null; stPaint(); } } });
+}
+function stSimplify(pts,eps){ if(pts.length<3) return pts; let dmax=0, idx=0; for(let i=1;i<pts.length-1;i++){ const d=stDist(pts[i],pts[0],pts[pts.length-1]); if(d>dmax){ dmax=d; idx=i; } }
+  if(dmax>eps){ const a=stSimplify(pts.slice(0,idx+1),eps), b=stSimplify(pts.slice(idx),eps); return a.slice(0,-1).concat(b); } return [pts[0],pts[pts.length-1]]; }
+function stTextAt(q){ const i=$('#stTxt'), st=$('#stStage'); if(!i||!st) return; i.hidden=false; i.value=''; i.style.left=(q[0]*100)+'%'; i.style.top=(q[1]*100)+'%'; STU.txt=q; setTimeout(()=>i.focus(),0); }
+function stTextDone(ok){ const i=$('#stTxt'); if(!i||i.hidden) return; const v=i.value.trim(); i.hidden=true; if(ok&&v&&STU.txt) stCommit({t:'text',p:STU.txt,text:v,c:STU.color,w:STU.size}); STU.txt=null; }
+
+/* ---------- playback: the clip plays, stops on every drawing for its pause, then plays on ---------- */
+const stFrame=()=>new Promise(r=>{ if(document.hidden) setTimeout(r,33); else requestAnimationFrame(()=>r()); });
+function stSeekP(v,t){ return new Promise(res=>{ let done=false; const fin=()=>{ if(done) return; done=true; v.removeEventListener('seeked',fin); res(); }; v.addEventListener('seeked',fin); try{ v.currentTime=t; }catch(e){ fin(); } setTimeout(fin,4000); }); }
+async function stRun({v,list,from,render,cancelled,onClip}){
+  for(let k=0;k<list.length;k++){ const e=list[k], [a,b]=stBounds(e); const start=k===0&&from!=null?Math.max(a,Math.min(b-0.05,from)):a;
+    const draws=stDraws(e).filter(d=>d.shapes.length&&d.at>=start-0.03&&d.at<=b+0.01).sort((x,y)=>x.at-y.at), kept=stDraws(e).filter(d=>d.shapes.length&&d.keep&&d.at<start-0.03);
+    if(onClip) onClip(k,e); await stSeekP(v,start); let di=0;
+    // a drawing right at the start is shown before anything plays
+    const p0=v.play(); if(p0&&p0.catch) p0.catch(()=>{});
+    for(;;){ if(cancelled()){ v.pause(); return false; } await stFrame();
+      const t=v.currentTime;
+      if(di<draws.length&&t>=draws[di].at-0.03){ const d=draws[di++]; v.pause(); await stSeekP(v,d.at); const ms=Math.max(0.5,+d.hold||5)*1000, t0=performance.now();
+        for(;;){ if(cancelled()){ return false; } const el=performance.now()-t0; if(el>=ms) break; render({e,t:d.at,kept,active:d,prog:el/450,left:(ms-el)/1000,hold:ms/1000}); await stFrame(); }
+        if(d.keep) kept.push(d); const p=v.play(); if(p&&p.catch) p.catch(()=>{}); continue; }
+      if(t>=b-0.01||v.ended){ v.pause(); render({e,t,kept,active:null,prog:1}); break; }
+      render({e,t,kept,active:null,prog:1});
+    } }
+  return true; }
+function stStopPlay(){ STU.stop=true; }
+async function stPlay(){
+  if(STU.playing){ stStopPlay(); return; } const v=$('#stVid'), cv=$('#stCv'); if(!v||!cv||!v.readyState) return;
+  STU.playing=true; STU.stop=false; STU.sel=null; STU.draft=null; const btn=$('#stPlayBtn'); if(btn) btn.textContent='❚❚ Stop';
+  const list=STU.items.slice(STU.i).map(stEv).filter(Boolean), from=v.currentTime, [a,b]=stBounds(list[0]), startAt=(from>=b-0.1)?a:from;
+  const hold=$('#stHold');
+  await stRun({v,list,from:startAt,cancelled:()=>STU.stop||view!=='studio',
+    onClip:(k)=>{ if(k>0){ STU.i=STU.items.indexOf(list[k].id); const c=$('#stClipList'); if(c) c.innerHTML=stClipsHtml(); } },
+    render:s=>{ const ctx=cv.getContext('2d'); ctx.clearRect(0,0,cv.width,cv.height); s.kept.forEach(d=>stShapes(ctx,cv.width,cv.height,d.shapes,1,v)); if(s.active) stShapes(ctx,cv.width,cv.height,s.active.shapes,s.prog,v);
+      if(hold){ hold.hidden=!s.active; if(s.active){ hold.querySelector('b').textContent=Math.ceil(s.left)+'s'; hold.querySelector('span').style.width=(100-s.left/s.hold*100)+'%'; } }
+      const bar=$('#stBar .st-fill'), [a2,b2]=stBounds(s.e); if(bar) bar.style.width=Math.max(0,Math.min(100,(s.t-a2)/(b2-a2)*100))+'%'; const tm=$('#stTime'); if(tm) tm.textContent=stTimeTxt(s.e,s.t); }});
+  STU.playing=false; if(hold) hold.hidden=true; const b2=$('#stPlayBtn'); if(b2) b2.textContent='▶ Play'; if(view==='studio'){ stSide(); stBar(); stPaint(); }
+}
+
+/* ---------- export ---------- */
+function stExportHtml(){ const x=STU.ex, mime=pickMime(), n=STU.items.length;
+  const secs=STU.items.map(stEv).filter(Boolean).reduce((s,e)=>{ const [a,b]=stBounds(e); return s+(b-a)+stDraws(e).filter(d=>d.shapes.length&&d.at>=a&&d.at<=b).reduce((t,d)=>t+(+d.hold||5),0); },0);
+  return `<div class="modal" id="stExModal"><div class="sheet"><div class="sheet-head"><div><h2>Export video</h2><p>${n} clip${n===1?'':'s'}, about ${fmtDur(secs)} with the pauses</p></div>${x.running?'':'<button class="btn ghost" data-stexclose>Close</button>'}</div>
+    ${!mime?'<p class="hint">This browser cannot record video. Use Chrome or Edge on a computer.</p>':x.running?`<div class="st-prog"><p id="stExMsg">${esc(x.msg||'')}</p><div class="bar"><i id="stExBar" style="width:${x.pct||0}%"></i></div><canvas id="stExCv"></canvas><button class="btn" data-stexcancel>Cancel</button></div>`:`
+      <div class="st-exopts"><label class="st-opt"><input type="radio" name="stexf" value="one" ${x.fmt!=='zip'?'checked':''}><span><b>One video</b><small>All clips one after the other, with the drawings and pauses.</small></span></label>
+      <label class="st-opt"><input type="radio" name="stexf" value="zip" ${x.fmt==='zip'?'checked':''}><span><b>Each clip as its own file</b><small>A .zip with one video per clip, numbered in this order.</small></span></label></div>
+      <p class="hint">The export plays every clip once in real time while it records, so it takes about as long as the video. Keep this tab open. The video has no sound.</p>
+      <div class="sel-foot"><button class="btn ghost" data-stexclose>Cancel</button><button class="btn primary" data-stexgo>Export</button></div>`}</div></div>`; }
+async function stExport(){
+  const x=STU.ex, mime=pickMime(); if(!mime) return; x.running=true; x.cancel=false; x.msg='Preparing…'; x.pct=0; renderStudio();
+  const list=STU.items.map(stEv).filter(Boolean), v=document.createElement('video'); v.muted=true; v.playsInline=true; v.preload='auto';
+  if(STU.src.remote) v.crossOrigin='anonymous'; v.src=STU.src.url;
+  try{
+    await new Promise((res,rej)=>{ if(v.readyState>=1) res(); v.addEventListener('loadedmetadata',res,{once:true}); v.addEventListener('error',()=>rej(new Error('The video could not be loaded.')),{once:true}); });
+    const sc=Math.min(1,1080/(v.videoHeight||720)), c=$('#stExCv')||document.createElement('canvas'); c.width=Math.round((v.videoWidth||1280)*sc/2)*2; c.height=Math.round((v.videoHeight||720)*sc/2)*2; const ctx=c.getContext('2d');
+    const total=list.reduce((s,e)=>{ const [a,b]=stBounds(e); return s+(b-a)+stDraws(e).filter(d=>d.shapes.length&&d.at>=a&&d.at<=b).reduce((t,d)=>t+(+d.hold||5),0); },0); let doneS=0, lastT=null, lastE=null;
+    const render=s=>{ ctx.drawImage(v,0,0,c.width,c.height); s.kept.forEach(d=>stShapes(ctx,c.width,c.height,d.shapes,1,v)); if(s.active) stShapes(ctx,c.width,c.height,s.active.shapes,s.prog,v);
+      if(lastE!==s.e){ lastE=s.e; lastT=null; } const now=performance.now(); if(lastT!=null) doneS+=(now-lastT)/1000; lastT=now;
+      const pct=Math.min(99,doneS/total*100), bar=$('#stExBar'); if(bar) bar.style.width=pct+'%'; };
+    const name=fileSafe(matchName(stM()))+' analysis';
+    const cancelled=()=>x.cancel;
+    const recordList=async(items,label)=>{ const stream=c.captureStream(30), rec=makeRecorder(stream,mime); const msg=$('#stExMsg'); if(msg) msg.textContent=label;
+      const ok=await stRun({v,list:items,render,cancelled}); rec.r.stop(); stream.getTracks().forEach(t=>t.stop()); const blob=await rec.done; return ok?blob:null; };
+    if(x.fmt==='zip'&&list.length>1){ await ensureLib(); const zip=new window.JSZip();
+      for(let k=0;k<list.length;k++){ const b=await recordList([list[k]],'Recording clip '+(k+1)+' of '+list.length+'…'); if(!b) throw new Error('cancel'); zip.file(String(k+1).padStart(2,'0')+' '+fileSafe(stLabel(list[k]))+'.'+extOf(mime),b); }
+      const msg=$('#stExMsg'); if(msg) msg.textContent='Packing the files…'; await offerFile(name+'.zip',await zip.generateAsync({type:'blob'})); }
+    else { const b=await recordList(list,'Recording '+list.length+' clip'+(list.length===1?'':'s')+'…'); if(!b) throw new Error('cancel'); await offerFile(name+'.'+extOf(mime),b); }
+    toast('Video exported.');
+  }catch(err){ if(err.message!=='cancel'){ console.error(err); toast('Export failed: '+err.message); } else toast('Export cancelled.'); }
+  v.removeAttribute('src'); v.load(); STU.ex=null; if(view==='studio') renderStudio();
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click',e=>{
+  const g=s=>e.target.closest(s); let b;
+  if(b=g('[data-stopen]')){ const ids=exSelected().map(x=>x.id); if(!ids.length){ toast('Select at least one clip.'); return; } ex.open=false; renderExport(); stOpen(M.id,ids); return; }
+  if(view!=='studio') return;
+  if(b=g('[data-sttool]')){ STU.tool=b.dataset.sttool; STU.draft=null; if(STU.tool!=='select'&&STU.sel){ STU.sel=null; stSide(); stPaint(); } document.querySelectorAll('[data-sttool]').forEach(x=>x.setAttribute('aria-pressed',x===b)); stPaint(); return; }
+  if(b=g('[data-stcol]')){ STU.color=b.dataset.stcol; document.querySelectorAll('[data-stcol]').forEach(x=>x.setAttribute('aria-pressed',x===b)); const s=STU.tool==='select'&&stSelShape(); if(s){ stPushUndo(); s.c=STU.color; stSave(); stSide(); stPaint(); } return; }
+  if(b=g('[data-stsize]')){ STU.size=+b.dataset.stsize; document.querySelectorAll('[data-stsize]').forEach(x=>x.setAttribute('aria-pressed',x===b)); const s=STU.tool==='select'&&stSelShape(); if(s){ stPushUndo(); s.w=STU.size; stSave(); stPaint(); } return; }
+  if(b=g('[data-stdash]')){ STU.dash=!STU.dash; b.setAttribute('aria-pressed',STU.dash); const s=STU.tool==='select'&&stSelShape(); if(s&&s.pts){ stPushUndo(); s.dash=STU.dash; stSave(); stPaint(); } return; }
+  if(g('[data-stundo]')){ stUndo(); return; }
+  if(b=g('[data-stshcol]')){ const s=stSelShape(); if(s){ stPushUndo(); s.c=b.dataset.stshcol; stSave(); stSide(); stPaint(); } return; }
+  if(g('[data-stdelshape]')){ stDelSel(); return; }
+  if(g('[data-stplay]')){ stPlay(); return; }
+  if(b=g('[data-ststep]')){ const v=$('#stVid'); if(v&&!STU.playing){ v.pause(); stSeekTo(v.currentTime+ +b.dataset.ststep); } return; }
+  if(b=g('[data-stdraw]')){ const d=stDraws(stCur()).find(x=>x.id===b.dataset.stdraw); if(d){ if(STU.playing) stStopPlay(); const v=$('#stVid'); v.pause(); STU.drawId=d.id; stSeekTo(d.at); } return; }
+  if(b=g('[data-stdeldraw]')){ const e2=stCur(); stPushUndo(); e2.draw=stDraws(e2).filter(d=>d.id!==b.dataset.stdeldraw); STU.sel=null; stSave(); stSide(); stPaint(); stBar(); toast('Drawing deleted.',()=>stUndo()); return; }
+  if(b=g('[data-stclip]')){ if(STU.playing) stStopPlay(); STU.i=+b.dataset.stclip; STU.sel=null; STU.drawId=null; STU.draft=null; renderStudio(); return; }
+  if(b=g('[data-stmv]')){ const k=+b.dataset.stmv, d=+b.dataset.d, it=STU.items; [it[k],it[k+d]]=[it[k+d],it[k]]; if(STU.i===k) STU.i=k+d; else if(STU.i===k+d) STU.i=k; stSave(); stSide(); return; }
+  if(b=g('[data-strm]')){ const k=+b.dataset.strm; STU.items.splice(k,1); if(STU.i>=STU.items.length) STU.i=Math.max(0,STU.items.length-1); stSave(); renderStudio(); return; }
+  if(b=g('[data-sttrim]')){ const e2=stCur(), m=stM(), f=b.dataset.sttrim, cur=withMatch(m,()=>f==='pre'?preOf(e2):postOf(e2)); setClipTiming(m.id,e2.id,f,cur+ +b.dataset.d); renderStudio(); return; }
+  if(g('[data-stpick]')){ STU.pick=true; renderStudio(); return; }
+  if(g('[data-stpickclose]')){ STU.pick=false; renderStudio(); return; }
+  if(g('[data-stpickadd]')){ const ids=[...document.querySelectorAll('[data-stpickid]:checked:not(:disabled)')].map(x=>x.dataset.stpickid); const m=stM(); const order=new Map(m.events.map((x,k)=>[x.id,x.t])); ids.sort((a,b2)=>order.get(a)-order.get(b2)); STU.items=STU.items.concat(ids); STU.pick=false; stSave(); renderStudio(); return; }
+  if(g('[data-stexport]')){ if(STU.playing) stStopPlay(); if(!STU.src){ toast('The video is still loading.'); return; } STU.ex={fmt:'one'}; renderStudio(); return; }
+  if(g('[data-stexclose]')){ STU.ex=null; renderStudio(); return; }
+  if(g('[data-stexgo]')){ const f=document.querySelector('input[name="stexf"]:checked'); STU.ex.fmt=f?f.value:'one'; stExport(); return; }
+  if(g('[data-stexcancel]')){ if(STU.ex) STU.ex.cancel=true; return; }
+});
+function stDelSel(){ const e=stCur(), id=STU.sel; if(!e||!id) return; stPushUndo(); stDraws(e).forEach(d=>{ d.shapes=d.shapes.filter(s=>s.id!==id); }); STU.sel=null; stSave(); stSide(); stPaint(); stBar(); }
+document.addEventListener('input',e=>{ if(view!=='studio') return; const t=e.target;
+  if(t.dataset.sthold!=null){ const d=stDraws(stCur()).find(x=>x.id===t.dataset.sthold); const val=parseFloat(t.value); if(d&&val>0){ d.hold=Math.min(20,Math.max(0.5,val)); stSave(); stBar(); } return; }
+  if(t.hasAttribute('data-stlabel')){ const s=stSelShape(); if(s){ if(s.t==='text') s.text=t.value; else s.label=t.value; stSave(); stPaint(); } return; } });
+document.addEventListener('change',e=>{ if(view!=='studio') return; const t=e.target;
+  if(t.dataset.stkeep!=null){ const d=stDraws(stCur()).find(x=>x.id===t.dataset.stkeep); if(d){ d.keep=t.checked; stSave(); } return; } });
+document.addEventListener('keydown',e=>{ if(view!=='studio') return; const t=e.target;
+  if(t.id==='stTxt'){ if(e.key==='Enter'){ e.preventDefault(); stTextDone(true); } else if(e.key==='Escape') stTextDone(false); return; }
+  if(/INPUT|TEXTAREA|SELECT/.test(t.tagName)) return;
+  if(e.key===' '){ e.preventDefault(); stPlay(); return; }
+  if(e.key==='ArrowLeft'||e.key==='ArrowRight'){ e.preventDefault(); const v=$('#stVid'); if(v&&!STU.playing){ v.pause(); stSeekTo(v.currentTime+(e.key==='ArrowLeft'?-0.2:0.2)); } return; }
+  if((e.key==='Delete'||e.key==='Backspace')&&STU.sel){ e.preventDefault(); stDelSel(); return; }
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){ e.preventDefault(); stUndo(); return; }
+  if(e.key==='Escape'){ if(STU.draft){ STU.draft=null; stPaint(); } else if(STU.sel){ STU.sel=null; stSide(); stPaint(); } return; }
+  if(e.key==='Enter'&&STU.draft&&(STU.draft.t==='chain'||STU.draft.t==='area')){ const d=STU.draft; d.pts.pop(); if(d.pts.length>=(d.t==='area'?3:2)) stCommit(d); else { STU.draft=null; stPaint(); } } });
+document.addEventListener('focusout',e=>{ if(e.target&&e.target.id==='stTxt') setTimeout(()=>stTextDone(true),0); });
+document.addEventListener('pointerdown',e=>{ if(view==='studio'&&e.target&&e.target.closest&&e.target.closest('#stBar')&&!e.target.closest('[data-stdraw]')){ const bar=$('#stBar'), r=bar.getBoundingClientRect(), ev=stCur(), [a,b]=stBounds(ev); if(STU.playing) stStopPlay(); const v=$('#stVid'); v.pause(); stSeekTo(a+(b-a)*Math.max(0,Math.min(1,(e.clientX-r.left)/r.width))); } });
 
 /* =================== MATCH PAGE (fixture) =================== */
 const SEL_MAX=20, SEL_TIMES=['gamemeal','arrive','teamtalk','readyup','warming','kickoff'];
