@@ -309,6 +309,13 @@ td.zero{color:var(--line)}
 .nav-links button{background:none;border:0;color:var(--hero-muted);font-weight:600;font-size:15px;padding:17px 11px 14px;border-bottom:3px solid transparent;white-space:nowrap}
 .nav-links button:hover{color:var(--hero-ink)}
 .nav-links button[aria-current="page"]{color:var(--hero-ink);border-bottom-color:var(--hero-accent)}
+.nav-dd{display:inline-flex;align-items:center;gap:6px}.nav-dd svg{transition:transform .15s;opacity:.8}.nav-dd[aria-expanded="true"]{color:var(--hero-ink)}.nav-dd[aria-expanded="true"] svg{transform:rotate(180deg)}
+.nav-menu{position:fixed;z-index:200;min-width:270px;background:var(--hero-bg,#0B0F14);border:1px solid var(--hero-line,rgba(255,255,255,.14));border-radius:12px;padding:6px;box-shadow:0 16px 40px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:2px}
+.nav-menu[hidden]{display:none}
+.nav-menu button{display:flex;flex-direction:column;align-items:flex-start;gap:1px;background:none;border:0;border-left:3px solid transparent;border-radius:8px;padding:9px 12px;text-align:left;color:var(--hero-ink);cursor:pointer}
+.nav-menu button b{font-size:15px;font-weight:700}.nav-menu button span{font-size:12.5px;color:var(--hero-muted)}
+.nav-menu button:hover,.nav-menu button:focus-visible{background:rgba(255,255,255,.07);outline:none}
+.nav-menu button[aria-current="page"]{border-left-color:var(--hero-accent);background:rgba(255,255,255,.05)}
 .nav .sync{color:var(--hero-muted);white-space:nowrap}
 .nav .sync.cloud i{background:#5DB4F0}
 .nav .btn.primary{background:var(--hero-accent);border-color:var(--hero-accent);color:var(--hero-accent-ink)}
@@ -1655,7 +1662,13 @@ body.tb-dragging,body.tb-dragging *{cursor:grabbing!important;user-select:none!i
 
 <nav class="nav" aria-label="Main"><div class="wrap nav-in">
   <button class="nav-brand" data-go="calendar" aria-label="Match Tagger calendar"><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="1.5" y="5.5" width="29" height="21" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><line x1="16" y1="5.5" x2="16" y2="26.5" stroke="currentColor" stroke-width="2"/><circle cx="16" cy="16" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="25" cy="16" r="3" fill="var(--hero-accent)"/></svg><span>Match Tagger</span></button>
-  <div class="nav-links"><button data-go="calendar" data-nav="calendar">Calendar</button><button data-go="week" data-nav="week">Week</button><button data-go="matches" data-nav="matches">Analyses</button><button data-go="players" data-nav="players">Players</button><button data-go="tactics" data-nav="tactics">Tactics</button><button data-go="presentations" data-nav="presentations">Presentations</button><button data-go="meetings" data-nav="meetings">Meetings</button><button data-go="portal" data-nav="portal">Portal</button><button data-go="team" data-nav="team">Team</button><button data-go="home" data-nav="home">Overview</button></div>
+  <div class="nav-links"><button data-go="calendar" data-nav="calendar">Calendar</button><button data-go="week" data-nav="week">Week</button><button class="nav-dd" id="navVideo" data-navdd aria-haspopup="menu" aria-expanded="false" aria-controls="navMenu">Video<svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"><path d="M2.5 4.5L6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button data-go="players" data-nav="players">Players</button><button data-go="tactics" data-nav="tactics">Tactics</button><button data-go="meetings" data-nav="meetings">Meetings</button><button data-go="home" data-nav="home">Overview</button></div>
+  <div class="nav-menu" id="navMenu" role="menu" aria-labelledby="navVideo" hidden>
+    <button role="menuitem" data-go="matches" data-nav="matches"><b>Analyses</b><span>Matches, tagging and reports</span></button>
+    <button role="menuitem" data-go="presentations" data-nav="presentations"><b>Presentations</b><span>Decks with clips, present full screen</span></button>
+    <button role="menuitem" data-go="portal" data-nav="portal"><b>Portal</b><span>Clips and messages for the players</span></button>
+    <button role="menuitem" data-go="team" data-nav="team"><b>Team</b><span>Team numbers over the season</span></button>
+  </div>
   <span class="spacer"></span>
   <button class="sync" id="sync" data-od title="Your Match Tagger folder"><i></i><span>Opening folder…</span></button>
   <button class="btn primary sm" data-go="new">New match</button>
@@ -3393,11 +3406,28 @@ function go(v,arg){
   if(v==='match'){ if(arg!==M.id) openMatch(arg); else if(!videoFile&&sessionFiles[M.id]) loadVideo(sessionFiles[M.id]); }
   document.querySelectorAll('.view').forEach(s=>s.hidden=s.id!=='view-'+v);
   document.querySelectorAll('[data-nav]').forEach(b=>b.setAttribute('aria-current',b.dataset.nav===navKey(v)?'page':'false'));
+  { const dd=document.getElementById('navVideo'); if(dd) dd.setAttribute('aria-current',['matches','presentations','portal','team'].includes(navKey(v))?'page':'false'); navMenuClose(); }
   const tok=v+(arg?'-'+arg:''); if(!ui.hashFrozen){ try{ if(location.hash.slice(1)!==tok){ ui.hashLock=tok; location.hash=tok; } }catch(e){} }
   if(v==='match') renderAll(); else renderView();
   try{ window.scrollTo(0,0); }catch(e){}
 }
 window.addEventListener('hashchange',()=>{ let h=''; try{ h=location.hash.slice(1); }catch(e){} if(ui.hashLock===h){ ui.hashLock=null; return; } const [v,a]=parseHash(); if(v!==view||a!==viewArg) go(v,a); });
+/* the Video dropdown in the top bar (Analyses, Presentations, Portal, Team) */
+function navMenuOpen(){ const m=document.getElementById('navMenu'), b=document.getElementById('navVideo'); if(!m||!b) return; const r=b.getBoundingClientRect();
+  m.hidden=false; m.style.top=Math.round(r.bottom+4)+'px'; m.style.left=Math.round(Math.max(8,Math.min(r.left,window.innerWidth-m.offsetWidth-8)))+'px'; b.setAttribute('aria-expanded','true'); }
+function navMenuClose(){ const m=document.getElementById('navMenu'), b=document.getElementById('navVideo'); if(m) m.hidden=true; if(b) b.setAttribute('aria-expanded','false'); }
+document.addEventListener('click',e=>{ const dd=e.target.closest&&e.target.closest('[data-navdd]'); const m=document.getElementById('navMenu'); if(!m) return;
+  if(dd){ if(m.hidden) navMenuOpen(); else navMenuClose(); return; }
+  if(!m.hidden&&!e.target.closest('#navMenu')) navMenuClose(); },true);
+document.addEventListener('keydown',e=>{ const m=document.getElementById('navMenu'); if(!m) return;
+  if(e.target&&e.target.id==='navVideo'&&(e.key==='ArrowDown'||e.key==='Enter'||e.key===' ')){ e.preventDefault(); navMenuOpen(); const f=m.querySelector('button'); if(f) f.focus(); return; }
+  if(m.hidden) return; const items=[...m.querySelectorAll('button')], i=items.indexOf(document.activeElement);
+  if(e.key==='Escape'){ e.preventDefault(); e.stopPropagation(); navMenuClose(); document.getElementById('navVideo').focus(); }
+  else if(e.key==='ArrowDown'&&i>-1){ e.preventDefault(); items[(i+1)%items.length].focus(); }
+  else if(e.key==='ArrowUp'&&i>-1){ e.preventDefault(); items[(i-1+items.length)%items.length].focus(); }
+  else if(e.key==='Tab'&&i>-1) navMenuClose(); },true);
+window.addEventListener('resize',navMenuClose); window.addEventListener('scroll',()=>{ const m=document.getElementById('navMenu'); if(m&&!m.hidden) navMenuClose(); },{passive:true});
+document.addEventListener('scroll',e=>{ if(e.target&&e.target.classList&&e.target.classList.contains('nav-links')) navMenuClose(); },true);
 function renderView(){ const f={presentations:renderPresentations,studio:renderStudio,meetings:renderMeetings,portal:renderPortal,entry:renderEntry,tactics:renderTactics,training:renderTraining,calendar:renderCalendar,week:renderWeek,fixture:renderFixture,home:renderHome,matches:renderMatches,report:renderReport,players:renderPlayers,player:renderPlayer,team:renderTeam,new:renderNew}[view]; if(f) f(); }
 function watchEvent(mid,eid){ const m=store[mid]; const e=m&&m.events.find(x=>x.id===eid); if(!e) return; ui.pendingSeek=e.t-leadOf(e); go('match',mid); if(hasVideo()){ ui.pendingSeek=null; seek(e.t-leadOf(e)); } else toast('Load the video for this match to watch the moment.'); }
 
