@@ -212,6 +212,16 @@ Open **Tactics** in the top menu. Every board is saved automatically to your fol
 - **Boards:** **New board**, **Duplicate** (handy for step 1, step 2…), **Rename** and **Delete** at the top.
 - **Export:** **Export PDF** makes an A4 page with the board and your notes. **All boards PDF** puts every board in one file. **PNG** gives an image for WhatsApp or a slide.
 
+## Presentations
+
+The **Presentations** tab makes PowerPoint-style decks and presents them full screen, with your clips playing in them.
+
+- **From a match…** picks a match, lets you tick the clips (filter by tag) and builds the deck: a title slide with the match, date and score, then one slide per clip. Choose the layout: full-screen clip, clip with a title, or clip with notes beside it. **+ Clips from a match** adds more clips to an existing deck, from any match.
+- **Edit like PowerPoint:** slides on the left (drag to reorder, duplicate, delete), the slide in the middle, settings on the right. Insert titles, text, bullets, rectangles, circles, lines, arrows, images and clips. Drag to move (it snaps to the middle and to other items), drag the corners to resize (Shift keeps the shape), double-click text to type. Change size, bold, colour, alignment, fills and outlines; bring to front or send to back. Ctrl+Z / Ctrl+Y, Ctrl+C / Ctrl+V (also to another slide), Ctrl+D, Delete, arrow keys to nudge. Dark or light theme, a background colour per slide, and speaker notes.
+- **Clips on a slide:** change the clip, start or end it a second earlier or later, and choose whether it shows its name, the drawings from the video editor, plays by itself, loops or has sound.
+- **Present** (or F5) goes full screen. → / space / click: next slide; ←: back; R: play the clip again; K: pause; B: black screen; Esc: leave. Clips start when their slide opens, stop at every drawing for its pause, and hold the last frame at the end. Move the mouse to see the controls.
+- Decks are saved in your storage (Data/presentations), images in Data/presentations/media.
+
 ## Video editor (drawings on clips)
 
 Draw on your clips the way analysis apps do, and export them as video.
