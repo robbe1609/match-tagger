@@ -5666,7 +5666,7 @@ function renderPresentations(){
       <input class="pz-title" id="pzTitle" value="${esc(d.title)}" aria-label="Presentation title" maxlength="120"><span class="hint" id="pzSaved"></span>
       <span class="pz-topact"><button class="btn sm ghost" data-pzundo title="Undo (Ctrl+Z)">Undo</button><button class="btn sm ghost" data-pzredo title="Redo (Ctrl+Y)">Redo</button>
       <div class="seg sm" role="group" aria-label="Theme"><button data-pztheme="dark" aria-pressed="${d.theme!=='light'}">Dark</button><button data-pztheme="light" aria-pressed="${d.theme==='light'}">Light</button></div>
-      <button class="btn sm" data-pzpresent="0">Present from start</button><button class="btn primary" data-pzpresent="cur">▶ Present</button></span></header>
+      <button class="btn sm" data-pzexport title="Download as a PowerPoint file, with the clips as videos">Export PowerPoint</button><button class="btn sm" data-pzpresent="0">Present from start</button><button class="btn primary" data-pzpresent="cur">▶ Present</button></span></header>
     <div class="pz-ribbon" role="toolbar" aria-label="Insert">
       <span class="pz-rg"><button class="btn sm" data-pzmenu="slide">+ New slide ▾</button></span>
       <span class="pz-rg"><button class="btn sm" data-pzins="title">Title</button><button class="btn sm" data-pzins="text">Text</button><button class="btn sm" data-pzins="list">Bullets</button></span>
@@ -5678,7 +5678,7 @@ function renderPresentations(){
       <section class="pz-center"><div class="pz-stagewrap" id="pzStageWrap"><div class="pz-stage" id="pzStage"></div></div>
         <label class="pz-notes">Speaker notes<textarea id="pzNotes" rows="3" placeholder="Notes for yourself (not shown when presenting)">${esc((pzS()||{}).notes||'')}</textarea></label></section>
       <aside class="pz-panel" id="pzPanel"></aside></div>
-    ${PZ.pick?pzPickHtml():''}</div>`;
+    ${PZ.pick?pzPickHtml():''}${PZ.exp?pzExportHtml():''}</div>`;
   pzPaintThumbs(); pzPaintStage(); pzPaintPanel(); pzFlushLabel();
 }
 function pzFlushLabel(){ const s=$('#pzSaved'); if(s) s.textContent=pzDirty.size?'Saving…':!col?'Saved in this browser':FSX.kind==='cloud'?'Saved online':'Saved'; }
@@ -5938,6 +5938,86 @@ document.addEventListener('dragover',e=>{ if(pzDragTh==null) return; const th=e.
 document.addEventListener('drop',e=>{ if(pzDragTh==null) return; const th=e.target.closest&&e.target.closest('[data-pzth]'); const from=pzDragTh; pzDragTh=null; if(!th) return; e.preventDefault(); const to=+th.dataset.pzth; if(to===from) return; const d=pzD(); pzSnap(); const [s]=d.slides.splice(from,1); d.slides.splice(to,0,s); PZ.slide=to; pzChanged(true); });
 document.addEventListener('dragend',()=>{ pzDragTh=null; document.querySelectorAll('.pz-th.drop').forEach(x=>x.classList.remove('drop')); });
 window.addEventListener('beforeunload',()=>{ if(pzDirty.size) pzFlush(); });
+/* ---------- export a deck as a PowerPoint file ----------
+   Slides are 13.33 x 7.5 in (16:9); 1 slide unit = 1/120 in, text 1 unit = 0.6 pt.
+   Clips go in as real videos: cut straight from the match's .mp4 (fast, exact), or recorded in real time when they carry drawings (so the drawings and pauses are in the video). */
+const pzIn=v=>v/120, pzPt=v=>Math.round(v*0.6*10)/10, pzHex=c=>String(c||'').replace('#','').toUpperCase();
+function pzExportHtml(){ const x=PZ.exp, d=pzD(); const clips=d.slides.reduce((n,s)=>n+s.els.filter(e=>e.type==='clip'&&e.eid).length,0);
+  const withDraw=d.slides.reduce((n,s)=>n+s.els.filter(e=>e.type==='clip'&&e.draw&&pzClipDraws(e).length).length,0), mime=pickMime(), canRec=!!mime&&extOf(mime)==='mp4';
+  return `<div class="modal" id="pzExModal"><div class="sheet"><div class="sheet-head"><div><h2>Export to PowerPoint</h2><p>${d.slides.length} slides, ${clips} clip${clips===1?'':'s'}</p></div>${x.running?'':'<button class="btn ghost" data-pzexclose>Close</button>'}</div>
+    ${x.running?`<div class="st-prog"><p id="pzExMsg">${esc(x.msg||'Preparing…')}</p><div class="bar"><i id="pzExBar" style="width:${x.pct||0}%"></i></div><button class="btn" data-pzexcancel>Cancel</button></div>`:`
+    <div class="st-exopts">
+      <label class="st-opt"><input type="radio" name="pzexv" value="video" ${x.media!=='still'?'checked':''}><span><b>Clips as video</b><small>Each clip plays inside PowerPoint. Cut straight from the match video, so it is quick and in full quality.</small></span></label>
+      <label class="st-opt"><input type="radio" name="pzexv" value="still" ${x.media==='still'?'checked':''}><span><b>Pictures of the clips only</b><small>A still frame per clip. A small file that is easy to e-mail.</small></span></label></div>
+    ${withDraw?`<label class="pz-n" style="margin:4px 0 10px"><input type="checkbox" id="pzExDraw" ${x.draw!==false&&canRec?'checked':''} ${canRec?'':'disabled'}> Include the drawings (${withDraw} clip${withDraw===1?'':'s'}): these are recorded in real time with their pauses${canRec?'':'. This browser cannot record .mp4, so they go in without drawings'}</label>`:''}
+    <p class="hint">Text, shapes, images, backgrounds and speaker notes all come along and stay editable in PowerPoint. Keep this tab open while it exports.</p>
+    <div class="sel-foot"><button class="btn ghost" data-pzexclose>Cancel</button><button class="btn primary" data-pzexgo>Export .pptx</button></div>`}</div></div>`; }
+function pzClipDraws(el){ const e=pzEvOf(el), b=pzBounds(el); if(!e||!b) return []; return (e.draw||[]).filter(d=>d.shapes&&d.shapes.length&&d.at>=b[0]-0.03&&d.at<=b[1]).sort((x,y)=>x.at-y.at); }
+const pzFileOf=mid=>sessionFiles[mid]||matchCloudVideo(pzMatchOf(mid));
+async function pzImgData(src){ if(!src) return null; if(src.startsWith('data:')) return src;
+  let b=null; try{ if(PZ.imgs[src]) b=await (await fetch(PZ.imgs[src])).blob(); else if(col) b=await FSX.readBlob('Data/presentations/media/'+src); }catch(e){}
+  return b?await blobToDataURL(new Blob([b],{type:/\.png$/i.test(src)?'image/png':'image/jpeg'})):null; }
+/* record one clip with its drawings and pauses into an .mp4 */
+async function pzRecordClip(el,f,mime){ const b=pzBounds(el), draws=pzClipDraws(el), x=PZ.exp;
+  const v=document.createElement('video'); v.muted=true; v.playsInline=true; v.preload='auto'; if(f.remote) v.crossOrigin='anonymous'; v.src=f.remote?await f.url(true):URL.createObjectURL(f);
+  await new Promise((res,rej)=>{ v.addEventListener('loadedmetadata',res,{once:true}); v.addEventListener('error',()=>rej(new Error('video')),{once:true}); setTimeout(()=>rej(new Error('timeout')),20000); });
+  const k=Math.min(1,1080/(v.videoHeight||720)), c=document.createElement('canvas'); c.width=Math.round((v.videoWidth||1280)*k/2)*2; c.height=Math.round((v.videoHeight||720)*k/2)*2; const ctx=c.getContext('2d');
+  const paint=(kept,cur,prog)=>{ ctx.drawImage(v,0,0,c.width,c.height); kept.forEach(d=>stShapes(ctx,c.width,c.height,d.shapes,1,v)); if(cur) stShapes(ctx,c.width,c.height,cur.shapes,prog,v); };
+  const wait=()=>new Promise(r=>{ if(document.hidden) setTimeout(r,33); else requestAnimationFrame(()=>r()); });
+  await stSeekP(v,b[0]); paint([]); const stream=c.captureStream(30), rec=makeRecorder(stream,mime); const kept=[]; let di=0; const pl=v.play(); if(pl&&pl.catch) pl.catch(()=>{});
+  for(;;){ if(x.cancel) break; await wait(); const t=v.currentTime;
+    if(di<draws.length&&t>=draws[di].at-0.03){ const d=draws[di++]; v.pause(); await stSeekP(v,d.at); const ms=Math.max(0.5,+d.hold||5)*1000, t0=performance.now();
+      while(performance.now()-t0<ms&&!x.cancel){ paint(kept,d,(performance.now()-t0)/450); await wait(); } if(d.keep) kept.push(d); const p2=v.play(); if(p2&&p2.catch) p2.catch(()=>{}); continue; }
+    if(t>=b[1]-0.02||v.ended){ v.pause(); paint(kept); break; } paint(kept); }
+  rec.r.stop(); stream.getTracks().forEach(t=>t.stop()); const blob=await rec.done; v.removeAttribute('src'); v.load(); return x.cancel?null:blob; }
+async function pzExportPptx(){
+  const d=pzD(), x=PZ.exp, th=pzTheme(d), mime=pickMime(), canRec=!!mime&&extOf(mime)==='mp4';
+  x.running=true; x.cancel=false; x.pct=0; x.msg='Loading the export tools…'; renderPresentations();
+  const step=(msg,p)=>{ x.msg=msg; x.pct=p; const m=$('#pzExMsg'), b=$('#pzExBar'); if(m) m.textContent=msg; if(b) b.style.width=Math.round(p*100)+'%'; };
+  let skipped=0;
+  try{
+    await ensureLib(); if(x.cancel) throw new Error('cancel');
+    const pptx=new window.PptxGenJS(); pptx.layout='LAYOUT_WIDE'; pptx.title=d.title; pptx.author=teamName();
+    const total=d.slides.reduce((n,s)=>n+s.els.filter(e=>e.type==='clip'&&e.eid).length,0)||1; let done=0;
+    for(let si=0;si<d.slides.length;si++){ if(x.cancel) throw new Error('cancel'); const s=d.slides[si], sl=pptx.addSlide();
+      sl.background={color:pzHex(s.bg||th.bg)}; if(s.notes&&s.notes.trim()) sl.addNotes(s.notes);
+      for(const el of s.els){
+        if(el.type==='text'){ const lines=String(el.text||'').split('\n'); const col2=pzHex(pzCol(el.color,d)); if(!lines.join('').trim()) continue;
+          const runs=(el.list?lines.filter(l=>l.trim()):lines).map((l,i,a)=>({text:l,options:Object.assign({breakLine:i<a.length-1},el.list?{bullet:{indent:pzPt(el.fs)*0.9}}:{})}));
+          sl.addText(runs,{x:pzIn(el.x),y:pzIn(el.y),w:pzIn(el.w),h:pzIn(el.h),fontFace:'Arial',fontSize:pzPt(el.fs),color:col2,bold:!!el.bold,italic:!!el.italic,align:el.align||'left',valign:el.valign==='middle'?'middle':el.valign==='bottom'?'bottom':'top',margin:[6,9,6,9],lineSpacingMultiple:1.05,paraSpaceAfter:el.list?pzPt(el.fs)*0.3:0,fill:el.fill?{color:pzHex(el.fill)}:undefined}); }
+        else if(el.type==='rect'||el.type==='ellipse'){ sl.addShape(el.type==='ellipse'?pptx.ShapeType.ellipse:(el.rad?pptx.ShapeType.roundRect:pptx.ShapeType.rect),{x:pzIn(el.x),y:pzIn(el.y),w:pzIn(el.w),h:pzIn(el.h),
+            fill:el.fill?{color:pzHex(el.fill),transparency:Math.round((1-(el.op==null?1:el.op))*100)}:{type:'none'},line:el.sw?{color:pzHex(el.stroke||'#FFFFFF'),width:pzPt(el.sw)}:{type:'none'},rectRadius:el.rad?Math.min(0.5,el.rad/Math.min(el.w,el.h)):undefined}); }
+        else if(el.type==='line'){ const lx=Math.min(el.x1,el.x2), ly=Math.min(el.y1,el.y2); sl.addShape(pptx.ShapeType.line,{x:pzIn(lx),y:pzIn(ly),w:Math.max(0.01,pzIn(Math.abs(el.x2-el.x1))),h:Math.max(0.01,pzIn(Math.abs(el.y2-el.y1))),flipH:el.x2<el.x1,flipV:el.y2<el.y1,
+            line:Object.assign({color:pzHex(el.stroke||'#FFD400'),width:pzPt(el.sw||6)},el.dash?{dashType:'dash'}:{},el.head?{endArrowType:'triangle'}:{})}); }
+        else if(el.type==='image'){ const data=await pzImgData(el.src); if(!data){ skipped++; continue; }
+          const dims=await new Promise(r=>{ const i=new Image(); i.onload=()=>r([i.naturalWidth,i.naturalHeight]); i.onerror=()=>r([el.w,el.h]); i.src=data; });
+          sl.addImage({data,x:pzIn(el.x),y:pzIn(el.y),w:pzIn(el.w),h:pzIn(el.h),sizing:{type:el.fit==='contain'?'contain':'cover',w:pzIn(el.w),h:pzIn(el.h)},rounding:false,transparency:Math.round((1-(el.op==null?1:el.op))*100)}); }
+        else if(el.type==='clip'){ const m=pzMatchOf(el.mid), e=pzEvOf(el), b=pzBounds(el); if(!m||!e||!b){ continue; }
+          const f=pzFileOf(el.mid), lab=pzClipLabel(m,e); done++; step('Clip '+done+' of '+total+': '+lab,(done-1)/total);
+          sl.addShape(pptx.ShapeType.rect,{x:pzIn(el.x),y:pzIn(el.y),w:pzIn(el.w),h:pzIn(el.h),fill:{color:'000000'},line:{type:'none'}});
+          if(!f){ skipped++; sl.addText('Video of '+matchName(m)+' not available',{x:pzIn(el.x),y:pzIn(el.y),w:pzIn(el.w),h:pzIn(el.h),align:'center',valign:'middle',color:'9AA3B0',fontSize:20}); continue; }
+          const fr=await grabFrame(el.mid,f,Math.min(b[1]-0.1,Math.max(b[0],e.t-1))); const ar=fr.ar||9/16;
+          let w=el.w, h=el.w*ar; if(h>el.h){ h=el.h; w=h/ar; } const cx=el.x+(el.w-w)/2, cy=el.y+(el.h-h)/2;
+          let video=null;
+          if(x.media!=='still'){ const wantDraw=el.draw&&x.draw!==false&&pzClipDraws(el).length&&canRec;
+            try{ if(!wantDraw){ const info=await srcFor(f); if(info.src) video=await blobToDataURL(await cutFrom(f,info.src,[[b[0],b[1]]],true)); }
+              if(!video&&canRec){ const bl=await pzRecordClip(el,f,mime); if(bl) video=await blobToDataURL(bl); } }catch(err){ console.warn('clip',err); }
+            if(!video) skipped++; }
+          if(x.cancel) throw new Error('cancel');
+          if(video) sl.addMedia({type:'video',data:video,extn:'mp4',x:pzIn(cx),y:pzIn(cy),w:pzIn(w),h:pzIn(h),cover:fr.data||undefined});
+          else if(fr.data) sl.addImage({data:fr.data,x:pzIn(cx),y:pzIn(cy),w:pzIn(w),h:pzIn(h)});
+          if(el.cap) sl.addText(lab,{x:pzIn(cx+24),y:pzIn(cy+h-80),w:pzIn(Math.min(w-48,40+lab.length*17)),h:pzIn(56),fontFace:'Arial',fontSize:pzPt(28),bold:true,color:'FFFFFF',fill:{color:'080A0E',transparency:15},margin:[2,10,2,10],valign:'middle'}); } } }
+    step('Building the PowerPoint file…',1);
+    const blob=await pptx.write({outputType:'blob'}); await offerFile(fileSafe(d.title||'Presentation')+'.pptx',blob);
+    toast(skipped?'Exported. '+skipped+' clip'+(skipped===1?'':'s')+' went in as a picture because the video could not be cut here.':'Exported to PowerPoint.');
+  }catch(err){ if(err.message==='cancel') toast('Export cancelled.'); else { console.error(err); toast('The export stopped: '+(err.message||err)); } }
+  PZ.exp=null; if(view==='presentations') renderPresentations(); }
+document.addEventListener('click',ev=>{ if(view!=='presentations'||!PZ.deck) return; const g=s=>ev.target.closest(s);
+  if(g('[data-pzexport]')){ PZ.exp={media:'video',draw:true}; renderPresentations(); return; }
+  if(g('[data-pzexclose]')){ PZ.exp=null; renderPresentations(); return; }
+  if(g('[data-pzexcancel]')){ if(PZ.exp) PZ.exp.cancel=true; return; }
+  if(g('[data-pzexgo]')){ const r=document.querySelector('input[name="pzexv"]:checked'), dr=$('#pzExDraw'); PZ.exp.media=r?r.value:'video'; PZ.exp.draw=dr?dr.checked:true; pzExportPptx(); return; } });
+
 
 /* =================== MATCH PAGE (fixture) =================== */
 const SEL_MAX=20, SEL_TIMES=['gamemeal','arrive','teamtalk','readyup','warming','kickoff'];
