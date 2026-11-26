@@ -1366,6 +1366,11 @@ html.locked body>*:not(#gate):not(#toasts){visibility:hidden}
 .mg-pcard{margin-top:16px}.mg-plist{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px;margin-top:10px}
 @media (max-width:899px){.mg-layout{grid-template-columns:1fr}.mg-side{position:static;max-height:none}.mg-layout.has-ed .mg-side{display:none}.mg-back{display:inline-flex}}
 @media (max-width:560px){.mg-meta{grid-template-columns:1fr 1fr}.mg-meta label:last-child{grid-column:1/3}.mg-ed{padding:14px}.mg-ed-act .btn{padding:6px 10px}}
+.st-mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-top:18px}
+.st-mcard{display:flex;flex-direction:column;gap:4px;text-align:left;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:12px;padding:12px 14px;color:var(--ink)}
+.st-mcard:hover{border-color:var(--muted);border-left-color:var(--accent)}
+.st-mcard b{font-size:17px}.st-mdate{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.st-mstats{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:13px;color:var(--muted)}.st-mdr{color:var(--accent);font-weight:700}.st-mnov{color:var(--warn);font-weight:700}
 .st-wrap{max-width:1680px;margin:0 auto;padding:14px 16px 40px}
 .st-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px}
 .st-title h1{margin:0;font-size:clamp(22px,2.6vw,32px)}.st-top .btn.primary{margin-left:auto}
@@ -1459,6 +1464,10 @@ html.locked body>*:not(#gate):not(#toasts){visibility:hidden}
 .pz-play{position:absolute;left:50%;top:50%;width:110px;height:110px;margin:-55px 0 0 -55px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-size:46px;display:flex;align-items:center;justify-content:center;padding-left:8px;box-sizing:border-box}
 .pz-cap{position:absolute;left:28px;bottom:26px;background:rgba(8,10,14,.85);color:#fff;font-weight:700;font-size:28px;padding:8px 18px;border-radius:999px;font-family:var(--f-body)}
 .pz-noclip{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#9AA3B0;font-size:34px;font-weight:700;text-align:center;padding:40px}
+.pz-drawn{position:absolute;right:20px;top:18px;background:#FFD400;color:#0B0F14;font-size:24px;font-weight:800;padding:6px 14px;border-radius:8px}
+.pz-dsel{margin-left:auto;display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;flex:none}
+.pz-dsel button{border:0;background:var(--surface);color:var(--muted);font:inherit;font-size:12.5px;font-weight:700;padding:3px 10px;cursor:pointer}
+.pz-dsel button[aria-pressed="true"]{background:var(--accent);color:#fff}
 .pz-clipinfo{position:absolute;left:20px;top:18px;background:rgba(0,120,191,.92);color:#fff;font-size:24px;font-weight:700;padding:6px 14px;border-radius:8px}
 .pz-center{display:flex;flex-direction:column;gap:10px;min-width:0}
 .pz-stagewrap{width:100%;display:flex;justify-content:center}
@@ -1665,6 +1674,7 @@ body.tb-dragging,body.tb-dragging *{cursor:grabbing!important;user-select:none!i
   <div class="nav-links"><button data-go="calendar" data-nav="calendar">Calendar</button><button data-go="week" data-nav="week">Week</button><button class="nav-dd" id="navVideo" data-navdd aria-haspopup="menu" aria-expanded="false" aria-controls="navMenu">Video<svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"><path d="M2.5 4.5L6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button data-go="players" data-nav="players">Players</button><button data-go="tactics" data-nav="tactics">Tactics</button><button data-go="meetings" data-nav="meetings">Meetings</button><button data-go="home" data-nav="home">Overview</button></div>
   <div class="nav-menu" id="navMenu" role="menu" aria-labelledby="navVideo" hidden>
     <button role="menuitem" data-go="matches" data-nav="matches"><b>Analyses</b><span>Matches, tagging and reports</span></button>
+    <button role="menuitem" data-go="studio" data-nav="studio"><b>Video editor</b><span>Draw on clips: arrows, players, formations</span></button>
     <button role="menuitem" data-go="presentations" data-nav="presentations"><b>Presentations</b><span>Decks with clips, present full screen</span></button>
     <button role="menuitem" data-go="portal" data-nav="portal"><b>Portal</b><span>Clips and messages for the players</span></button>
     <button role="menuitem" data-go="team" data-nav="team"><b>Team</b><span>Team numbers over the season</span></button>
@@ -3380,11 +3390,11 @@ let view='home', viewArg=null;
 const sessionFiles={};
 const VIEWS=['home','calendar','week','fixture','training','tactics','meetings','studio','presentations','entry','portal','matches','report','players','player','team','new','match'];
 function parseHash(){ let h=''; try{ h=(location.hash||'').slice(1); }catch(e){}
-  if(/^(home|matches|players|team|new|calendar|tactics|portal|meetings|presentations)$/.test(h)) return [h,null];
+  if(/^(home|matches|players|team|new|calendar|tactics|portal|meetings|presentations|studio)$/.test(h)) return [h,null];
   const w=h.match(/^week(?:-(\d{4}-W\d{2}))?$/); if(w) return ['week',w[1]||null];
   const tr=h.match(/^training-(\d{4}-\d{2}-\d{2})$/); if(tr) return ['training',tr[1]];
   const k=h.match(/^(match|report|player|fixture|tactics|entry|meetings|studio|presentations)-([A-Za-z0-9]+)$/); return k?[k[1],k[2]]:['calendar',null]; }
-const navKey=v=>({studio:'matches',entry:'matches',report:'matches',match:'matches',player:'players',new:'calendar',fixture:'calendar',training:'calendar'}[v]||v);
+const navKey=v=>({entry:'matches',report:'matches',match:'matches',player:'players',new:'calendar',fixture:'calendar',training:'calendar'}[v]||v);
 function go(v,arg){
   if(typeof plUi!=='undefined'&&(plUi.daySel||plUi.addMatch)){ plUi.daySel=null; plUi.addMatch=null; renderDayModal(); renderAddMatch(); }
   if(!VIEWS.includes(v)) v='calendar';
@@ -3406,7 +3416,7 @@ function go(v,arg){
   if(v==='match'){ if(arg!==M.id) openMatch(arg); else if(!videoFile&&sessionFiles[M.id]) loadVideo(sessionFiles[M.id]); }
   document.querySelectorAll('.view').forEach(s=>s.hidden=s.id!=='view-'+v);
   document.querySelectorAll('[data-nav]').forEach(b=>b.setAttribute('aria-current',b.dataset.nav===navKey(v)?'page':'false'));
-  { const dd=document.getElementById('navVideo'); if(dd) dd.setAttribute('aria-current',['matches','presentations','portal','team'].includes(navKey(v))?'page':'false'); navMenuClose(); }
+  { const dd=document.getElementById('navVideo'); if(dd) dd.setAttribute('aria-current',['matches','studio','presentations','portal','team'].includes(navKey(v))?'page':'false'); navMenuClose(); }
   const tok=v+(arg?'-'+arg:''); if(!ui.hashFrozen){ try{ if(location.hash.slice(1)!==tok){ ui.hashLock=tok; location.hash=tok; } }catch(e){} }
   if(v==='match') renderAll(); else renderView();
   try{ window.scrollTo(0,0); }catch(e){}
@@ -5277,8 +5287,20 @@ async function stSource(mid){
 
 /* ---------- page ---------- */
 function stIcon(path){ return `<svg viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`; }
+/* the editor's own start page: pick the match to work on */
+function stHomeHtml(){ const ms=Object.values(store).filter(m=>(m.events||[]).length).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const row=m=>{ const ev=withMatch(m,()=>sortedEvents().filter(e=>!['swap','formation','sub','h1s','h1e','h2s','h2e'].includes(e.type))), inEd=((m.studio&&m.studio.items)||[]).filter(id=>m.events.some(e=>e.id===id)).length,
+      dr=m.events.filter(e=>(e.draw||[]).some(d=>d.shapes&&d.shapes.length)).length, vid=!!(sessionFiles[m.id]||matchCloudVideo(m)||(M.id===m.id&&videoURL));
+    return `<button class="st-mcard" data-stmatch="${m.id}"><span class="st-mdate">${esc(m.date?new Date(m.date+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'')}</span><b>${esc(matchName(m))}</b>
+      <span class="st-mstats"><span>${ev.length} clip${ev.length===1?'':'s'} tagged</span>${inEd?`<span>${inEd} in the editor</span>`:''}${dr?`<span class="st-mdr">${dr} with drawings</span>`:''}${vid?'':'<span class="st-mnov">No video found</span>'}</span></button>`; };
+  const last=STU.mid&&store[STU.mid];
+  return `<div class="wrap page"><header class="page-head"><div><span class="eyebrow">Video</span><h1>Video editor</h1><p>Pick a match. Its clips are cut out one by one so you can draw on them, then show them in a presentation or export them as video.</p></div>
+    ${last?`<div class="page-actions"><button class="btn primary" data-stmatch="${last.id}">Continue with ${esc(matchName(last))}</button></div>`:''}</header>
+    ${ms.length?`<div class="st-mgrid">${ms.map(row).join('')}</div>`:'<p class="empty">No tagged matches yet. Tag a match first, then come back here to draw on its clips.</p>'}</div>`; }
 function renderStudio(){
-  const el=$('#view-studio'); if(!el) return; const mid=viewArg||STU.mid, m=store[mid];
+  const el=$('#view-studio'); if(!el) return;
+  if(!viewArg){ if(STU.playing) stStopPlay(); el.innerHTML=stHomeHtml(); return; }
+  const mid=viewArg, m=store[mid];
   if(!m){ el.innerHTML='<div class="wrap page"><p class="empty">This match is not available.</p></div>'; return; }
   if(STU.mid!==mid){ STU.mid=mid; STU.items=((m.studio&&m.studio.items)||[]).filter(id=>m.events.some(e=>e.id===id)); STU.i=0; STU.sel=null; STU.undo=[]; }
   STU.items=STU.items.filter(id=>m.events.some(e=>e.id===id)); if(STU.i>=STU.items.length) STU.i=Math.max(0,STU.items.length-1);
@@ -5286,7 +5308,7 @@ function renderStudio(){
   try{ V().pause(); }catch(e){}
   const e=stCur();
   el.innerHTML=`<div class="st-wrap">
-    <header class="st-top"><button class="btn sm ghost" data-go="match" data-arg="${mid}">← Back to the tagger</button><div class="st-title"><span class="eyebrow">Video editor</span><h1>${esc(matchName(m))}</h1></div><span class="hint" id="stSaved"></span>
+    <header class="st-top"><button class="btn sm ghost" data-go="studio">← All matches</button><button class="btn sm ghost" data-go="match" data-arg="${mid}">Open in the tagger</button><div class="st-title"><span class="eyebrow">Video editor</span><h1>${esc(matchName(m))}</h1></div><span class="hint" id="stSaved"></span>
       <button class="btn primary" data-stexport ${STU.items.length?'':'disabled'}>Export video</button></header>
     <div class="st-grid">
       <aside class="st-clips"><div class="st-h"><b>Clips</b><span class="hint">${STU.items.length}</span><button class="btn sm" data-stpick>+ Add clips</button></div><div id="stClipList">${stClipsHtml()}</div></aside>
@@ -5530,6 +5552,7 @@ document.addEventListener('click',e=>{
   const g=s=>e.target.closest(s); let b;
   if(b=g('[data-stopen]')){ const ids=exSelected().map(x=>x.id); if(!ids.length){ toast('Select at least one clip.'); return; } ex.open=false; renderExport(); stOpen(M.id,ids); return; }
   if(view!=='studio') return;
+  if(b=g('[data-stmatch]')){ const id=b.dataset.stmatch, m=store[id]; if(!m) return; const has=((m.studio&&m.studio.items)||[]).some(x=>m.events.some(e=>e.id===x)); STU.pick=!has; go('studio',id); return; }
   if(b=g('[data-sttool]')){ STU.tool=b.dataset.sttool; STU.draft=null; if(STU.tool!=='select'&&STU.sel){ STU.sel=null; stSide(); stPaint(); } document.querySelectorAll('[data-sttool]').forEach(x=>x.setAttribute('aria-pressed',x===b)); stPaint(); return; }
   if(b=g('[data-stcol]')){ STU.color=b.dataset.stcol; document.querySelectorAll('[data-stcol]').forEach(x=>x.setAttribute('aria-pressed',x===b)); const s=STU.tool==='select'&&stSelShape(); if(s){ stPushUndo(); s.c=STU.color; stSave(); stSide(); stPaint(); } return; }
   if(b=g('[data-stsize]')){ STU.size=+b.dataset.stsize; document.querySelectorAll('[data-stsize]').forEach(x=>x.setAttribute('aria-pressed',x===b)); const s=STU.tool==='select'&&stSelShape(); if(s){ stPushUndo(); s.w=STU.size; stSave(); stPaint(); } return; }
@@ -5628,7 +5651,10 @@ const pzMatches=()=>Object.values(store).filter(m=>(m.events||[]).length).sort((
 /* ---------- slide layouts ---------- */
 const PZ_LAYOUTS=[['title','Title'],['text','Title and bullets'],['clip','Full-screen clip'],['cliptitle','Clip with title'],['clipnotes','Clip and notes'],['blank','Blank']];
 function pzTxt(x,y,w,h,text,o){ return Object.assign({id:pzUid('e'),type:'text',x,y,w,h,text,fs:40,bold:false,italic:false,color:null,align:'left',valign:'top',list:false,fill:null},o||{}); }
-function pzClipEl(x,y,w,h,c){ return {id:pzUid('e'),type:'clip',x,y,w,h,mid:c?c.mid:null,eid:c?c.eid:null,ta:0,tb:0,cap:true,draw:true,auto:true,loop:false,sound:false}; }
+function pzClipEl(x,y,w,h,c){ return {id:pzUid('e'),type:'clip',x,y,w,h,mid:c?c.mid:null,eid:c?c.eid:null,ta:0,tb:0,cap:true,draw:!(c&&c.draw===false),auto:true,loop:false,sound:false}; }
+const pzHasDraw=e=>!!e&&(e.draw||[]).some(d=>d.shapes&&d.shapes.length);
+/* open the video editor on one clip of a presentation (added to that match's editor list) */
+function pzOpenStudio(mid,eid){ const m=store[mid]; if(!m) return; const items=((m.studio&&m.studio.items)||[]).filter(id=>m.events.some(e=>e.id===id)); if(!items.includes(eid)) items.push(eid); STU.mid=null; m.studio={items}; saveMatchObj(m); STU.pick=false; go('studio',mid); setTimeout(()=>{ const k=STU.items.indexOf(eid); if(k>-1&&k!==STU.i){ STU.i=k; renderStudio(); } },0); }
 function pzNewSlide(layout,c,meta){ const s={id:pzUid('s'),bg:null,notes:'',els:[]}; const t=meta&&meta.title||'';
   if(layout==='title'){ s.els.push(pzTxt(120,300,1360,170,t||'Title',{fs:96,bold:true,align:'center',valign:'bottom'})); s.els.push(pzTxt(220,500,1160,90,meta&&meta.sub||'Subtitle',{fs:38,align:'center',color:'muted'})); }
   else if(layout==='text'){ s.els.push(pzTxt(90,60,1420,120,t||'Title',{fs:64,bold:true,valign:'middle'})); s.els.push(pzTxt(90,210,1420,620,'First point\nSecond point\nThird point',{fs:38,list:true})); }
@@ -5651,8 +5677,8 @@ function pzElHtml(el,d,mode){
   if(el.type==='image'){ const u=pzImgUrl(el.src); return `<div class="pze pze-img" data-pzel="${el.id}" style="${st}border-radius:${el.rad||0}px;opacity:${el.op==null?1:el.op}"><div class="pz-imgi" data-pzimg="${esc(el.src)}" style="background-image:${u?`url('${u}')`:'none'};background-size:${el.fit==='contain'?'contain':'cover'}"></div></div>`; }
   if(el.type==='clip'){ const m=pzMatchOf(el.mid), e=pzEvOf(el), lab=m&&e?pzClipLabel(m,e):'Choose a clip';
     if(mode==='present') return `<div class="pze pze-clip" data-pzel="${el.id}" style="${st}"><video playsinline preload="auto"></video><canvas></canvas>${el.cap&&e?`<span class="pz-cap">${esc(lab)}</span>`:''}</div>`;
-    const key=el.mid+':'+el.eid, po=PZ.posters[key]; if(e&&!po&&mode!=='thumbonly') pzPosterQueue(el);
-    return `<div class="pze pze-clip" data-pzel="${el.id}" style="${st}"><div class="pz-poster" data-pzposter="${esc(key)}" style="${po?`background-image:url('${po}')`:''}"></div><span class="pz-play">▶</span>${el.cap&&e?`<span class="pz-cap">${esc(lab)}</span>`:''}${!e?'<span class="pz-noclip">Choose a clip</span>':''}${mode==='edit'&&e?`<span class="pz-clipinfo">${esc(lab)}${m?', '+esc(matchName(m)):''}</span>`:''}</div>`; }
+    const wd=!!(el.draw&&pzHasDraw(e)), key=el.mid+':'+el.eid+(wd?':d':''), po=PZ.posters[key]; if(e&&!po&&mode!=='thumbonly') pzPosterQueue(el);
+    return `<div class="pze pze-clip" data-pzel="${el.id}" style="${st}"><div class="pz-poster" data-pzposter="${esc(key)}" style="${po?`background-image:url('${po}')`:''}"></div><span class="pz-play">▶</span>${el.cap&&e?`<span class="pz-cap">${esc(lab)}</span>`:''}${!e?'<span class="pz-noclip">Choose a clip</span>':''}${wd?'<span class="pz-drawn">✎ With drawings</span>':''}${mode==='edit'&&e?`<span class="pz-clipinfo">${esc(lab)}${m?', '+esc(matchName(m)):''}</span>`:''}</div>`; }
   return ''; }
 function pzSlideHtml(s,d,mode){ const th=pzTheme(d); return `<div class="pz-slide" style="background:${s.bg||th.bg};color:${th.ink}">${s.els.map(el=>pzElHtml(el,d,mode)).join('')}</div>`; }
 
@@ -5661,14 +5687,14 @@ async function pzVideoUrl(mid){ const m=pzMatchOf(mid); if(!m) return null; cons
   let r=null; if(M.id===mid&&videoURL) r={url:videoURL,remote:!!(videoFile&&videoFile.remote)};
   else { const f=sessionFiles[mid]||matchCloudVideo(m); if(f&&f.url) r={url:await f.url(),remote:true}; else if(f instanceof Blob) r={url:URL.createObjectURL(f),remote:false}; }
   if(r){ r.at=Date.now(); PZ.urls[mid]=r; } return r; }
-function pzPosterQueue(el){ const key=el.mid+':'+el.eid; if(PZ.posters[key]!==undefined||PZ.pq.some(x=>x.key===key)) return; PZ.pq.push({key,el:pzClone(el)}); pzPosterRun(); }
+function pzPosterQueue(el){ const key=el.mid+':'+el.eid+(el.draw&&pzHasDraw(pzEvOf(el))?':d':''); if(PZ.posters[key]!==undefined||PZ.pq.some(x=>x.key===key)) return; PZ.pq.push({key,el:pzClone(el)}); pzPosterRun(); }
 async function pzPosterRun(){ if(PZ.pbusy) return; PZ.pbusy=true;
   while(PZ.pq.length){ const {key,el}=PZ.pq.shift(); PZ.posters[key]=null;
     try{ const b=pzBounds(el), e=pzEvOf(el), src=b&&await pzVideoUrl(el.mid); if(!src) continue;
       const v=document.createElement('video'); v.muted=true; v.preload='auto'; if(src.remote) v.crossOrigin='anonymous'; v.src=src.url;
       await new Promise((res,rej)=>{ v.onloadeddata=res; v.onerror=()=>rej(new Error('video')); setTimeout(()=>rej(new Error('timeout')),15000); });
-      const t=Math.min(b[1]-0.1,Math.max(b[0],e.t-1)); await new Promise(res=>{ v.onseeked=res; v.currentTime=t; setTimeout(res,6000); });
-      const c=document.createElement('canvas'); c.width=480; c.height=Math.round(480*(v.videoHeight||9)/(v.videoWidth||16)); c.getContext('2d').drawImage(v,0,0,c.width,c.height);
+      const dr=key.endsWith(':d')?pzClipDraws(el)[0]:null, t=dr?dr.at:Math.min(b[1]-0.1,Math.max(b[0],e.t-1)); await new Promise(res=>{ v.onseeked=res; v.currentTime=t; setTimeout(res,6000); });
+      const c=document.createElement('canvas'); c.width=640; c.height=Math.round(640*(v.videoHeight||9)/(v.videoWidth||16)); const cx=c.getContext('2d'); cx.drawImage(v,0,0,c.width,c.height); if(dr) stShapes(cx,c.width,c.height,dr.shapes,1,v);
       PZ.posters[key]=c.toDataURL('image/jpeg',.72); v.removeAttribute('src'); v.load();
       document.querySelectorAll(`[data-pzposter="${CSS.escape(key)}"]`).forEach(n=>n.style.backgroundImage=`url('${PZ.posters[key]}')`);
     }catch(err){ /* no still for this clip: the dark placeholder stays */ } }
@@ -5760,7 +5786,9 @@ function pzPaintPanel(){ const p=$('#pzPanel'); if(!p) return; const el=pzEl(PZ.
   if(el.type==='clip'){ const m=pzMatchOf(el.mid), e=pzEvOf(el), b=pzBounds(el);
     h+=`<div class="pz-f"><span>Clip</span>${e?`<p class="pz-clipname"><b>${esc(pzClipLabel(m,e))}</b><small>${esc(matchName(m))}${b?SEP+Math.round(b[1]-b[0])+' s':''}</small></p>`:'<p class="hint">No clip chosen yet.</p>'}<button class="btn sm" data-pzchange>${e?'Change clip':'Choose a clip'}</button></div>
       ${e?`<div class="pz-f"><span>Start and end</span><div class="pz-row"><span class="hint">Start</span><button class="st-ib" data-pztrim="ta" data-d="-1">−1s</button><button class="st-ib" data-pztrim="ta" data-d="1">+1s</button><span class="pz-gap"></span><span class="hint">End</span><button class="st-ib" data-pztrim="tb" data-d="-1">−1s</button><button class="st-ib" data-pztrim="tb" data-d="1">+1s</button></div></div>`:''}
-      <div class="pz-f pz-checks">${[['cap','Show the clip name'],['draw','Show drawings from the video editor'],['auto','Play when the slide opens'],['loop','Loop'],['sound','Sound']].map(([k,l])=>`<label><input type="checkbox" data-pzcheck="${k}" ${el[k]?'checked':''}> ${l}</label>`).join('')}</div>
+      ${e?(pzHasDraw(e)?`<div class="pz-f"><span>Drawings</span><div class="seg sm"><button data-pzwd="1" aria-pressed="${!!el.draw}">With drawings</button><button data-pzwd="0" aria-pressed="${!el.draw}">Without</button></div><button class="linkbtn" data-pzstudio>Change the drawings in the video editor</button></div>`
+        :`<div class="pz-f"><span>Drawings</span><p class="hint" style="margin:0">This clip has no drawings yet.</p><button class="btn sm ghost" data-pzstudio>Draw on it in the video editor</button></div>`):''}
+      <div class="pz-f pz-checks">${[['cap','Show the clip name'],['auto','Play when the slide opens'],['loop','Loop'],['sound','Sound']].map(([k,l])=>`<label><input type="checkbox" data-pzcheck="${k}" ${el[k]?'checked':''}> ${l}</label>`).join('')}</div>
       <button class="btn sm ghost" data-pzfull>Make it full screen</button>`; }
   p.innerHTML=h; }
 
@@ -5771,12 +5799,13 @@ function pzPickHtml(){ const P2=PZ.pick, ms=pzMatches(); if(!P2.mid&&ms.length) 
   return `<div class="modal" id="pzPick"><div class="sheet wide"><div class="sheet-head"><div><h2>${P2.single?'Choose a clip':P2.mode==='new'?'New presentation from a match':'Add clips'}</h2><p>${P2.single?'Pick the moment for this clip':'Pick a match, then tick the moments you want. Each one becomes a slide.'}</p></div><button class="btn ghost" data-pzpickclose>Close</button></div>
     <div class="pz-pick"><div class="pz-pm">${ms.map(x=>`<button class="pz-pmi${x.id===P2.mid?' on':''}" data-pzpickm="${x.id}"><b>${esc(matchName(x))}</b><small>${esc(x.date?new Date(x.date+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'')}${SEP}${pzCandidates(x).length} clips</small></button>`).join('')||'<p class="hint">No tagged matches yet.</p>'}</div>
       <div class="pz-pc">${m?`<div class="pz-pf"><button class="tag${!P2.type?' on':''}" data-pzpickt="">All</button>${types.map(t=>`<button class="tag${P2.type===t?' on':''}" data-pzpickt="${esc(t)}" style="--c:${T(t).css||T(t).color||''}">${esc(T(t).label)} ${cand.filter(e=>e.type===t).length}</button>`).join('')}${P2.single?'':`<span class="pz-gap"></span><button class="linkbtn" data-pzpickall>Select all shown</button><button class="linkbtn" data-pzpicknone>None</button>`}</div>
-        <div class="pz-pl">${shown.map(e=>`<label class="pz-pr"><input type="${P2.single?'radio':'checkbox'}" name="pzpe" data-pzpicke="${e.id}" ${sel.has(e.id)?'checked':''}><span class="dot" style="background:${T(e.type).css||'#888'}"></span><span>${esc(pzClipLabel(m,e))}</span>${(e.draw||[]).length?'<small>with drawings</small>':''}</label>`).join('')||'<p class="hint">No clips for this tag.</p>'}</div>`:''}</div></div>
+        <div class="pz-pl">${shown.map(e=>`<label class="pz-pr"><input type="${P2.single?'radio':'checkbox'}" name="pzpe" data-pzpicke="${e.id}" ${sel.has(e.id)?'checked':''}><span class="dot" style="background:${T(e.type).css||'#888'}"></span><span>${esc(pzClipLabel(m,e))}</span>${pzHasDraw(e)?`<span class="pz-dsel" role="group" aria-label="Drawings"><button type="button" data-pzdraw="${e.id}" data-v="1" aria-pressed="${!(P2.nodraw&&P2.nodraw.has(e.id))}">✎ With drawings</button><button type="button" data-pzdraw="${e.id}" data-v="0" aria-pressed="${!!(P2.nodraw&&P2.nodraw.has(e.id))}">Without</button></span>`:''}</label>`).join('')||'<p class="hint">No clips for this tag.</p>'}</div>`:''}</div></div>
     <div class="sel-foot">${P2.single?'':`<label class="pz-n">Slide layout<select id="pzPickLay">${[['clip','Full-screen clip'],['cliptitle','Clip with title'],['clipnotes','Clip and notes']].map(([k,l])=>`<option value="${k}"${P2.layout===k?' selected':''}>${l}</option>`).join('')}</select></label>${P2.mode==='new'?'<label class="pz-n"><input type="checkbox" id="pzPickTitle" checked> Start with a title slide</label>':''}`}
       <span class="hint">${sel.size} selected</span><button class="btn ghost" data-pzpickclose>Cancel</button><button class="btn primary" data-pzpickgo ${sel.size?'':'disabled'}>${P2.single?'Use this clip':P2.mode==='new'?'Create presentation':'Add '+sel.size+' slide'+(sel.size===1?'':'s')}</button></div></div></div>`; }
 function pzPickGo(){ const P2=PZ.pick, m=pzMatchOf(P2.mid); if(!m) return; const ids=pzCandidates(m).filter(e=>P2.sel.has(e.id)).map(e=>e.id);
-  if(P2.single){ const el=pzEl(P2.single); if(el&&ids[0]){ pzSnap(); el.mid=m.id; el.eid=ids[0]; el.ta=0; el.tb=0; } PZ.pick=null; pzChanged(true); return; }
-  const lay=($('#pzPickLay')||{}).value||'clip', mk=id=>{ const e=m.events.find(x=>x.id===id); return pzNewSlide(lay,{mid:m.id,eid:id,label:pzClipLabel(m,e)}); };
+  const nd=P2.nodraw||new Set();
+  if(P2.single){ const el=pzEl(P2.single); if(el&&ids[0]){ pzSnap(); el.mid=m.id; el.eid=ids[0]; el.ta=0; el.tb=0; el.draw=!nd.has(ids[0]); } PZ.pick=null; pzChanged(true); return; }
+  const lay=($('#pzPickLay')||{}).value||'clip', mk=id=>{ const e=m.events.find(x=>x.id===id); return pzNewSlide(lay,{mid:m.id,eid:id,label:pzClipLabel(m,e),draw:!nd.has(id)}); };
   if(P2.mode==='new'){ const d=pzNewDeck(matchName(m)); d.slides=[]; if(!$('#pzPickTitle')||$('#pzPickTitle').checked){ const sc=(m.events||[]).some(e=>e.type==='goal'||e.type==='goal_against')?finalScore(m):''; d.slides.push(pzNewSlide('title',null,{title:matchName(m),sub:[m.date?new Date(m.date+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}):'',sc].filter(Boolean).join('   ')})); }
     ids.forEach(id=>d.slides.push(mk(id))); PZ.pick=null; pzTouch(d.id); go('presentations',d.id); return; }
   pzSnap(); const d=pzD(); d.slides.splice(PZ.slide+1,0,...ids.map(mk)); PZ.slide+=1; PZ.sel=null; PZ.pick=null; pzChanged(true); toast(ids.length+' slide'+(ids.length===1?'':'s')+' added.'); }
@@ -5899,6 +5928,8 @@ document.addEventListener('click',ev=>{ const g=s=>ev.target.closest(s); let b;
     toast('Deleted '+copy.title+'.',()=>{ delete pzDeleted[id]; pzDirty.delete('del:'+id); pzDecks[id]=copy; pzTouch(id); pzDirty.add('_del'); renderPresentations(); },'Undo'); return; }
   // clip picker
   if(g('[data-pzpickclose]')){ PZ.pick=null; renderPresentations(); return; }
+  if(b=g('[data-pzdraw]')){ ev.preventDefault(); const P2=PZ.pick, id=b.dataset.pzdraw; P2.nodraw=P2.nodraw||new Set(); if(b.dataset.v==='0') P2.nodraw.add(id); else P2.nodraw.delete(id);
+    if(P2.single) P2.sel=new Set([id]); else P2.sel.add(id); const sc=document.querySelector('#pzPick .pz-pl'), top=sc?sc.scrollTop:0; renderPresentations(); const sc2=document.querySelector('#pzPick .pz-pl'); if(sc2) sc2.scrollTop=top; return; }
   if(b=g('[data-pzpickm]')){ PZ.pick.mid=b.dataset.pzpickm; PZ.pick.sel=new Set(); PZ.pick.type=''; renderPresentations(); return; }
   if(b=g('[data-pzpickt]')){ PZ.pick.type=b.dataset.pzpickt; renderPresentations(); return; }
   if(g('[data-pzpickall]')){ const m=pzMatchOf(PZ.pick.mid); pzCandidates(m).filter(e=>!PZ.pick.type||e.type===PZ.pick.type).forEach(e=>PZ.pick.sel.add(e.id)); renderPresentations(); return; }
@@ -5929,7 +5960,9 @@ document.addEventListener('click',ev=>{ const g=s=>ev.target.closest(s); let b;
   if(b=g('[data-pzfill]')){ pzSnap(); el.fill=b.dataset.pzfill||null; pzChanged(); return; }
   if(b=g('[data-pzstroke]')){ pzSnap(); el.stroke=b.dataset.pzstroke; if(el.type!=='line'&&!el.sw) el.sw=4; pzChanged(); return; }
   if(b=g('[data-pzfit]')){ pzSnap(); el.fit=b.dataset.pzfit; pzChanged(); return; }
-  if(g('[data-pzchange]')){ PZ.pick={single:el.id,mid:el.mid,sel:new Set(el.eid?[el.eid]:[])}; renderPresentations(); return; }
+  if(b=g('[data-pzwd]')){ pzSnap(); el.draw=b.dataset.pzwd==='1'; pzChanged(); return; }
+  if(g('[data-pzstudio]')){ pzOpenStudio(el.mid,el.eid); return; }
+  if(g('[data-pzchange]')){ PZ.pick={single:el.id,mid:el.mid,sel:new Set(el.eid?[el.eid]:[]),nodraw:new Set(el.eid&&!el.draw?[el.eid]:[])}; renderPresentations(); return; }
   if(b=g('[data-pztrim]')){ pzSnap(); el[b.dataset.pztrim]=(+el[b.dataset.pztrim]||0)+ +b.dataset.d; const bb=pzBounds(el); if(bb&&bb[1]-bb[0]<1) el[b.dataset.pztrim]-= +b.dataset.d; pzChanged(); return; }
   if(g('[data-pzfull]')){ pzSnap(); Object.assign(el,{x:0,y:0,w:PZ_W,h:PZ_H}); s.els=s.els.filter(x=>x!==el); s.els.unshift(el); pzChanged(); return; }
 });
